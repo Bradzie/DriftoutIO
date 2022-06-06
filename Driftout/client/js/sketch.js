@@ -1,3 +1,4 @@
+var socket;
 
 // Load prior to game start
 function preload(){
@@ -6,7 +7,7 @@ function preload(){
 
 // Called when game is started once
 function setup(){
-  console.log("hello world");
+  socket = io();
 }
 
 // Called within a loop for drawing to canvas (no rendering)
