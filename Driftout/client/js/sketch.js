@@ -61,22 +61,33 @@ function movement(){
 
 // The player object constructor
 var Player = function(name, x, y) {
-    this.name = name;
-    this.x = x;
-    this.y = y;
-    this.vX = 0;
-    this.vY = 0;
+  this.name = name;
+  this.x = x;
+  this.y = y;
+  this.vX = 0;
+  this.vY = 0;
 
-    this.draw = function() {
+  this.draw = function() {
+    var angle = atan2(mouseY - windowHeight/2, mouseX - windowWidth/2);
+    // decide angle of mouse cursor from middle of canvas
 
-        fill(60);
-        circle(this.x, this.y, 40);
+    push();
+    fill(60);
+    translate(this.x, this.y);
+    rotate(angle);
+    strokeWeight(5);
+    beginShape();
+    vertex(25, 0);
+    vertex(-25, 20);
+    vertex(-25, -20);
+    endShape(CLOSE);
+    pop();
 
-        this.x += this.vX;
-        this.y += this.vY;
+    this.x += this.vX;
+    this.y += this.vY;
 
-        this.vX = this.vX * 0.99;
-        this.vY = this.vY * 0.99;
+    this.vX = this.vX * 0.99;
+    this.vY = this.vY * 0.99;
 
     }
 
