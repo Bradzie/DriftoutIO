@@ -1,6 +1,8 @@
 var socket;
 var player1;
 var player2;
+var Collision;
+var collisions;
 
 // Load prior to game start
 function preload(){
@@ -19,6 +21,9 @@ function setup(){
 
   createCanvas(windowWidth, windowHeight);
 
+  collisions = [];
+  collisions.push(new Collision(200, 225, 200, 1600, -1, true));
+
 }
 
 // this is called alot of times per second (FPS, frame per second)
@@ -30,7 +35,7 @@ function draw() {
 
     movement();
 
-    collisions();
+    doCollisions();
 
     player1.draw();
     player2.draw();
@@ -59,58 +64,68 @@ function movement(){
   }
 }
 
-function collisions(){
+function doCollisions(){
 
-  // Inside rect
-  if ((player1.x > 200 && player1.x < 225) && (player1.y > 200 && player1.y < 1600)){
-    player1.x -= 1;
-    player1.vX = -player1.vX * 0.7;
+  for (let wall in collisions){
+    if ((player1.x > wall.x1 && player1.x < wall.x2) &&
+    (player1.y > wall.y1 && player1.y < wall.y2)) {
+
+      player1.x += wall.x1;
+
+      if (wall.isX == true){
+        player1.x += wall.push;
+        player1.vX = -player1.vX;
+      }
+
+      else{
+        player1.y += wall.push;
+        player1.vY = -player1.vY;
+      }
+    }
   }
 
-  if ((player1.y > 200 && player1.y < 225) && (player1.x > 200 && player1.x < 1600)){
-    player1.y -= 1;
-    player1.vY = -player1.vY * 0.7;
-  }
-
-
-  if ((player1.x > 1575 && player1.x < 1600) && (player1.y > 200 && player1.y < 1600)){
-    player1.x += 1;
-    player1.vX = -player1.vX * 0.7;
-  }
-
-  if ((player1.y > 1575 && player1.y < 1600) && (player1.x > 200 && player1.x < 1600)){
-    player1.y += 1;
-    player1.vY = -player1.vY * 0.7;
-  }
-
-  // Border rect
-  if ((player1.x > 2000 && player1.x < 2025) && (player1.y > -200 && player1.y < 2000)){
-    player1.x -= 1;
-    player1.vX = -player1.vX * 0.7;
-  }
-
-  if ((player1.x > -225 && player1.x < -200) && (player1.y > -200 && player1.y < 2000)){
-    player1.x += 1;
-    player1.vX = -player1.vX * 0.7;
-  }
-
-  if ((player1.y > 2000 && player1.y < 2025) && (player1.x > -200 && player1.x < 2000)){
-    player1.y -= 1;
-    player1.vY = -player1.vY * 0.7;
-  }
-
-  if ((player1.y > -225 && player1.y < -200) && (player1.x > -200 && player1.x < 2000)){
-    player1.y += 1;
-    player1.vY = -player1.vY * 0.7;
-  }
-
-
-  // if (player1.x > 2000 || player1.x < -200){
+  // // Inside rect
+  // if ((player1.x > 200 && player1.x < 225) && (player1.y > 200 && player1.y < 1600)){
+  //   player1.x -= 1;
   //   player1.vX = -player1.vX * 0.7;
   // }
-  if (player1.y > 2000 || player1.y < -200){
-    player1.vY = -player1.vY * 0.7;
-  }
+  //
+  // if ((player1.y > 200 && player1.y < 225) && (player1.x > 200 && player1.x < 1600)){
+  //   player1.y -= 1;
+  //   player1.vY = -player1.vY * 0.7;
+  // }
+  //
+  //
+  // if ((player1.x > 1575 && player1.x < 1600) && (player1.y > 200 && player1.y < 1600)){
+  //   player1.x += 1;
+  //   player1.vX = -player1.vX * 0.7;
+  // }
+  //
+  // if ((player1.y > 1575 && player1.y < 1600) && (player1.x > 200 && player1.x < 1600)){
+  //   player1.y += 1;
+  //   player1.vY = -player1.vY * 0.7;
+  // }
+  //
+  // // Border rect
+  // if ((player1.x > 2000 && player1.x < 2025) && (player1.y > -200 && player1.y < 2000)){
+  //   player1.x -= 1;
+  //   player1.vX = -player1.vX * 0.7;
+  // }
+  //
+  // if ((player1.x > -225 && player1.x < -200) && (player1.y > -200 && player1.y < 2000)){
+  //   player1.x += 1;
+  //   player1.vX = -player1.vX * 0.7;
+  // }
+  //
+  // if ((player1.y > 2000 && player1.y < 2025) && (player1.x > -200 && player1.x < 2000)){
+  //   player1.y -= 1;
+  //   player1.vY = -player1.vY * 0.7;
+  // }
+  //
+  // if ((player1.y > -225 && player1.y < -200) && (player1.x > -200 && player1.x < 2000)){
+  //   player1.y += 1;
+  //   player1.vY = -player1.vY * 0.7;
+  // }
 }
 
 function drawMap(){
@@ -132,6 +147,16 @@ function drawMap(){
   vertex(1600, 200);
   endShape(CLOSE);
   pop();
+}
+
+// The collision object constructor
+var Collision = function(x1, x2, y1, y2, push, isX){
+  this.x1 = x1;
+  this.x2 = x2;
+  this.y1 = y1;
+  this.y2 = y2;
+  this.push = push;
+  this.isX = isX;
 }
 
 // The player object constructor
