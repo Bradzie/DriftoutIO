@@ -1,10 +1,20 @@
 var socket;
 var player1;
 var player2;
+var currentCar;
+var allCars;
 
 // Load prior to game start
 function preload(){
-  //something
+  allCars = {
+    racer : new Car('Racer', 150, 6, 8, []),
+    prankster : new Car('Prankster', 120, 6, 5, []),
+    bullet : new Car('Bullet', 100, 10, 5, []),
+    spike : new Car('Spike', 150, 5, 3, []),
+    tank : new Car('Tank', 200, 4, 5, []),
+    sprinter : new Car('Sprinter', 80, 12, 10, []),
+    fragile : new Car('Fragile', 70, 6, 5, [])
+  };
 }
 
 // Called when game is started once
@@ -14,8 +24,11 @@ function setup(){
   socket.on("returnMessage", function(data){
     console.log(data);
   })
-  player1 = new Player('Brad', -50, 1000);
-  player2 = new Player('Chloe', 50, 1000);
+  currentCar = new Car('Racer', 150, 6, 8, []);
+  player1 = new Player('Brad', -50, 1000, "tank");
+  player2 = new Player('Chloe', 50, 1000, "racer");
+
+  console.log(allCars.tank);
 
   createCanvas(windowWidth, windowHeight);
 
@@ -30,7 +43,7 @@ function draw() {
 
     movement();
 
-    collisions();
+    doCollisions();
 
     player1.draw();
     player2.draw();
@@ -38,28 +51,28 @@ function draw() {
 
 function movement(){
   if (keyIsDown(87)){
-    if(player1.vY > -6){
-      player1.vY += -0.08;
+    if(player1.vY > -player1.maxSpeed){
+      player1.vY += -player1.acceleration;
     }
   }
   if (keyIsDown(83)){
-    if(player1.vY < 6){
-      player1.vY += 0.08;
+    if(player1.vY < player1.maxSpeed){
+      player1.vY += player1.acceleration;
     }
   }
   if (keyIsDown(65)){
-    if(player1.vX > -6){
-      player1.vX += -0.08;
+    if(player1.vX > -player1.maxSpeed){
+      player1.vX += -player1.acceleration;
     }
   }
   if (keyIsDown(68)){
-    if(player1.vX < 6){
-      player1.vX += 0.08;
+    if(player1.vX < player1.maxSpeed){
+      player1.vX += player1.acceleration;
     }
   }
 }
 
-function collisions(){
+function doCollisions(){
 
   // Inside rect
   if ((player1.x > 200 && player1.x < 225) && (player1.y > 200 && player1.y < 1600)){
@@ -103,14 +116,6 @@ function collisions(){
     player1.y += 1;
     player1.vY = -player1.vY * 0.7;
   }
-
-
-  // if (player1.x > 2000 || player1.x < -200){
-  //   player1.vX = -player1.vX * 0.7;
-  // }
-  if (player1.y > 2000 || player1.y < -200){
-    player1.vY = -player1.vY * 0.7;
-  }
 }
 
 function drawMap(){
@@ -134,13 +139,21 @@ function drawMap(){
   pop();
 }
 
+// ----------- OBJECTS ------------
+
 // The player object constructor
-var Player = function(name, x, y) {
+var Player = function(name, x, y, car) {
+  console.log(allCars[car]);
   this.name = name;
   this.x = x;
   this.y = y;
   this.vX = 0;
   this.vY = 0;
+  this.car = allCars[car];
+  this.maxHP = allCars[car].maxHP;
+  this.maxSpeed = allCars[car].maxSpeed;
+  this.maxBoosts = allCars[car].maxBoosts;
+  this.acceleration = allCars[car].acceleration;
 
   this.draw = function() {
     var angle = atan2(mouseY - windowHeight/2, mouseX - windowWidth/2);
@@ -165,6 +178,15 @@ var Player = function(name, x, y) {
     this.vY = this.vY * 0.99;
 
     }
-
     return this;
+}
+
+// The car object constructor
+var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades){
+  this.name = name;
+  this.maxHP = maxHP;
+  this.maxSpeed = maxSpeed;
+  this.maxBoosts = maxBoosts;
+  this.upgrades = upgrades;
+  this.acceleration = 0.1;
 }
