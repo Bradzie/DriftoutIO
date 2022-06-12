@@ -6,6 +6,7 @@ var player1;
 var player2;
 var currentCar;
 var allCars;
+var grip = 0.99;
 var boostCooldown = 1000;
 var canBoost = 0;
 
@@ -41,48 +42,19 @@ function setup(){
 
 // this is called alot of times per second (FPS, frame per second)
 function draw() {
+    resizeCanvas(windowWidth, windowHeight);
     background(100, 100, 100); // it gets a hex/rgb color
     translate(width/2 - player1.x, height/2 - player1.y);
 
     drawMap();
 
-    movement();
-
     doCollisions();
 
-    player1.draw();
-    player1.events();
+    if (player1.alive == true){
+      player1.draw();
+      player1.events();
+    }
     player2.draw();
-}
-
-function movement(){
-  if (mouseIsPressed == true && millis() > canBoost){
-    player1.vX = player1.vX*2;
-    player1.vY = player1.vY*2;
-    canBoost = millis() + boostCooldown;
-  }
-  if (keyIsDown(87)){
-    if(player1.vY > -player1.maxSpeed){
-      player1.vY += -player1.acceleration;
-    }
-  }
-  if (keyIsDown(83)){
-    if(player1.vY < player1.maxSpeed){
-      player1.vY += player1.acceleration;
-    }
-  }
-  if (keyIsDown(65)){
-    if(player1.vX > -player1.maxSpeed){
-      player1.vX += -player1.acceleration;
-    }
-  }
-  if (keyIsDown(68)){
-    if(player1.vX < player1.maxSpeed){
-      player1.vX += player1.acceleration;
-    }
-  }
-  // player1.vX *= 0.995;
-  // player1.vY *= 0.995;
 }
 
 function doCollisions(){
@@ -176,16 +148,34 @@ var Player = function(name, x, y, car) {
   this.maxSpeed = car.maxSpeed;
   this.maxBoosts = car.maxBoosts;
   this.acceleration = car.acceleration;
+  this.alive = true;
 
   this.events = function(){
     if (this.HP < this.maxHP){
-      this.HP += 0.5;
+      this.HP += 0.1;
+    }
+    if (this.HP < 0){
+      this.alive = false;
     }
   }
 
   this.draw = function() {
     var angle = atan2(mouseY - windowHeight/2, mouseX - windowWidth/2);
     // decide angle of mouse cursor from middle of canvas
+
+    // movement
+    if (mouseIsPressed == true && millis() > canBoost){
+      this.vX += cos(angle)*2;
+      this.vY += sin(angle)*2;
+      canBoost = millis() + boostCooldown;
+    }
+    if (player1.vX < player1.maxSpeed && player1.vX > -player1.maxSpeed){
+      this.vX += cos(angle)*this.acceleration;
+    }
+    if (player1.vY < player1.maxSpeed && player1.vY > -player1.maxSpeed){
+      this.vY += sin(angle)*this.acceleration;
+    }
+
 
     // Player's car
     push();
@@ -207,22 +197,22 @@ var Player = function(name, x, y, car) {
     text(this.name, this.x, this.y + 60);
 
     // Player's health
-    if (this.HP < this.maxHP){
+    if (this.HP < this.maxHP && this.HP > 0){
       push();
       strokeWeight(5);
       stroke(220, 0, 0);
       line(this.x - 40, this.y + 70, this.x + 40, this.y + 70);
       stroke(0, 220, 0);
-      line(this.x - 40, this.y + 70,
-          this.x + (this.HP / (this.maxHP / 40)), this.y + 70);
+      line(this.x - 40, this.y + 70, this.x + (this.HP / (this.maxHP / 40)),
+          this.y + 70);
       pop();
     }
 
     this.x += this.vX;
     this.y += this.vY;
 
-    this.vX = this.vX * 0.99;
-    this.vY = this.vY * 0.99;
+    this.vX = this.vX * grip;
+    this.vY = this.vY * grip;
 
     }
     return this;
