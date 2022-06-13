@@ -10,6 +10,27 @@ var grip = 0.99;
 var boostCooldown = 1000;
 var canBoost = 0;
 
+// function mapBorderLine(x, y, x2, y2){
+//   var red = true;
+//   var angle = atan(y2, y, x2, x);
+//
+//   if (x == x2){
+//     while (y != y2){
+//       beginShape();
+//       if (red == true) {fill(220,220,220);}
+//       else {fill(220,0,0);}
+//       line(x,y,);
+//     }
+//   }
+//
+//   while (x < x2 && y < y2){
+//     beginShape();
+//     if (red == true) {fill(220,220,220);}
+//     else {fill(220,0,0);}
+//     line(x,y,);
+//   }
+// }
+
 // Load prior to game start
 function preload(){
   allCars = {
@@ -102,16 +123,13 @@ function preload(){
 
 // Called when game is started once
 function setup(){
+  // Server setup
   socket = io();
-  socket.emit("message", "ahoy there");
-  socket.on("returnMessage", function(data){
-    console.log(data);
-  })
-  currentCar = new Car('Racer', 150, 6, 8, []);
+
+
+  // Game setup
   player1 = new Player('Brad', -50, 1000, allCars.sprinter);
   player2 = new Player('Chloe', 50, 1000, allCars.tank);
-
-  console.log(allCars.tank);
 
   createCanvas(windowWidth, windowHeight);
 

@@ -17,9 +17,7 @@ server.listen(port, function(){
 
 io.on("connection", function(socket){
   console.log("New connection, ID: " + socket.id);
-  socket.on("message", function(data){
-    console.log(data);
-  });
+});
   socket.emit("returnMessage", "Hi, you are connected via socket.io")
 
 })
