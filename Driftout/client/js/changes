@@ -1,0 +1,12 @@
+PLANNED ADDITIONS:
+
+- Different rendered designs for each Car
+- Server sync and ability to play with multiple clients
+- Movement towards mouse / boost towards mouse
+- Implementation of a collision function to tidy up code
+- HUD for boost, leaderboard and upgrades/upgrade points
+- Functional start and finish line
+
+BUGS:
+
+- Can clip out of corners
