@@ -6,3 +6,7 @@ PLANNED ADDITIONS:
 - Implementation of a collision function to tidy up code
 - HUD for boost, leaderboard and upgrades/upgrade points
 - Functional start and finish line
+
+BUGS:
+
+- Can clip out of corners

@@ -13,13 +13,90 @@ var canBoost = 0;
 // Load prior to game start
 function preload(){
   allCars = {
-    racer : new Car('Racer', 150, 6, 8, [], 0.1),
-    prankster : new Car('Prankster', 120, 6, 5, [], 0.1),
-    bullet : new Car('Bullet', 100, 10, 5, [], 0.08),
-    spike : new Car('Spike', 150, 5, 3, [], 0.12),
-    tank : new Car('Tank', 200, 4, 5, [], 0.15),
-    sprinter : new Car('Sprinter', 80, 12, 10, [], 0.1),
-    fragile : new Car('Fragile', 70, 6, 5, [], 0.1)
+    racer : new Car('Racer', 150, 6, 8, [], 0.1, function(x, y, angle){
+      push();
+      fill(20,20,200);
+      translate(this.x, this.y);
+      rotate(angle);
+      stroke(100,100,255);
+      strokeWeight(5);
+      beginShape();
+      vertex(25, 0);
+      vertex(-25, 20);
+      vertex(-25, -20);
+      endShape(CLOSE);
+      smooth();
+      pop();
+    }),
+    prankster : new Car('Prankster', 120, 6, 5, [], 0.1,function(x, y, angle){
+      push();
+      translate(this.x, this.y);
+      rotate(angle);
+      strokeWeight(5);
+      fill(50,255,150);
+      stroke(0,150,50);
+      beginShape();
+      vertex(-10, 10);
+      vertex(-10, -10);
+      vertex(-25, -20);
+      vertex(-25, 20);
+      endShape(CLOSE);
+      fill(200,0,200);
+      stroke(255,100,255);
+      beginShape();
+      vertex(30, 20);
+      vertex(-10, 20);
+      vertex(-10, -20);
+      vertex(30, -20);
+      endShape(CLOSE);
+      smooth();
+      pop();
+    }),
+    bullet : new Car('Bullet', 100, 10, 5, [], 0.08, function(x, y, angle){
+      push();
+      translate(this.x, this.y);
+      rotate(angle);
+      strokeWeight(5);
+      fill(230,230,10);
+      stroke(125,125,0);
+      beginShape();
+      vertex(30, 0);
+      vertex(15, 20);
+      vertex(-30, 20);
+      vertex(-30, -20);
+      vertex(15, -20);
+      endShape(CLOSE);
+      smooth();
+      pop();
+    }),
+    tank : new Car('Tank', 200, 4, 5, [], 0.15, function(x, y, angle){
+      push();
+      translate(this.x, this.y);
+      rotate(angle);
+      strokeWeight(5);
+      fill(50,255,150);
+      stroke(0,150,50);
+      circle(0,0,70);
+      smooth();
+      pop();
+    }),
+    sprinter : new Car('Sprinter', 80, 12, 10, [], 0.1,function(x, y, angle){
+      push();
+      translate(this.x, this.y);
+      rotate(angle);
+      strokeWeight(5);
+      fill(255,0,0);
+      stroke(125,0,0);
+      beginShape();
+      vertex(30, 0);
+      vertex(-30, 18);
+      vertex(-30, -18);
+      endShape(CLOSE);
+      smooth();
+      pop();
+    }),
+    fragile : new Car('Fragile', 70, 6, 5, [], 0.1),
+    spike : new Car('Spike', 150, 5, 3, [], 0.12)
   };
 }
 
@@ -32,7 +109,7 @@ function setup(){
   })
   currentCar = new Car('Racer', 150, 6, 8, []);
   player1 = new Player('Brad', -50, 1000, allCars.sprinter);
-  player2 = new Player('Chloe', 50, 1000, allCars.racer);
+  player2 = new Player('Chloe', 50, 1000, allCars.tank);
 
   console.log(allCars.tank);
 
@@ -149,6 +226,7 @@ var Player = function(name, x, y, car) {
   this.maxBoosts = car.maxBoosts;
   this.acceleration = car.acceleration;
   this.alive = true;
+  this.drawCar = car.drawCar;
 
   this.events = function(){
     if (this.HP < this.maxHP){
@@ -176,19 +254,8 @@ var Player = function(name, x, y, car) {
       this.vY += sin(angle)*this.acceleration;
     }
 
-
     // Player's car
-    push();
-    fill(60);
-    translate(this.x, this.y);
-    rotate(angle);
-    strokeWeight(5);
-    beginShape();
-    vertex(25, 0);
-    vertex(-25, 20);
-    vertex(-25, -20);
-    endShape(CLOSE);
-    pop();
+    this.drawCar(this.x, this.y, angle);
 
     // Player's name
     textSize(30);
@@ -208,6 +275,7 @@ var Player = function(name, x, y, car) {
       pop();
     }
 
+    // Apply movement to player location
     this.x += this.vX;
     this.y += this.vY;
 
@@ -219,11 +287,12 @@ var Player = function(name, x, y, car) {
 }
 
 // The car object constructor
-var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration){
+var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, drawCar){
   this.name = name;
   this.maxHP = maxHP;
   this.maxSpeed = maxSpeed;
   this.maxBoosts = maxBoosts;
   this.upgrades = upgrades;
   this.acceleration = acceleration;
+  this.drawCar = drawCar;
 }
