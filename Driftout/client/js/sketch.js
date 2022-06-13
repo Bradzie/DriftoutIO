@@ -130,6 +130,8 @@ function setup(){
   // Game setup
   player1 = new Player('Brad', -50, 1000, allCars.sprinter);
   player2 = new Player('Chloe', 50, 1000, allCars.tank);
+  player3 = new Player('Oreo', -150, 1000, allCars.prankster);
+  player4 = new Player('newKitty', 150, 1000, allCars.racer);
 
   createCanvas(windowWidth, windowHeight);
 
@@ -143,68 +145,22 @@ function draw() {
 
     drawMap();
 
-    doCollisions();
-
     if (player1.alive == true){
       player1.draw();
       player1.events();
+      player1.doCollisions();
     }
+
     player2.draw();
+    player2.doCollisions();
+
+    player3.draw();
+    player3.doCollisions();
+
+    player4.draw();
+    player4.doCollisions();
 }
 
-function doCollisions(){
-
-  // Inside rect
-  if ((player1.x > 200 && player1.x < 225) && (player1.y > 200 && player1.y < 1600)){
-    player1.x -= 1;
-    player1.HP -= Math.abs(player1.vX)**2.5;
-    player1.vX = -player1.vX * 0.7;
-  }
-
-  if ((player1.y > 200 && player1.y < 225) && (player1.x > 200 && player1.x < 1600)){
-    player1.y -= 1;
-    player1.HP -= Math.abs(player1.vY)**2.5;
-    player1.vY = -player1.vY * 0.7;
-  }
-
-
-  if ((player1.x > 1575 && player1.x < 1600) && (player1.y > 200 && player1.y < 1600)){
-    player1.x += 1;
-    player1.HP -= Math.abs(player1.vX)**2.5;
-    player1.vX = -player1.vX * 0.7;
-  }
-
-  if ((player1.y > 1575 && player1.y < 1600) && (player1.x > 200 && player1.x < 1600)){
-    player1.y += 1;
-    player1.HP -= Math.abs(player1.vY)**2.5;
-    player1.vY = -player1.vY * 0.7;
-  }
-
-  // Border rect
-  if ((player1.x > 2000 && player1.x < 2025) && (player1.y > -200 && player1.y < 2000)){
-    player1.x -= 1;
-    player1.HP -= Math.abs(player1.vX)**2.5;
-    player1.vX = -player1.vX * 0.7;
-  }
-
-  if ((player1.x > -225 && player1.x < -200) && (player1.y > -200 && player1.y < 2000)){
-    player1.x += 1;
-    player1.HP -= Math.abs(player1.vX)**2.5;
-    player1.vX = -player1.vX * 0.7;
-  }
-
-  if ((player1.y > 2000 && player1.y < 2025) && (player1.x > -200 && player1.x < 2000)){
-    player1.y -= 1;
-    player1.HP -= Math.abs(player1.vY)**2.5;
-    player1.vY = -player1.vY * 0.7;
-  }
-
-  if ((player1.y > -225 && player1.y < -200) && (player1.x > -200 && player1.x < 2000)){
-    player1.y += 1;
-    player1.HP -= Math.abs(player1.vY)**2.5;
-    player1.vY = -player1.vY * 0.7;
-  }
-}
 
 function drawMap(){
   push();
@@ -284,7 +240,9 @@ var Player = function(name, x, y, car) {
     // Player's health
     if (this.HP < this.maxHP && this.HP > 0){
       push();
-      strokeWeight(5);
+      strokeWeight(12);
+      line(this.x - 40, this.y + 70, this.x + 40, this.y + 70);
+      strokeWeight(10);
       stroke(220, 0, 0);
       line(this.x - 40, this.y + 70, this.x + 40, this.y + 70);
       stroke(0, 220, 0);
@@ -301,6 +259,61 @@ var Player = function(name, x, y, car) {
     this.vY = this.vY * grip;
 
     }
+
+  this.doCollisions = function() {
+
+      // Inside rect
+    if ((this.x > 200 && this.x < 225) && (this.y > 200 && this.y < 1600)){
+      this.x -= 1;
+      this.HP -= Math.abs(this.vX)**2.5;
+      this.vX = -this.vX * 0.7;
+      }
+
+    if ((this.y > 200 && this.y < 225) && (this.x > 200 && this.x < 1600)){
+      this.y -= 1;
+      this.HP -= Math.abs(this.vY)**2.5;
+      this.vY = -this.vY * 0.7;
+      }
+
+
+    if ((this.x > 1575 && this.x < 1600) && (this.y > 200 && this.y < 1600)){
+      this.x += 1;
+      this.HP -= Math.abs(this.vX)**2.5;
+      this.vX = -this.vX * 0.7;
+      }
+
+    if ((this.y > 1575 && this.y < 1600) && (this.x > 200 && this.x < 1600)){
+      this.y += 1;
+      this.HP -= Math.abs(this.vY)**2.5;
+      this.vY = -this.vY * 0.7;
+      }
+
+      // Border rect
+    if ((this.x > 2000 && this.x < 2025) && (this.y > -200 && this.y < 2000)){
+      this.x -= 1;
+      this.HP -= Math.abs(this.vX)**2.5;
+      this.vX = -this.vX * 0.7;
+      }
+
+    if ((this.x > -225 && this.x < -200) && (this.y > -200 && this.y < 2000)){
+      this.x += 1;
+      this.HP -= Math.abs(this.vX)**2.5;
+      this.vX = -this.vX * 0.7;
+      }
+
+    if ((this.y > 2000 && this.y < 2025) && (this.x > -200 && this.x < 2000)){
+      this.y -= 1;
+      this.HP -= Math.abs(this.vY)**2.5;
+      this.vY = -this.vY * 0.7;
+      }
+
+    if ((this.y > -225 && this.y < -200) && (this.x > -200 && this.x < 2000)){
+      this.y += 1;
+      this.HP -= Math.abs(this.vY)**2.5;
+      this.vY = -this.vY * 0.7;
+      }
+    }
+
     return this;
 }
 
