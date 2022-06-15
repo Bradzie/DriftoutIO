@@ -19,10 +19,11 @@ server.listen(port, function(){
 
 io.on("connection", function(socket){
   console.log("New connection, ID: " + socket.id);
-
+  console.log("Working?");
   var player;
 
   socket.on("ready", (data) => {
+      console.log("Recieved ready!");
       player = new Player(socket.id, data.name, Math.random() * 500, Math.random() * 500, allCars.racer);
       allPlayers.push(player);
 
@@ -30,17 +31,17 @@ io.on("connection", function(socket){
       socket.broadcast.emit('newPlayer', player.getInitPack());
 
       var initPack = [];
-      for(var i in players) {
-          initPack.push(players[i].getInitPack());
+      for(var i in allPlayers) {
+          initPack.push(allPlayers[i].getInitPack());
       }
       socket.emit("initPack", {initPack: initPack});
   });
 
   socket.on("disconnect", () => {
       io.emit('someoneLeft', {id: socket.id});
-      for(var i in players) {
-          if(players[i].id === socket.id) {
-              players.splice(i, 1);
+      for(var i in allPlayers) {
+          if(allPlayers[i].id === socket.id) {
+              allPlayers.splice(i, 1);
           }
       }
   });
@@ -127,9 +128,19 @@ var Player = function(id, name, x, y, car) {
       }
     }
 
+  this.getInitPack = function () {
+    return {
+      id: this.id,
+      name: this.name,
+      x: this.x,
+      y: this.y,
+      car: this.car
+    }
+  }
+
   this.doCollisions = function() {
-      // players
-    // allPlayers.map(player =>{
+      // allPlayers
+    // allallPlayers.map(player =>{
     //   if (((player.x > this.x-30) && (player.x < this.x+30)) &&
     //      ((player.y > this.y-30) && (player.y < this.y+30))){
     //        if (Math.abs(this.vX) > Math.abs(this.vY)){
