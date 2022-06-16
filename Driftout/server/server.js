@@ -65,6 +65,7 @@ var Player = function(id, name, x, y, car) {
   this.alive = true;
   this.drawCar = car.drawCar;
   this.boostPower = car.boostPower;
+  this.angle = 0;
 
   this.draw = function() {
     if (this.alive == true){
@@ -75,7 +76,7 @@ var Player = function(id, name, x, y, car) {
         this.alive = false;
       }
 
-      var angle = atan2(mouseY - windowHeight/2, mouseX - windowWidth/2);
+      this.angle = atan2(mouseY - windowHeight/2, mouseX - windowWidth/2);
       // decide angle of mouse cursor from middle of canvas
 
       // movement
@@ -92,7 +93,7 @@ var Player = function(id, name, x, y, car) {
       }
 
       // Player's car
-      this.drawCar(this.x, this.y, angle);
+      this.drawCar(this.x, this.y, this.angle);
 
       // Player's name
       textSize(24);
@@ -240,7 +241,7 @@ allCars = {
   racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, function(x, y, angle){
     push();
     fill(20,20,200);
-    translate(this.x, this.y);
+    translate(x, y);
     rotate(angle);
     stroke(100,100,255);
     strokeWeight(5);
@@ -254,7 +255,7 @@ allCars = {
   }),
   prankster : new Car('Prankster', 120, 6, 5, [], 0.1, 2, function(x, y, angle){
     push();
-    translate(this.x, this.y);
+    translate(x, y);
     rotate(angle);
     strokeWeight(5);
     fill(50,255,150);
@@ -278,7 +279,7 @@ allCars = {
   }),
   bullet : new Car('Bullet', 100, 10, 5, [], 0.12, 2.5, function(x, y, angle){
     push();
-    translate(this.x, this.y);
+    translate(x, y);
     rotate(angle);
     strokeWeight(5);
     fill(230,230,10);
@@ -295,7 +296,7 @@ allCars = {
   }),
   tank : new Car('Tank', 200, 4, 5, [], 0.08, 3, function(x, y, angle){
     push();
-    translate(this.x, this.y);
+    translate(x, y);
     rotate(angle);
     strokeWeight(5);
     fill(50,255,150);
@@ -306,7 +307,7 @@ allCars = {
   }),
   sprinter : new Car('Sprinter', 80, 12, 10, [], 0.14, 2, function(x, y, angle){
     push();
-    translate(this.x, this.y);
+    translate(x, y);
     rotate(angle);
     strokeWeight(5);
     fill(255,0,0);
