@@ -1,10 +1,10 @@
 # DriftoutIO
 
-**A fast-paced royle/racing game inspired by driftin.io built with socket.io, p5js and node.js.
+## A fast-paced royle/racing game inspired by driftin.io built with socket.io, p5js and node.js.
 
-*This is not currently hosted online due to very early development. You can however run the latest version locally but there are a few steps.
+*This is not currently hosted online due to very early development. You can however run the latest version locally but there are a few steps.*
 
-**How to Run:
+## How to Run:
 
 1. Install npm package manager (If you haven't already!)
 2. Install Node js
