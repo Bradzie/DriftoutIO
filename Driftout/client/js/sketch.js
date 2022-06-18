@@ -109,8 +109,9 @@ function setup(){
 
   socket.emit("ready", {name: "Brad"});
 
-  socket.on("yourId", function(data) {
+  socket.on("myID", function(data) {
       myId = data.id;
+      console.log(myId + "IT WORKS!");
   });
 
   socket.on("newPlayer", function(data) {
@@ -142,32 +143,29 @@ function setup(){
   // allPlayers = [
   //   player1 = new Player('Brad', -50, 1000, allCars.tank),
   //   player2 = new Player('Chloe', 50, 1000, allCars.sprinter),
-  //   player3 = new Player('Oreo', -150, 1000, allCars.prankster),
-  //   player4 = new Player('newKitty', 150, 1000, allCars.racer)
+  //   player3 = new Player('Oreo', -150, 1000, allCars.prankster)
   // ];
 
-  //console.log(allPlayers);
 
 
   createCanvas(windowWidth, windowHeight);
 
 }
 
-// this is called alot of times per second (FPS, frame per second)
 function draw() {
     resizeCanvas(windowWidth, windowHeight);
     background(100, 100, 100); // it gets a hex/rgb color
 
-    drawMap();
-
     for(var i in allPlayers) {
         if(allPlayers[i].id === myId) {
-            translate(width/2 - allPlayers[i].x, height/2 - allPlayers[i].y);
-            allPlayers[i].events();
+          translate(windowWidth/2 - allPlayers[i].x, windowHeight/2 - allPlayers[i].y);
+          allPlayers[i].events();
+          drawMap();
         }
         if(allPlayers[i].alive == true){
-          translate(width/2 - allPlayers[i].x, height/2 - allPlayers[i].y);
-          allPlayers[i].events();
+          //translate(width/2 - allPlayers[i].x, height/2 - allPlayers[i].y);
+          //allPlayers[i].events();
+          console.log(allPlayers);
           allPlayers[i].draw();
         }
     }
@@ -261,12 +259,18 @@ var Player = function(id, name, x, y, car) {
       // console.log(this.drawCar);
       //this.drawCar(this.x, this.y, this.angle);
       allCars.racer.drawCar(this.x, this.y, this.angle);
+      console.log(this.id + " " + round(this.x) + " " + round(this.y));
+
 
       // Player's name
-      textSize(24);
+      textSize(20);
       textAlign(CENTER);
       textStyle(BOLD);
-      text(this.name, this.x, this.y + 60);
+      fill(0,0,0);
+      text(this.name + " " + this.id, this.x, this.y + 60);
+      // textStyle(NORMAL);
+      // fill(255,255,255);
+      // text(this.name, this.x, this.y + 60);
 
       // Player's health
       if (this.HP < this.maxHP && this.HP > 0){
