@@ -151,13 +151,13 @@ var Player = function(id, name, x, y, car) {
       }
 
       // Border rect
-    if ((this.x > 2000 && this.x < 2025) && (this.y > -200 && this.y < 2000)){
+    if ((this.x > 2000 && this.x < 2025) && (this.y > -225 && this.y < 2025)){
       this.x -= 1;
       this.HP -= Math.abs(this.vX)*2.5;
       this.vX = -this.vX * 0.7;
       }
 
-    if ((this.x > -225 && this.x < -200) && (this.y > -200 && this.y < 2000)){
+    if ((this.x > -225 && this.x < -200) && (this.y > -225 && this.y < 2025)){
       this.x += 1;
       this.HP -= Math.abs(this.vX)*2.5;
       this.vX = -this.vX * 0.7;
@@ -208,7 +208,7 @@ setInterval(() => {
     }
 
     io.emit("updatePack", {updatePack});
-}, 1000/25)
+}, 1000/75)
 
 // The car object constructor
 var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, drawCar){

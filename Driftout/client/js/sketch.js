@@ -201,6 +201,41 @@ function drawMap(){
   vertex(1600, 200);
   endShape(CLOSE);
   pop();
+
+  mapBorderLine(-200, -200, 2000, -200);
+  mapBorderLine(-200, 2000, -200, -200);
+  mapBorderLine(-200, 2000, 2000, 2000);
+  mapBorderLine(2000, -200, 2000, 2000);
+
+  mapBorderLine(200, 200, 1600, 200);
+  mapBorderLine(200, 1600, 200, 200);
+  mapBorderLine(200, 1600, 1600, 1600);
+  mapBorderLine(1600, 200, 1600, 1600);
+
+}
+
+function mapBorderLine(x1, y1, x2, y2){
+  var count = 0;
+  var isRed = true;
+
+  strokeCap(ROUND);
+  strokeWeight(50);
+  while(count<21){
+    if (isRed == true){
+      stroke(255,0,0);
+      isRed = false;
+    }
+    else{
+      stroke(255,255,255);
+      isRed = true;
+    }
+    line(x1+(((x2-x1)/21)*count),y1+(((y2-y1)/21)*count),x2,y2);
+    strokeCap(SQUARE);
+    count++;
+  }
+  strokeCap(ROUND);
+  strokeWeight(0);
+  stroke(0,0,0);
 }
 
 function sendInputData() {
