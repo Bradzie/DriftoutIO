@@ -2,21 +2,19 @@ var socket;
 
 // Constants
 
-var player1;
-var player2;
 var currentCar;
 var allCars;
-var grip = 0.99;
 var boostCooldown = 1000;
 var canBoost = 0;
+var allPlayers = [];
 
 // Load prior to game start
 function preload(){
   allCars = {
-    racer : new Car('Racer', 150, 6, 8, [], 0.1, function(x, y, angle){
+    racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, function(x, y, angle){
       push();
       fill(20,20,200);
-      translate(this.x, this.y);
+      translate(x, y);
       rotate(angle);
       stroke(100,100,255);
       strokeWeight(5);
@@ -28,9 +26,9 @@ function preload(){
       smooth();
       pop();
     }),
-    prankster : new Car('Prankster', 120, 6, 5, [], 0.1,function(x, y, angle){
+    prankster : new Car('Prankster', 120, 6, 5, [], 0.1, 2, function(x, y, angle){
       push();
-      translate(this.x, this.y);
+      translate(x, y);
       rotate(angle);
       strokeWeight(5);
       fill(50,255,150);
@@ -52,9 +50,9 @@ function preload(){
       smooth();
       pop();
     }),
-    bullet : new Car('Bullet', 100, 10, 5, [], 0.08, function(x, y, angle){
+    bullet : new Car('Bullet', 100, 10, 5, [], 0.12, 2.5, function(x, y, angle){
       push();
-      translate(this.x, this.y);
+      translate(x, y);
       rotate(angle);
       strokeWeight(5);
       fill(230,230,10);
@@ -69,9 +67,9 @@ function preload(){
       smooth();
       pop();
     }),
-    tank : new Car('Tank', 200, 4, 5, [], 0.15, function(x, y, angle){
+    tank : new Car('Tank', 200, 4, 5, [], 0.08, 3, function(x, y, angle){
       push();
-      translate(this.x, this.y);
+      translate(x, y);
       rotate(angle);
       strokeWeight(5);
       fill(50,255,150);
@@ -80,9 +78,9 @@ function preload(){
       smooth();
       pop();
     }),
-    sprinter : new Car('Sprinter', 80, 12, 10, [], 0.1,function(x, y, angle){
+    sprinter : new Car('Sprinter', 80, 12, 10, [], 0.14, 2, function(x, y, angle){
       push();
-      translate(this.x, this.y);
+      translate(x, y);
       rotate(angle);
       strokeWeight(5);
       fill(255,0,0);
@@ -95,100 +93,96 @@ function preload(){
       smooth();
       pop();
     }),
-    fragile : new Car('Fragile', 70, 6, 5, [], 0.1),
-    spike : new Car('Spike', 150, 5, 3, [], 0.12)
+    fragile : new Car('Fragile', 70, 6, 5, [], 0.1, 2.5),
+    spike : new Car('Spike', 150, 5, 3, [], 0.12, 3)
   };
 }
 
 // Called when game is started once
 function setup(){
-  socket = io();
-  socket.emit("message", "ahoy there");
-  socket.on("returnMessage", function(data){
-    console.log(data);
-  })
-  currentCar = new Car('Racer', 150, 6, 8, []);
-  player1 = new Player('Brad', -50, 1000, allCars.sprinter);
-  player2 = new Player('Chloe', 50, 1000, allCars.tank);
+  // Server setup
+  allPlayers = [];
+  myId = 0;
 
-  console.log(allCars.tank);
+  socket = io();
+
+  socket.emit("ready", {name: "Brad"});
+
+  socket.on("myID", function(data) {
+      myId = data.id;
+      console.log(myId + "IT WORKS!");
+  });
+
+  socket.on("newPlayer", function(data) {
+      var player = new Player(data.id, data.name, data.x, data.y, allCars.racer);
+      allPlayers.push(player);
+      console.log(allCars);
+      console.log(allCars.racer);
+      console.log(player.car);
+      console.log("Console output");
+  });
+
+  socket.on("initPack", function(data) {
+      for(var i in data.initPack) {
+          var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, data.initPack[i].car);
+          allPlayers.push(player);
+          console.log(myId);
+      }
+  });
+
+  socket.on("updatePack", function(data) {
+      for(var i in data.updatePack) {
+          for(var j in allPlayers) {
+              if(allPlayers[j].id === data.updatePack[i].id) {
+                  allPlayers[j].x = data.updatePack[i].x;
+                  allPlayers[j].y = data.updatePack[i].y;
+                  allPlayers[j].angle = data.updatePack[i].angle;
+              }
+          }
+      }
+  });
+
+  socket.on("someoneLeft", function(data) {
+      for(var i in allPlayers) {
+          if(allPlayers[i].id === data.id) {
+              allPlayers.splice(i, 1);
+          }
+      }
+  });
+
+  // Game setup
+  // allPlayers = [
+  //   player1 = new Player('Brad', -50, 1000, allCars.tank),
+  //   player2 = new Player('Chloe', 50, 1000, allCars.sprinter),
+  //   player3 = new Player('Oreo', -150, 1000, allCars.prankster)
+  // ];
+
+
 
   createCanvas(windowWidth, windowHeight);
 
 }
 
-// this is called alot of times per second (FPS, frame per second)
 function draw() {
     resizeCanvas(windowWidth, windowHeight);
     background(100, 100, 100); // it gets a hex/rgb color
-    translate(width/2 - player1.x, height/2 - player1.y);
+    sendInputData();
 
-    drawMap();
-
-    doCollisions();
-
-    if (player1.alive == true){
-      player1.draw();
-      player1.events();
+    for(var i in allPlayers) {
+        if(allPlayers[i].id === myId) {
+          translate(windowWidth/2 - allPlayers[i].x, windowHeight/2 - allPlayers[i].y);
+          drawMap();
+        }
+        if(allPlayers[i].alive == true){
+          //translate(width/2 - allPlayers[i].x, height/2 - allPlayers[i].y);
+          //allPlayers[i].events();
+          allPlayers[i].draw();
+        }
     }
-    player2.draw();
-}
-
-function doCollisions(){
-
-  // Inside rect
-  if ((player1.x > 200 && player1.x < 225) && (player1.y > 200 && player1.y < 1600)){
-    player1.x -= 1;
-    player1.HP -= Math.abs(player1.vX)**2.5;
-    player1.vX = -player1.vX * 0.7;
-  }
-
-  if ((player1.y > 200 && player1.y < 225) && (player1.x > 200 && player1.x < 1600)){
-    player1.y -= 1;
-    player1.HP -= Math.abs(player1.vY)**2.5;
-    player1.vY = -player1.vY * 0.7;
-  }
-
-
-  if ((player1.x > 1575 && player1.x < 1600) && (player1.y > 200 && player1.y < 1600)){
-    player1.x += 1;
-    player1.HP -= Math.abs(player1.vX)**2.5;
-    player1.vX = -player1.vX * 0.7;
-  }
-
-  if ((player1.y > 1575 && player1.y < 1600) && (player1.x > 200 && player1.x < 1600)){
-    player1.y += 1;
-    player1.HP -= Math.abs(player1.vY)**2.5;
-    player1.vY = -player1.vY * 0.7;
-  }
-
-  // Border rect
-  if ((player1.x > 2000 && player1.x < 2025) && (player1.y > -200 && player1.y < 2000)){
-    player1.x -= 1;
-    player1.HP -= Math.abs(player1.vX)**2.5;
-    player1.vX = -player1.vX * 0.7;
-  }
-
-  if ((player1.x > -225 && player1.x < -200) && (player1.y > -200 && player1.y < 2000)){
-    player1.x += 1;
-    player1.HP -= Math.abs(player1.vX)**2.5;
-    player1.vX = -player1.vX * 0.7;
-  }
-
-  if ((player1.y > 2000 && player1.y < 2025) && (player1.x > -200 && player1.x < 2000)){
-    player1.y -= 1;
-    player1.HP -= Math.abs(player1.vY)**2.5;
-    player1.vY = -player1.vY * 0.7;
-  }
-
-  if ((player1.y > -225 && player1.y < -200) && (player1.x > -200 && player1.x < 2000)){
-    player1.y += 1;
-    player1.HP -= Math.abs(player1.vY)**2.5;
-    player1.vY = -player1.vY * 0.7;
-  }
 }
 
 function drawMap(){
+
   push();
   fill(200);
   strokeWeight(5);
@@ -209,16 +203,23 @@ function drawMap(){
   pop();
 }
 
-// ----------- OBJECTS ------------
+function sendInputData() {
+    var angle = atan2(mouseY - windowHeight/2, mouseX - windowWidth/2);
+    socket.emit("inputData", {mouseX, mouseY, angle, windowWidth, windowHeight});
+}
+
+
+// ----------- OBJECTS ---------------------------------------------------
 
 // The player object constructor
-var Player = function(name, x, y, car) {
-  console.log(car);
+var Player = function(id, name, x, y, car) {
+  this.id = id;
   this.name = name;
   this.x = x;
   this.y = y;
   this.vX = 0;
   this.vY = 0;
+  this.angle = 0;
   this.car = car;
   this.maxHP = car.maxHP;
   this.HP = car.maxHP;
@@ -227,67 +228,46 @@ var Player = function(name, x, y, car) {
   this.acceleration = car.acceleration;
   this.alive = true;
   this.drawCar = car.drawCar;
-
-  this.events = function(){
-    if (this.HP < this.maxHP){
-      this.HP += 0.1;
-    }
-    if (this.HP < 0){
-      this.alive = false;
-    }
-  }
+  this.boostPower = car.boostPower;
 
   this.draw = function() {
-    var angle = atan2(mouseY - windowHeight/2, mouseX - windowWidth/2);
-    // decide angle of mouse cursor from middle of canvas
-
-    // movement
-    if (mouseIsPressed == true && millis() > canBoost){
-      this.vX += cos(angle)*2;
-      this.vY += sin(angle)*2;
-      canBoost = millis() + boostCooldown;
-    }
-    if (player1.vX < player1.maxSpeed && player1.vX > -player1.maxSpeed){
-      this.vX += cos(angle)*this.acceleration;
-    }
-    if (player1.vY < player1.maxSpeed && player1.vY > -player1.maxSpeed){
-      this.vY += sin(angle)*this.acceleration;
-    }
 
     // Player's car
-    this.drawCar(this.x, this.y, angle);
+    console.log(this.x, this.y);
+    allCars.racer.drawCar(this.x, this.y, this.angle);
+    //console.log(this.id + " " + round(this.x) + " " + round(this.y));
+
 
     // Player's name
-    textSize(30);
+    textSize(20);
     textAlign(CENTER);
     textStyle(BOLD);
+    fill(0,0,0);
     text(this.name, this.x, this.y + 60);
 
     // Player's health
     if (this.HP < this.maxHP && this.HP > 0){
       push();
-      strokeWeight(5);
+      strokeWeight(12);
+      stroke(160,160,160)
+      line(this.x - 20, this.y + 70, this.x + 20, this.y + 70);
+      strokeWeight(8);
       stroke(220, 0, 0);
-      line(this.x - 40, this.y + 70, this.x + 40, this.y + 70);
+      line(this.x - 20, this.y + 70, this.x + 20, this.y + 70);
       stroke(0, 220, 0);
-      line(this.x - 40, this.y + 70, this.x + (this.HP / (this.maxHP / 40)),
+      line(this.x - (this.HP / (this.maxHP / 20)), this.y + 70, this.x + (this.HP / (this.maxHP / 20)),
           this.y + 70);
       pop();
+      }
     }
 
-    // Apply movement to player location
-    this.x += this.vX;
-    this.y += this.vY;
-
-    this.vX = this.vX * grip;
-    this.vY = this.vY * grip;
-
-    }
     return this;
-}
+  }
+
+
 
 // The car object constructor
-var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, drawCar){
+var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, drawCar){
   this.name = name;
   this.maxHP = maxHP;
   this.maxSpeed = maxSpeed;
@@ -295,4 +275,92 @@ var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, dra
   this.upgrades = upgrades;
   this.acceleration = acceleration;
   this.drawCar = drawCar;
+  this.boostPower = boostPower;
 }
+
+allCars = {
+  racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, function(x, y, angle){
+    push();
+    fill(20,20,200);
+    //translate(x, y);
+    rotate(angle);
+    stroke(100,100,255);
+    strokeWeight(5);
+    beginShape();
+    vertex(25, 0);
+    vertex(-25, 20);
+    vertex(-25, -20);
+    endShape(CLOSE);
+    smooth();
+    pop();
+  }),
+  prankster : new Car('Prankster', 120, 6, 5, [], 0.1, 2, function(x, y, angle){
+    push();
+    translate(this.x, this.y);
+    rotate(this.angle);
+    strokeWeight(5);
+    fill(50,255,150);
+    stroke(0,150,50);
+    beginShape();
+    vertex(-10, 10);
+    vertex(-10, -10);
+    vertex(-25, -20);
+    vertex(-25, 20);
+    endShape(CLOSE);
+    fill(200,0,200);
+    stroke(255,100,255);
+    beginShape();
+    vertex(30, 20);
+    vertex(-10, 20);
+    vertex(-10, -20);
+    vertex(30, -20);
+    endShape(CLOSE);
+    smooth();
+    pop();
+  }),
+  bullet : new Car('Bullet', 100, 10, 5, [], 0.12, 2.5, function(x, y, angle){
+    push();
+    translate(this.x, this.y);
+    rotate(this.angle);
+    strokeWeight(5);
+    fill(230,230,10);
+    stroke(125,125,0);
+    beginShape();
+    vertex(30, 0);
+    vertex(15, 20);
+    vertex(-30, 20);
+    vertex(-30, -20);
+    vertex(15, -20);
+    endShape(CLOSE);
+    smooth();
+    pop();
+  }),
+  tank : new Car('Tank', 200, 4, 5, [], 0.08, 3, function(x, y, angle){
+    push();
+    translate(this.x, this.y);
+    rotate(this.angle);
+    strokeWeight(5);
+    fill(50,255,150);
+    stroke(0,150,50);
+    circle(0,0,70);
+    smooth();
+    pop();
+  }),
+  sprinter : new Car('Sprinter', 80, 12, 10, [], 0.14, 2, function(x, y, angle){
+    push();
+    translate(this.x, this.y);
+    rotate(this.angle);
+    strokeWeight(5);
+    fill(255,0,0);
+    stroke(125,0,0);
+    beginShape();
+    vertex(30, 0);
+    vertex(-30, 18);
+    vertex(-30, -18);
+    endShape(CLOSE);
+    smooth();
+    pop();
+  })
+  //fragile : new Car('Fragile', 70, 6, 5, [], 0.1, 2.5),
+  //spike : new Car('Spike', 150, 5, 3, [], 0.12, 3)
+};
