@@ -1,11 +1,11 @@
-var socket;
+var playing = false,
+  socket,
+  mainCanvas = document.getElementById("mainCanvas"),
+  gameTitle = document.getElementById("gameTitle");
+  enterGameButton = document.getElementById('enterGameButton')
 
 // Constants
-
-var currentCar;
 var allCars;
-var boostCooldown = 1000;
-var canBoost = 0;
 var allPlayers = [];
 
 // Load prior to game start
@@ -159,6 +159,7 @@ function setup(){
 }
 
 function draw() {
+  if (playing == true){
     resizeCanvas(windowWidth, windowHeight);
     background(100, 100, 100); // it gets a hex/rgb color
     sendInputData();
@@ -174,6 +175,13 @@ function draw() {
           allPlayers[i].draw();
         }
     }
+  }
+  else{
+    enterGameButton.onClick = function() {
+      playing = true;
+      console.log("CLICK")
+    }
+  }
 }
 
 function drawMap(){

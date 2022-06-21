@@ -29,6 +29,16 @@ body {
   position: absolute;
   align-items: center;
 	text-align: center;
+  display: flex;
+}
+
+#enterGameButton {
+  background-color: #02f6fa;
+  padding-left: 50em;
+}
+
+#enterGameButton:hover{
+  background-color: #008f91;
 }
 
 #mainCanvas {
