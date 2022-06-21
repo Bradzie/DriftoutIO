@@ -110,16 +110,11 @@ function setup(){
 
   socket.on("myID", function(data) {
       myId = data.id;
-      console.log(myId + "IT WORKS!");
   });
 
   socket.on("newPlayer", function(data) {
       var player = new Player(data.id, data.name, data.x, data.y, allCars.racer);
       allPlayers.push(player);
-      console.log(allCars);
-      console.log(allCars.racer);
-      console.log(player.car);
-      console.log("Console output");
   });
 
   socket.on("initPack", function(data) {
@@ -137,6 +132,7 @@ function setup(){
                   allPlayers[j].x = data.updatePack[i].x;
                   allPlayers[j].y = data.updatePack[i].y;
                   allPlayers[j].angle = data.updatePack[i].angle;
+                  allPlayers[j].hp = data.updatePack[i].hp;
               }
           }
       }
@@ -157,9 +153,8 @@ function setup(){
   //   player3 = new Player('Oreo', -150, 1000, allCars.prankster)
   // ];
 
-
-
-  createCanvas(windowWidth, windowHeight);
+  var mainCanvas = createCanvas(windowWidth, windowHeight);
+  mainCanvas.parent("mainCanvas");
 
 }
 
@@ -216,10 +211,14 @@ function drawMap(){
 
 function mapBorderLine(x1, y1, x2, y2){
   var count = 0;
+  var max = 0;
   var isRed = true;
 
   strokeCap(ROUND);
   strokeWeight(50);
+
+  max = Math.sqrt(((x2-x1)**2)+((y2-y1)**2)) / 75
+
   while(count<21){
     if (isRed == true){
       stroke(255,0,0);
@@ -240,7 +239,11 @@ function mapBorderLine(x1, y1, x2, y2){
 
 function sendInputData() {
     var angle = atan2(mouseY - windowHeight/2, mouseX - windowWidth/2);
-    socket.emit("inputData", {mouseX, mouseY, angle, windowWidth, windowHeight});
+    var mouseClick = false;
+    if (mouseIsPressed === true){
+      mouseClick = true;
+    }
+    socket.emit("inputData", {mouseX, mouseY, angle, windowWidth, windowHeight, mouseClick});
 }
 
 
@@ -312,90 +315,3 @@ var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boo
   this.drawCar = drawCar;
   this.boostPower = boostPower;
 }
-
-allCars = {
-  racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, function(x, y, angle){
-    push();
-    fill(20,20,200);
-    //translate(x, y);
-    rotate(angle);
-    stroke(100,100,255);
-    strokeWeight(5);
-    beginShape();
-    vertex(25, 0);
-    vertex(-25, 20);
-    vertex(-25, -20);
-    endShape(CLOSE);
-    smooth();
-    pop();
-  }),
-  prankster : new Car('Prankster', 120, 6, 5, [], 0.1, 2, function(x, y, angle){
-    push();
-    translate(this.x, this.y);
-    rotate(this.angle);
-    strokeWeight(5);
-    fill(50,255,150);
-    stroke(0,150,50);
-    beginShape();
-    vertex(-10, 10);
-    vertex(-10, -10);
-    vertex(-25, -20);
-    vertex(-25, 20);
-    endShape(CLOSE);
-    fill(200,0,200);
-    stroke(255,100,255);
-    beginShape();
-    vertex(30, 20);
-    vertex(-10, 20);
-    vertex(-10, -20);
-    vertex(30, -20);
-    endShape(CLOSE);
-    smooth();
-    pop();
-  }),
-  bullet : new Car('Bullet', 100, 10, 5, [], 0.12, 2.5, function(x, y, angle){
-    push();
-    translate(this.x, this.y);
-    rotate(this.angle);
-    strokeWeight(5);
-    fill(230,230,10);
-    stroke(125,125,0);
-    beginShape();
-    vertex(30, 0);
-    vertex(15, 20);
-    vertex(-30, 20);
-    vertex(-30, -20);
-    vertex(15, -20);
-    endShape(CLOSE);
-    smooth();
-    pop();
-  }),
-  tank : new Car('Tank', 200, 4, 5, [], 0.08, 3, function(x, y, angle){
-    push();
-    translate(this.x, this.y);
-    rotate(this.angle);
-    strokeWeight(5);
-    fill(50,255,150);
-    stroke(0,150,50);
-    circle(0,0,70);
-    smooth();
-    pop();
-  }),
-  sprinter : new Car('Sprinter', 80, 12, 10, [], 0.14, 2, function(x, y, angle){
-    push();
-    translate(this.x, this.y);
-    rotate(this.angle);
-    strokeWeight(5);
-    fill(255,0,0);
-    stroke(125,0,0);
-    beginShape();
-    vertex(30, 0);
-    vertex(-30, 18);
-    vertex(-30, -18);
-    endShape(CLOSE);
-    smooth();
-    pop();
-  })
-  //fragile : new Car('Fragile', 70, 6, 5, [], 0.1, 2.5),
-  //spike : new Car('Spike', 150, 5, 3, [], 0.12, 3)
-};
