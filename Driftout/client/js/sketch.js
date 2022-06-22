@@ -1,8 +1,10 @@
 var playing = false,
   socket,
   mainCanvas = document.getElementById("mainCanvas"),
-  gameTitle = document.getElementById("gameTitle");
-  enterGameButton = document.getElementById('enterGameButton')
+  gameTitle = document.getElementById("gameTitle"),
+  enterGameButton = document.getElementById('enterGameButton'),
+  menuContainer = document.getElementById("menuContainer"),
+  nameInput = document.getElementById('nameInput');
 
 // Constants
 var allCars;
@@ -106,8 +108,6 @@ function setup(){
 
   socket = io();
 
-  socket.emit("ready", {name: "Brad"});
-
   socket.on("myID", function(data) {
       myId = data.id;
   });
@@ -176,12 +176,13 @@ function draw() {
         }
     }
   }
-  else{
-    enterGameButton.onClick = function() {
-      playing = true;
-      console.log("CLICK")
-    }
-  }
+}
+
+function enterGame(){
+  playing = true;
+  socket.emit("ready", {name: nameInput.value});
+  menuContainer.style.display = "none";
+  console.log("gameStart");
 }
 
 function drawMap(){
