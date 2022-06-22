@@ -33,6 +33,11 @@ body {
   grid-gap: 0.5em;
 }
 
+#carSelect {
+  align-items: center;
+  text-align: center;
+}
+
 #nameInput {
   align-self: center;
   text-align: center;

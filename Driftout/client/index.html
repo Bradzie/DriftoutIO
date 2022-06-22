@@ -16,7 +16,15 @@
       <button id = "enterGameButton" onClick = "enterGame()" type = "button">
         START RACING
       </button>
-      <input id = "nameInput" placeholder = "Name"></input>
+      <input id = "nameInput" placeholder = "Name">
+      <div id = "carSelect">
+        <input id = "carInputRacer" type = "radio" name = "carRadio">
+        <label for = "carInputRacer">Racer</label>
+        <input id = "carInputSprinter" type = "radio" name = "carRadio">
+        <label for = "carInputSprinter">Sprinter</label>
+        <input id = "carInputTank" type = "radio" name = "carRadio">
+        <label for = "carInputTank">Tank</label>
+      </div>
     </div>
   </body>
   <script src="js/p5.js"></script>

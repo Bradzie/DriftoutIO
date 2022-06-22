@@ -4,6 +4,10 @@ var playing = false,
   gameTitle = document.getElementById("gameTitle"),
   enterGameButton = document.getElementById('enterGameButton'),
   menuContainer = document.getElementById("menuContainer"),
+  carInputRacer = document.getElementById('carInputRacer'),
+  carInputTank = document.getElementById('carInputTank'),
+  carInputSprinter = document.getElementById('carInputSprinter'),
+  carRadio = document.getElementById('carRadio'),
   nameInput = document.getElementById('nameInput');
 
 // Constants
@@ -115,11 +119,13 @@ function setup(){
   socket.on("newPlayer", function(data) {
       var player = new Player(data.id, data.name, data.x, data.y, allCars.racer);
       allPlayers.push(player);
+      console.log("NEWPLAYER!")
   });
 
   socket.on("initPack", function(data) {
       for(var i in data.initPack) {
           var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, data.initPack[i].car);
+          console.log(data.initPack[i].car);
           allPlayers.push(player);
           console.log(myId);
       }
@@ -173,16 +179,31 @@ function draw() {
           //translate(width/2 - allPlayers[i].x, height/2 - allPlayers[i].y);
           //allPlayers[i].events();
           allPlayers[i].draw();
+          //console.log(allPlayers[i])
         }
     }
   }
 }
 
 function enterGame(){
+  var carChoice = '';
   playing = true;
-  socket.emit("ready", {name: nameInput.value});
+  if(carInputRacer.value == 'on'){
+    carChoice = allCars.racer;
+    console.log('racer');
+  }
+  if(carInputTank.value == 'on'){
+    carChoice = allCars.tank;
+    console.log('tank');
+  }
+  if(carInputSprinter.value == 'on'){
+    carChoice = allCars.sprinter;
+    console.log('sprinter');
+  }
+
+  socket.emit("ready", {name: nameInput.value, car: carChoice});
   menuContainer.style.display = "none";
-  console.log("gameStart");
+  console.log(allPlayers);
 }
 
 function drawMap(){
@@ -280,7 +301,7 @@ var Player = function(id, name, x, y, car) {
   this.draw = function() {
 
     // Player's car
-    console.log(this.x, this.y);
+    //console.log(this.x, this.y);
     allCars.racer.drawCar(this.x, this.y, this.angle);
     //console.log(this.id + " " + round(this.x) + " " + round(this.y));
 

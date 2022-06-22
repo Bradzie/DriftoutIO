@@ -29,7 +29,7 @@ io.on("connection", function(socket){
   var player;
 
   socket.on("ready", (data) => {
-      player = new Player(socket.id, data.name, Math.random()*100, 0, allCars.racer);
+      player = new Player(socket.id, data.name, Math.random()*100, 0, data.car);
       allPlayers.push(player);
 
       socket.emit("myID", {id: player.id});
@@ -39,6 +39,7 @@ io.on("connection", function(socket){
       var initPack = [];
       for(var i in allPlayers) {
           initPack.push(allPlayers[i].getInitPack());
+          console.log(allPlayers[i].name);
       }
       socket.emit("initPack", {initPack: initPack});
   });
@@ -182,6 +183,7 @@ var Player = function(id, name, x, y, car) {
 
 
   this.getInitPack = function () {
+    console.log(this.car);
     return {
       id: this.id,
       name: this.name,
