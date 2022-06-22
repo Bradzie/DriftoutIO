@@ -12,6 +12,7 @@ var io = socketIO(server);
 app.use(express.static(publicPath));
 
 var allPlayers = [];
+var mouseIsPressed;
 
 // ---------- CONTSTANTS ----------
 
@@ -50,6 +51,7 @@ io.on("connection", function(socket){
               allPlayers[i].angle = data.angle;
               allPlayers[i].windowWidth = data.windowWidth;
               allPlayers[i].windowHeight = data.windowHeight;
+              mouseIsPressed = data.mouseClick;
               break;
           }
       }
@@ -86,6 +88,8 @@ var Player = function(id, name, x, y, car) {
   this.drawCar = car.drawCar;
   this.boostPower = car.boostPower;
   this.angle = 0;
+  this.canBoost = 0;
+  this.boostCooldown = 1000;
 
   this.events = function(mouseIsPressed) {
 
@@ -95,12 +99,12 @@ var Player = function(id, name, x, y, car) {
         this.alive = false;
       }
 
-      // movement
-      // if (mouseIsPressed == true && millis() > canBoost){
-      //   this.vX += cos(this.angle)*this.boostPower;
-      //   this.vY += sin(this.angle)*this.boostPower;
-      //   canBoost = millis() + boostCooldown;
-      // }
+      // Movement
+      if (mouseIsPressed == true && Date.getTime() > canBoost){
+        this.vX += Math.cos(this.angle)*this.boostPower;
+        this.vY += Math.sin(this.angle)*this.boostPower;
+        canBoost = Date.getTime() + boostCooldown;
+      }
       if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
         this.vX += Math.cos(this.angle)*this.acceleration;
       }
@@ -192,7 +196,8 @@ var Player = function(id, name, x, y, car) {
       id: this.id,
       x: this.x,
       y: this.y,
-      angle: this.angle
+      angle: this.angle,
+      hp: this.hp
     }
   }
 

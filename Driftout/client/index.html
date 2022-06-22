@@ -1,12 +1,25 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
   <head>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kdam+Thmor+Pro&display=swap" rel="stylesheet">
+    <link rel="icon" href="./assets/icon.png">
     <meta charset="utf-8">
     <title>Driftout.IO</title>
   </head>
   <body>
-    <script src="js/p5.js"></script>
-    <script src="js/sketch.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
+    <div id = "mainCanvas"></div>
+    <div id = "menuContainer">
+      <p class = "gameTitle">DRIFTOUT IO</p>
+      <button id = "enterGameButton" onClick = "enterGame()" type = "button">
+        START RACING
+      </button>
+      <input id = "nameInput" placeholder = "Name"></input>
+    </div>
   </body>
+  <script src="js/p5.js"></script>
+  <script src="js/sketch.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
 </html>

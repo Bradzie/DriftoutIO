@@ -1,0 +1,66 @@
+html, body{
+  font-family: 'Kdam Thmor Pro', sans-serif;
+}
+
+body {
+  background-color: grey;
+  width: 100%;
+	height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+#gameUIContainer {
+  position: absolute;
+	width: 100%;
+	height: 100%;
+	display: none;
+	pointer-events: none;
+}
+
+#centerContent {
+  align-items: center;
+  text-align: center;
+}
+
+#menuContainer {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  justify-content: center;
+  flex-direction: column-reverse;
+  display: flex;
+  grid-gap: 0.5em;
+}
+
+#nameInput {
+  align-self: center;
+  text-align: center;
+  font-size: 2em;
+  padding: 0.4em;
+}
+
+#enterGameButton {
+  border-radius: 0.2em;
+  font-size: 2em;
+  background-color: #02f6fa;
+  align-self: center;
+  z-index: 100;
+  border: 2px solid black;
+}
+
+#enterGameButton:hover{
+  background-color: #008f91;
+}
+
+#mainCanvas {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+
+.gameTitle {
+  text-align: center;
+  position: absolute;
+  font-size: 4em;
+}
