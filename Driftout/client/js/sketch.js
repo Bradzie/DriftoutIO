@@ -7,6 +7,8 @@ var playing = false,
   carInputRacer = document.getElementById('carInputRacer'),
   carInputTank = document.getElementById('carInputTank'),
   carInputSprinter = document.getElementById('carInputSprinter'),
+  carInputPrankster = document.getElementById('carInputPrankster'),
+  carInputBullet = document.getElementById('carInputBullet'),
   carRadio = document.getElementById('carRadio'),
   nameInput = document.getElementById('nameInput');
 
@@ -188,17 +190,25 @@ function draw() {
 function enterGame(){
   var carChoice = '';
   playing = true;
-  if(carInputRacer.value == 'on'){
+  if(carInputRacer.checked == true){
     carChoice = allCars.racer;
     console.log('racer');
   }
-  if(carInputTank.value == 'on'){
+  if(carInputTank.checked == true){
     carChoice = allCars.tank;
     console.log('tank');
   }
-  if(carInputSprinter.value == 'on'){
+  if(carInputSprinter.checked == true){
     carChoice = allCars.sprinter;
     console.log('sprinter');
+  }
+  if(carInputPrankster.checked == true){
+    carChoice = allCars.prankster;
+    console.log('prankster');
+  }
+  if(carInputBullet.checked == true){
+    carChoice = allCars.bullet;
+    console.log('bullet');
   }
 
   socket.emit("ready", {name: nameInput.value, car: carChoice});
