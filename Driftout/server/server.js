@@ -32,6 +32,7 @@ io.on("connection", function(socket){
       player = new Player(socket.id, data.name, Math.random()*100, 0, data.car);
       allPlayers.push(player);
 
+
       socket.emit("myID", {id: player.id});
       console.log(player.id);
       socket.broadcast.emit('newPlayer', player.getInitPack());
@@ -230,7 +231,7 @@ var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boo
 }
 
 allCars = {
-  racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, function(x, y, angle){
+  Racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, function(x, y, angle){
     push();
     fill(20,20,200);
     translate(x, y);
@@ -245,7 +246,7 @@ allCars = {
     smooth();
     pop();
   }),
-  prankster : new Car('Prankster', 120, 6, 5, [], 0.1, 2, function(x, y, angle){
+  Prankster : new Car('Prankster', 120, 6, 5, [], 0.1, 2, function(x, y, angle){
     push();
     translate(x, y);
     rotate(angle);
@@ -269,7 +270,7 @@ allCars = {
     smooth();
     pop();
   }),
-  bullet : new Car('Bullet', 100, 10, 5, [], 0.12, 2.5, function(x, y, angle){
+  Bullet : new Car('Bullet', 100, 10, 5, [], 0.12, 2.5, function(x, y, angle){
     push();
     translate(x, y);
     rotate(angle);
@@ -286,7 +287,7 @@ allCars = {
     smooth();
     pop();
   }),
-  tank : new Car('Tank', 200, 4, 5, [], 0.08, 3, function(x, y, angle){
+  Tank : new Car('Tank', 200, 4, 5, [], 0.08, 3, function(x, y, angle){
     push();
     translate(x, y);
     rotate(angle);
@@ -297,7 +298,7 @@ allCars = {
     smooth();
     pop();
   }),
-  sprinter : new Car('Sprinter', 80, 12, 10, [], 0.14, 2, function(x, y, angle){
+  Sprinter : new Car('Sprinter', 80, 12, 10, [], 0.14, 2, function(x, y, angle){
     push();
     translate(x, y);
     rotate(angle);
@@ -312,6 +313,6 @@ allCars = {
     smooth();
     pop();
   }),
-  fragile : new Car('Fragile', 70, 6, 5, [], 0.1, 2.5),
-  spike : new Car('Spike', 150, 5, 3, [], 0.12, 3)
+  Fragile : new Car('Fragile', 70, 6, 5, [], 0.1, 2.5),
+  Spike : new Car('Spike', 150, 5, 3, [], 0.12, 3)
 };

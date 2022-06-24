@@ -19,7 +19,7 @@ var allPlayers = [];
 // Load prior to game start
 function preload(){
   allCars = {
-    racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, function(x, y, angle){
+    Racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, function(x, y, angle){
       push();
       fill(20,20,200);
       translate(x, y);
@@ -34,7 +34,7 @@ function preload(){
       smooth();
       pop();
     }),
-    prankster : new Car('Prankster', 120, 6, 5, [], 0.1, 2, function(x, y, angle){
+    Prankster : new Car('Prankster', 120, 6, 5, [], 0.1, 2, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -58,7 +58,7 @@ function preload(){
       smooth();
       pop();
     }),
-    bullet : new Car('Bullet', 100, 10, 5, [], 0.12, 2.5, function(x, y, angle){
+    Bullet : new Car('Bullet', 100, 10, 5, [], 0.12, 2.5, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -75,7 +75,7 @@ function preload(){
       smooth();
       pop();
     }),
-    tank : new Car('Tank', 200, 4, 5, [], 0.08, 3, function(x, y, angle){
+    Tank : new Car('Tank', 200, 4, 5, [], 0.08, 3, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -86,7 +86,7 @@ function preload(){
       smooth();
       pop();
     }),
-    sprinter : new Car('Sprinter', 80, 12, 10, [], 0.14, 2, function(x, y, angle){
+    Sprinter : new Car('Sprinter', 80, 12, 10, [], 0.14, 2, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -101,8 +101,8 @@ function preload(){
       smooth();
       pop();
     }),
-    fragile : new Car('Fragile', 70, 6, 5, [], 0.1, 2.5),
-    spike : new Car('Spike', 150, 5, 3, [], 0.12, 3)
+    Fragile : new Car('Fragile', 70, 6, 5, [], 0.1, 2.5),
+    Spike : new Car('Spike', 150, 5, 3, [], 0.12, 3)
   };
 }
 
@@ -119,15 +119,17 @@ function setup(){
   });
 
   socket.on("newPlayer", function(data) {
-      var player = new Player(data.id, data.name, data.x, data.y, allCars.racer);
+      var newCar = Object.entries(allCars).filter(car => car[0] == data.car.name)[0][1];
+      var player = new Player(data.id, data.name, data.x, data.y, newCar);
+      console.log(player);
       allPlayers.push(player);
-      console.log("NEWPLAYER!")
+
   });
 
   socket.on("initPack", function(data) {
       for(var i in data.initPack) {
-          var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, data.initPack[i].car);
-          console.log(data.initPack[i].car);
+          var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack[i].car.name)[0][1];
+          var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar);
           allPlayers.push(player);
           console.log(myId);
       }
@@ -191,23 +193,23 @@ function enterGame(){
   var carChoice = '';
   playing = true;
   if(carInputRacer.checked == true){
-    carChoice = allCars.racer;
+    carChoice = allCars.Racer;
     console.log('racer');
   }
   if(carInputTank.checked == true){
-    carChoice = allCars.tank;
+    carChoice = allCars.Tank;
     console.log('tank');
   }
   if(carInputSprinter.checked == true){
-    carChoice = allCars.sprinter;
+    carChoice = allCars.Sprinter;
     console.log('sprinter');
   }
   if(carInputPrankster.checked == true){
-    carChoice = allCars.prankster;
+    carChoice = allCars.Prankster;
     console.log('prankster');
   }
   if(carInputBullet.checked == true){
-    carChoice = allCars.bullet;
+    carChoice = allCars.Bullet;
     console.log('bullet');
   }
 
@@ -312,7 +314,7 @@ var Player = function(id, name, x, y, car) {
 
     // Player's car
     //console.log(this.x, this.y);
-    allCars.racer.drawCar(this.x, this.y, this.angle);
+    this.drawCar(this.x, this.y, this.angle);
     //console.log(this.id + " " + round(this.x) + " " + round(this.y));
 
 

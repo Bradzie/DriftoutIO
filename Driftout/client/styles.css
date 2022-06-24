@@ -46,12 +46,16 @@ body {
 }
 
 #enterGameButton {
-  border-radius: 0.2em;
-  font-size: 2em;
+  border-radius: 0.3em;
+  font-size: 1.5em;
+  padding-left: 1em;
+  padding-right: 1em;
+  font-weight: bolder;
   background-color: #02f6fa;
   align-self: center;
   z-index: 100;
-  border: 2px solid black;
+  border: 4px solid white;
+  font-family: 'Kdam Thmor Pro';
 }
 
 #enterGameButton:hover{
@@ -68,4 +72,5 @@ body {
   text-align: center;
   position: absolute;
   font-size: 4em;
+  border-bottom: 10px solid #02f6fa;
 }
