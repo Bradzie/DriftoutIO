@@ -14,9 +14,21 @@
     <div id = "menuContainer">
       <p class = "gameTitle">DRIFTOUT IO</p>
       <button id = "enterGameButton" onClick = "enterGame()" type = "button">
-        START RACING
+        RACE
       </button>
-      <input id = "nameInput" placeholder = "Name"></input>
+      <input id = "nameInput" placeholder = "Name">
+      <div id = "carSelect">
+        <input id = "carInputRacer" type = "radio" name = "carRadio">
+        <label for = "carInputRacer">Racer</label>
+        <input id = "carInputSprinter" type = "radio" name = "carRadio">
+        <label for = "carInputSprinter">Sprinter</label>
+        <input id = "carInputTank" type = "radio" name = "carRadio">
+        <label for = "carInputTank">Tank</label>
+        <input id = "carInputPrankster" type = "radio" name = "carRadio">
+        <label for = "carInputPrankster">Prankster</label>
+        <input id = "carInputBullet" type = "radio" name = "carRadio">
+        <label for = "carInputBullet">Bullet</label>
+      </div>
     </div>
   </body>
   <script src="js/p5.js"></script>

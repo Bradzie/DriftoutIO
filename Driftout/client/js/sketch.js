@@ -4,6 +4,12 @@ var playing = false,
   gameTitle = document.getElementById("gameTitle"),
   enterGameButton = document.getElementById('enterGameButton'),
   menuContainer = document.getElementById("menuContainer"),
+  carInputRacer = document.getElementById('carInputRacer'),
+  carInputTank = document.getElementById('carInputTank'),
+  carInputSprinter = document.getElementById('carInputSprinter'),
+  carInputPrankster = document.getElementById('carInputPrankster'),
+  carInputBullet = document.getElementById('carInputBullet'),
+  carRadio = document.getElementById('carRadio'),
   nameInput = document.getElementById('nameInput');
 
 // Constants
@@ -13,7 +19,7 @@ var allPlayers = [];
 // Load prior to game start
 function preload(){
   allCars = {
-    racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, function(x, y, angle){
+    Racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, function(x, y, angle){
       push();
       fill(20,20,200);
       translate(x, y);
@@ -28,7 +34,7 @@ function preload(){
       smooth();
       pop();
     }),
-    prankster : new Car('Prankster', 120, 6, 5, [], 0.1, 2, function(x, y, angle){
+    Prankster : new Car('Prankster', 120, 6, 5, [], 0.1, 2, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -52,7 +58,7 @@ function preload(){
       smooth();
       pop();
     }),
-    bullet : new Car('Bullet', 100, 10, 5, [], 0.12, 2.5, function(x, y, angle){
+    Bullet : new Car('Bullet', 100, 10, 5, [], 0.12, 2.5, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -69,7 +75,7 @@ function preload(){
       smooth();
       pop();
     }),
-    tank : new Car('Tank', 200, 4, 5, [], 0.08, 3, function(x, y, angle){
+    Tank : new Car('Tank', 200, 4, 5, [], 0.08, 3, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -80,7 +86,7 @@ function preload(){
       smooth();
       pop();
     }),
-    sprinter : new Car('Sprinter', 80, 12, 10, [], 0.14, 2, function(x, y, angle){
+    Sprinter : new Car('Sprinter', 80, 12, 10, [], 0.14, 2, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -95,8 +101,8 @@ function preload(){
       smooth();
       pop();
     }),
-    fragile : new Car('Fragile', 70, 6, 5, [], 0.1, 2.5),
-    spike : new Car('Spike', 150, 5, 3, [], 0.12, 3)
+    Fragile : new Car('Fragile', 70, 6, 5, [], 0.1, 2.5),
+    Spike : new Car('Spike', 150, 5, 3, [], 0.12, 3)
   };
 }
 
@@ -113,13 +119,17 @@ function setup(){
   });
 
   socket.on("newPlayer", function(data) {
-      var player = new Player(data.id, data.name, data.x, data.y, allCars.racer);
+      var newCar = Object.entries(allCars).filter(car => car[0] == data.car.name)[0][1];
+      var player = new Player(data.id, data.name, data.x, data.y, newCar);
+      console.log(player);
       allPlayers.push(player);
+
   });
 
   socket.on("initPack", function(data) {
       for(var i in data.initPack) {
-          var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, data.initPack[i].car);
+          var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack[i].car.name)[0][1];
+          var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar);
           allPlayers.push(player);
           console.log(myId);
       }
@@ -173,16 +183,39 @@ function draw() {
           //translate(width/2 - allPlayers[i].x, height/2 - allPlayers[i].y);
           //allPlayers[i].events();
           allPlayers[i].draw();
+          //console.log(allPlayers[i])
         }
     }
   }
 }
 
 function enterGame(){
+  var carChoice = '';
   playing = true;
-  socket.emit("ready", {name: nameInput.value});
+  if(carInputRacer.checked == true){
+    carChoice = allCars.Racer;
+    console.log('racer');
+  }
+  if(carInputTank.checked == true){
+    carChoice = allCars.Tank;
+    console.log('tank');
+  }
+  if(carInputSprinter.checked == true){
+    carChoice = allCars.Sprinter;
+    console.log('sprinter');
+  }
+  if(carInputPrankster.checked == true){
+    carChoice = allCars.Prankster;
+    console.log('prankster');
+  }
+  if(carInputBullet.checked == true){
+    carChoice = allCars.Bullet;
+    console.log('bullet');
+  }
+
+  socket.emit("ready", {name: nameInput.value, car: carChoice});
   menuContainer.style.display = "none";
-  console.log("gameStart");
+  console.log(allPlayers);
 }
 
 function drawMap(){
@@ -280,8 +313,8 @@ var Player = function(id, name, x, y, car) {
   this.draw = function() {
 
     // Player's car
-    console.log(this.x, this.y);
-    allCars.racer.drawCar(this.x, this.y, this.angle);
+    //console.log(this.x, this.y);
+    this.drawCar(this.x, this.y, this.angle);
     //console.log(this.id + " " + round(this.x) + " " + round(this.y));
 
 
