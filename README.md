@@ -16,7 +16,7 @@
 
 There are currently multiple bugs on list to be corrected one by one - I will update this list as often as I can so it stays relevant.
 
-1. An open tab can only see players who connected _after_ they did
+1. An open tab can only see players in the correct position who joined _after_ they did, other players are desynced on the x-axis by between 50 - 150?
 2. Collisions currently don't affect vehicle HP, this is due to what data gets sent between the server and client
 3. Boosting currently does not work, it was disabled when client/server sync was introduced
 4. CSS display can be dodgy and difficult to look at when viewing on a smaller screen (Mobile, Tablet, etc.)
