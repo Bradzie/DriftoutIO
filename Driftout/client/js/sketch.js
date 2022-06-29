@@ -121,7 +121,6 @@ function setup(){
   socket.on("newPlayer", function(data) {
       var newCar = Object.entries(allCars).filter(car => car[0] == data.car.name)[0][1];
       var player = new Player(data.id, data.name, data.x, data.y, newCar);
-      console.log(player);
       allPlayers.push(player);
 
   });
@@ -131,7 +130,9 @@ function setup(){
           var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack[i].car.name)[0][1];
           var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar);
           allPlayers.push(player);
+          socket.emit("syncPlayers", allPlayers);
           console.log(myId);
+          console.log(allPlayers);
       }
   });
 
@@ -142,7 +143,7 @@ function setup(){
                   allPlayers[j].x = data.updatePack[i].x;
                   allPlayers[j].y = data.updatePack[i].y;
                   allPlayers[j].angle = data.updatePack[i].angle;
-                  allPlayers[j].hp = data.updatePack[i].hp;
+                  allPlayers[j].HP = data.updatePack[i].HP;
               }
           }
       }
@@ -170,21 +171,24 @@ function setup(){
 
 function draw() {
   if (playing == true){
-    resizeCanvas(windowWidth, windowHeight);
+    //resizeCanvas(windowWidth, windowHeight);
     background(100, 100, 100); // it gets a hex/rgb color
     sendInputData();
 
     for(var i in allPlayers) {
-        if(allPlayers[i].id === myId) {
-          translate(windowWidth/2 - allPlayers[i].x, windowHeight/2 - allPlayers[i].y);
-          drawMap();
+        if(allPlayers[i].id == myId) {
+          translate(width/2 - allPlayers[i].x, height/2 - allPlayers[i].y);
         }
-        if(allPlayers[i].alive == true){
-          //translate(width/2 - allPlayers[i].x, height/2 - allPlayers[i].y);
-          //allPlayers[i].events();
-          allPlayers[i].draw();
-          //console.log(allPlayers[i])
-        }
+    }
+
+    drawMap();
+
+    for(var i in allPlayers) {
+      if(allPlayers[i].alive == true){
+        //translate(width/2 - allPlayers[i].x, height/2 - allPlayers[i].y);
+        //allPlayers[i].events();
+        allPlayers[i].draw();
+      }
     }
   }
 }
@@ -313,8 +317,9 @@ var Player = function(id, name, x, y, car) {
   this.draw = function() {
 
     // Player's car
-    //console.log(this.x, this.y);
+    console.log(this.HP, this.maxHP);
     this.drawCar(this.x, this.y, this.angle);
+    console.log("Player name: " + this.name + " at x: " + this.x + " at y: " + this.y);
     //console.log(this.id + " " + round(this.x) + " " + round(this.y));
 
 

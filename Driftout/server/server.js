@@ -29,7 +29,7 @@ io.on("connection", function(socket){
   var player;
 
   socket.on("ready", (data) => {
-      player = new Player(socket.id, data.name, Math.random()*100, 0, data.car);
+      player = new Player(socket.id, data.name, 0, 0, data.car);
       allPlayers.push(player);
 
 
@@ -43,6 +43,15 @@ io.on("connection", function(socket){
           console.log(allPlayers[i].name);
       }
       socket.emit("initPack", {initPack: initPack});
+
+      socket.on("syncPlayers", (data) => {
+        for(var i in data){
+            console.log("Old player location for " + allPlayers[i].name + " x: " + allPlayers[i].x + " y: " + allPlayers[i].y);
+            console.log("New player location for " + data[i].name + " x: " + data[i].x + " y: " + data[i].y);
+            allPlayers[i].x = data[i].x;
+            allPlayers[i].y = data[i].y;
+          }
+      });
   });
 
   socket.on("inputData", (data) => {
@@ -125,7 +134,9 @@ var Player = function(id, name, x, y, car) {
 
       // Health regen
 
-      this.HP += 0.1;
+      if(this.HP < this.maxHP){
+        this.HP += 0.05;
+      }
     }
   }
 
@@ -134,57 +145,56 @@ var Player = function(id, name, x, y, car) {
       // Inside rect
     if ((this.x > 200 && this.x < 225) && (this.y > 200 && this.y < 1600)){
       this.x -= 1;
-      this.HP -= Math.abs(this.vX)*2.5;
+      this.HP -= Math.abs(this.vX)*8;
       this.vX = -this.vX * 0.7;
       }
 
     if ((this.y > 200 && this.y < 225) && (this.x > 200 && this.x < 1600)){
       this.y -= 1;
-      this.HP -= Math.abs(this.vY)*2.5;
+      this.HP -= Math.abs(this.vY)*8;
       this.vY = -this.vY * 0.7;
       }
 
     if ((this.x > 1575 && this.x < 1600) && (this.y > 200 && this.y < 1600)){
       this.x += 1;
-      this.HP -= Math.abs(this.vX)*2.5;
+      this.HP -= Math.abs(this.vX)*8;
       this.vX = -this.vX * 0.7;
       }
 
     if ((this.y > 1575 && this.y < 1600) && (this.x > 200 && this.x < 1600)){
       this.y += 1;
-      this.HP -= Math.abs(this.vY)*2.5;
+      this.HP -= Math.abs(this.vY)*8;
       this.vY = -this.vY * 0.7;
       }
 
       // Border rect
     if ((this.x > 2000 && this.x < 2025) && (this.y > -225 && this.y < 2025)){
       this.x -= 1;
-      this.HP -= Math.abs(this.vX)*2.5;
+      this.HP -= Math.abs(this.vX)*8;
       this.vX = -this.vX * 0.7;
       }
 
     if ((this.x > -225 && this.x < -200) && (this.y > -225 && this.y < 2025)){
       this.x += 1;
-      this.HP -= Math.abs(this.vX)*2.5;
+      this.HP -= Math.abs(this.vX)*8;
       this.vX = -this.vX * 0.7;
       }
 
     if ((this.y > 2000 && this.y < 2025) && (this.x > -200 && this.x < 2000)){
       this.y -= 1;
-      this.HP -= Math.abs(this.vY)*2.5;
+      this.HP -= Math.abs(this.vY)*8;
       this.vY = -this.vY * 0.7;
       }
 
     if ((this.y > -225 && this.y < -200) && (this.x > -200 && this.x < 2000)){
       this.y += 1;
-      this.HP -= Math.abs(this.vY)*2.5;
+      this.HP -= Math.abs(this.vY)*8;
       this.vY = -this.vY * 0.7;
       }
     }
 
-
+  // Pack to initialize a new instance of a player
   this.getInitPack = function () {
-    console.log(this.car);
     return {
       id: this.id,
       name: this.name,
@@ -194,19 +204,30 @@ var Player = function(id, name, x, y, car) {
     }
   }
 
+  // Important player information to be transferred server/client
   this.getUpdatePack = function () {
     return {
       id: this.id,
       x: this.x,
       y: this.y,
       angle: this.angle,
-      hp: this.hp
+      HP: this.HP
+    }
+  }
+
+  // To sync player positions on a wider interval
+  this.getSyncPack = function (){
+    return {
+      id: this.id,
+      x: this.x,
+      y: this.y
     }
   }
 
     return this;
 }
 
+// Loop speed to update player properties
 setInterval(() => {
     var updatePack = [];
 
@@ -230,6 +251,7 @@ var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boo
   this.boostPower = boostPower;
 }
 
+// Car class objects
 allCars = {
   Racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, function(x, y, angle){
     push();
