@@ -125,12 +125,19 @@ function setup(){
 
   });
 
+  socket.on("removePlayerClient", () => {
+    for(var i in allPlayers) {
+      if(allPlayers[i].id === socket.id) {
+        allPlayers.splice(i, 1);
+      }
+    }
+  });
+
   socket.on("initPack", function(data) {
       for(var i in data.initPack) {
           var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack[i].car.name)[0][1];
           var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar);
           allPlayers.push(player);
-          socket.emit("syncPlayers", allPlayers);
           console.log(myId);
           console.log(allPlayers);
       }
@@ -144,6 +151,7 @@ function setup(){
                   allPlayers[j].y = data.updatePack[i].y;
                   allPlayers[j].angle = data.updatePack[i].angle;
                   allPlayers[j].HP = data.updatePack[i].HP;
+                  allPlayers[j].alive = data.updatePack[i].alive;
               }
           }
       }
@@ -171,12 +179,18 @@ function setup(){
 
 function draw() {
   if (playing == true){
-    //resizeCanvas(windowWidth, windowHeight);
+    resizeCanvas(windowWidth, windowHeight);
     background(100, 100, 100); // it gets a hex/rgb color
     sendInputData();
 
     for(var i in allPlayers) {
         if(allPlayers[i].id == myId) {
+          if(allPlayers[i].alive == false){
+            menuContainer.style.visibility = "visible";
+            menuContainer.style.opacity = "1";
+            playing = false;
+            socket.emit("removePlayerServer");
+          }
           translate(width/2 - allPlayers[i].x, height/2 - allPlayers[i].y);
         }
     }
@@ -218,7 +232,8 @@ function enterGame(){
   }
 
   socket.emit("ready", {name: nameInput.value, car: carChoice});
-  menuContainer.style.display = "none";
+  menuContainer.style.visibility = "hidden";
+  menuContainer.style.opacity = "0";
   console.log(allPlayers);
 }
 
@@ -296,7 +311,7 @@ function sendInputData() {
 // ----------- OBJECTS ---------------------------------------------------
 
 // The player object constructor
-var Player = function(id, name, x, y, car) {
+var Player = function(id, name, x, y, car, alive) {
   this.id = id;
   this.name = name;
   this.x = x;
@@ -334,12 +349,17 @@ var Player = function(id, name, x, y, car) {
     if (this.HP < this.maxHP && this.HP > 0){
       push();
       strokeWeight(12);
-      stroke(160,160,160)
+      stroke(120,120,120)
       line(this.x - 20, this.y + 70, this.x + 20, this.y + 70);
       strokeWeight(8);
-      stroke(220, 0, 0);
+      stroke(80, 80, 80);
       line(this.x - 20, this.y + 70, this.x + 20, this.y + 70);
-      stroke(0, 220, 0);
+      if (this.HP < (this.maxHP / 4)){
+        stroke(220, 0, 0);
+      }
+      else{
+        stroke(0, 220, 0);
+      }
       line(this.x - (this.HP / (this.maxHP / 20)), this.y + 70, this.x + (this.HP / (this.maxHP / 20)),
           this.y + 70);
       pop();
