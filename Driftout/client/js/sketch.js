@@ -114,6 +114,8 @@ function setup(){
   allPlayers = [];
   myId = 0;
 
+  leaderboardContainer.innerHTML = "Leaderboard";
+
   socket = io();
 
   socket.on("myID", function(data) {
@@ -125,13 +127,11 @@ function setup(){
       var player = new Player(data.id, data.name, data.x, data.y, newCar);
       allPlayers.push(player);
       console.log(allPlayers);
-      leaderboardContainer.innerHTML = "Leaderboard";
+      var text = "";
       for(var i in allPlayers){
-        var newEntry = leaderboardItem;
-        newEntry.innerHTML = allPlayers[i].name;
-        leaderboardContainer.className += newEntry;
+        text += "<div class = 'leaderboardItem'>" + allPlayers[i].name + "</div>\n";
       }
-
+      leaderboardContainer.innerHTML = "Leaderboard\n" + text;
   });
 
   socket.on("removePlayerClient", () => {
@@ -149,6 +149,11 @@ function setup(){
           allPlayers.push(player);
           console.log(myId);
           console.log(allPlayers);
+          var text = "";
+          for(var i in allPlayers){
+            text += "<div class = 'leaderboardItem'>" + allPlayers[i].name + "</div>\n";
+          }
+          leaderboardContainer.innerHTML = "Leaderboard\n" + text;
       }
   });
 
@@ -188,10 +193,7 @@ function draw() {
     for(var i in allPlayers) {
         if(allPlayers[i].id == myId) {
           if(allPlayers[i].alive == false){
-            menuContainer.style.visibility = "visible";
-            menuContainer.style.opacity = "1";
-            playing = false;
-            socket.emit("removePlayerServer");
+            exitGame();
           }
           translate(width/2 - allPlayers[i].x, height/2 - allPlayers[i].y);
         }
@@ -207,6 +209,15 @@ function draw() {
       }
     }
   }
+}
+
+function exitGame(){
+  menuContainer.style.visibility = "visible";
+  menuContainer.style.opacity = "1";
+  leaderboardContainer.style.visibility = "hidden";
+  leaderboardContainer.style.opacity = "0";
+  playing = false;
+  socket.emit("removePlayerServer");
 }
 
 function enterGame(){
@@ -236,6 +247,8 @@ function enterGame(){
   socket.emit("ready", {name: nameInput.value, car: carChoice});
   menuContainer.style.visibility = "hidden";
   menuContainer.style.opacity = "0";
+  leaderboardContainer.style.visibility = "visible";
+  leaderboardContainer.style.opacity = "1";
   console.log(allPlayers);
 }
 
