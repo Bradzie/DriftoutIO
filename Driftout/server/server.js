@@ -30,6 +30,7 @@ io.on("connection", function(socket){
 
   socket.on("ready", (data) => {
       player = new Player(socket.id, data.name, 0, 0, data.car);
+      player.alive = true;
       allPlayers.push(player);
 
 
@@ -43,15 +44,6 @@ io.on("connection", function(socket){
           console.log(allPlayers[i].name);
       }
       socket.emit("initPack", {initPack: initPack});
-
-      socket.on("syncPlayers", (data) => {
-        for(var i in data){
-            console.log("Old player location for " + allPlayers[i].name + " x: " + allPlayers[i].x + " y: " + allPlayers[i].y);
-            console.log("New player location for " + data[i].name + " x: " + data[i].x + " y: " + data[i].y);
-            allPlayers[i].x = data[i].x;
-            allPlayers[i].y = data[i].y;
-          }
-      });
   });
 
   socket.on("inputData", (data) => {
@@ -75,6 +67,17 @@ io.on("connection", function(socket){
               allPlayers.splice(i, 1);
           }
       }
+  });
+
+  socket.on("removePlayerServer", () => {
+    socket.emit("removePlayerClient");
+    console.log(allPlayers);
+    for(var i in allPlayers) {
+        if(allPlayers[i].id === socket.id) {
+            allPlayers.splice(i, 1);
+        }
+    }
+    console.log(allPlayers);
   });
 });
 
@@ -211,7 +214,8 @@ var Player = function(id, name, x, y, car) {
       x: this.x,
       y: this.y,
       angle: this.angle,
-      HP: this.HP
+      HP: this.HP,
+      alive: this.alive
     }
   }
 

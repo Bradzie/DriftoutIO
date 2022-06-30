@@ -10,7 +10,9 @@ var playing = false,
   carInputPrankster = document.getElementById('carInputPrankster'),
   carInputBullet = document.getElementById('carInputBullet'),
   carRadio = document.getElementById('carRadio'),
-  nameInput = document.getElementById('nameInput');
+  nameInput = document.getElementById('nameInput'),
+  leaderboardContainer = document.getElementById('leaderboardContainer'),
+  leaderboardItem = document.getElementById('leaderboardItem');
 
 // Constants
 var allCars;
@@ -112,6 +114,8 @@ function setup(){
   allPlayers = [];
   myId = 0;
 
+  leaderboardContainer.innerHTML = "Leaderboard";
+
   socket = io();
 
   socket.on("myID", function(data) {
@@ -122,7 +126,20 @@ function setup(){
       var newCar = Object.entries(allCars).filter(car => car[0] == data.car.name)[0][1];
       var player = new Player(data.id, data.name, data.x, data.y, newCar);
       allPlayers.push(player);
+      console.log(allPlayers);
+      var text = "";
+      for(var i in allPlayers){
+        text += "<div class = 'leaderboardItem'>" + allPlayers[i].name + "</div>\n";
+      }
+      leaderboardContainer.innerHTML = "Leaderboard\n" + text;
+  });
 
+  socket.on("removePlayerClient", () => {
+    for(var i in allPlayers) {
+      if(allPlayers[i].id === socket.id) {
+        allPlayers.splice(i, 1);
+      }
+    }
   });
 
   socket.on("initPack", function(data) {
@@ -130,9 +147,13 @@ function setup(){
           var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack[i].car.name)[0][1];
           var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar);
           allPlayers.push(player);
-          socket.emit("syncPlayers", allPlayers);
           console.log(myId);
           console.log(allPlayers);
+          var text = "";
+          for(var i in allPlayers){
+            text += "<div class = 'leaderboardItem'>" + allPlayers[i].name + "</div>\n";
+          }
+          leaderboardContainer.innerHTML = "Leaderboard\n" + text;
       }
   });
 
@@ -144,6 +165,7 @@ function setup(){
                   allPlayers[j].y = data.updatePack[i].y;
                   allPlayers[j].angle = data.updatePack[i].angle;
                   allPlayers[j].HP = data.updatePack[i].HP;
+                  allPlayers[j].alive = data.updatePack[i].alive;
               }
           }
       }
@@ -157,13 +179,6 @@ function setup(){
       }
   });
 
-  // Game setup
-  // allPlayers = [
-  //   player1 = new Player('Brad', -50, 1000, allCars.tank),
-  //   player2 = new Player('Chloe', 50, 1000, allCars.sprinter),
-  //   player3 = new Player('Oreo', -150, 1000, allCars.prankster)
-  // ];
-
   var mainCanvas = createCanvas(windowWidth, windowHeight);
   mainCanvas.parent("mainCanvas");
 
@@ -171,12 +186,15 @@ function setup(){
 
 function draw() {
   if (playing == true){
-    //resizeCanvas(windowWidth, windowHeight);
+    resizeCanvas(windowWidth, windowHeight);
     background(100, 100, 100); // it gets a hex/rgb color
     sendInputData();
 
     for(var i in allPlayers) {
         if(allPlayers[i].id == myId) {
+          if(allPlayers[i].alive == false){
+            exitGame();
+          }
           translate(width/2 - allPlayers[i].x, height/2 - allPlayers[i].y);
         }
     }
@@ -191,6 +209,15 @@ function draw() {
       }
     }
   }
+}
+
+function exitGame(){
+  menuContainer.style.visibility = "visible";
+  menuContainer.style.opacity = "1";
+  leaderboardContainer.style.visibility = "hidden";
+  leaderboardContainer.style.opacity = "0";
+  playing = false;
+  socket.emit("removePlayerServer");
 }
 
 function enterGame(){
@@ -218,7 +245,10 @@ function enterGame(){
   }
 
   socket.emit("ready", {name: nameInput.value, car: carChoice});
-  menuContainer.style.display = "none";
+  menuContainer.style.visibility = "hidden";
+  menuContainer.style.opacity = "0";
+  leaderboardContainer.style.visibility = "visible";
+  leaderboardContainer.style.opacity = "1";
   console.log(allPlayers);
 }
 
@@ -296,7 +326,7 @@ function sendInputData() {
 // ----------- OBJECTS ---------------------------------------------------
 
 // The player object constructor
-var Player = function(id, name, x, y, car) {
+var Player = function(id, name, x, y, car, alive) {
   this.id = id;
   this.name = name;
   this.x = x;
@@ -317,9 +347,9 @@ var Player = function(id, name, x, y, car) {
   this.draw = function() {
 
     // Player's car
-    console.log(this.HP, this.maxHP);
+    //console.log(this.HP, this.maxHP);
     this.drawCar(this.x, this.y, this.angle);
-    console.log("Player name: " + this.name + " at x: " + this.x + " at y: " + this.y);
+    //console.log("Player name: " + this.name + " at x: " + this.x + " at y: " + this.y);
     //console.log(this.id + " " + round(this.x) + " " + round(this.y));
 
 
@@ -334,12 +364,17 @@ var Player = function(id, name, x, y, car) {
     if (this.HP < this.maxHP && this.HP > 0){
       push();
       strokeWeight(12);
-      stroke(160,160,160)
+      stroke(120,120,120)
       line(this.x - 20, this.y + 70, this.x + 20, this.y + 70);
       strokeWeight(8);
-      stroke(220, 0, 0);
+      stroke(80, 80, 80);
       line(this.x - 20, this.y + 70, this.x + 20, this.y + 70);
-      stroke(0, 220, 0);
+      if (this.HP < (this.maxHP / 4)){
+        stroke(220, 0, 0);
+      }
+      else{
+        stroke(0, 220, 0);
+      }
       line(this.x - (this.HP / (this.maxHP / 20)), this.y + 70, this.x + (this.HP / (this.maxHP / 20)),
           this.y + 70);
       pop();
