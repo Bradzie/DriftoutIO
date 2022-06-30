@@ -17,5 +17,6 @@
 There are currently multiple bugs on list to be corrected one by one - I will update this list as often as I can so it stays relevant.
 
 1. Boosting currently does not work, it was disabled when client/server sync was introduced
-2. CSS display can be dodgy and difficult to look at when viewing on a smaller screen (Mobile, Tablet, etc.)
+2. Leaderboard will show duplicated players as many times as they have lived (3x crashes = 3x appearences on leaderboard)
+3. CSS display can be dodgy and difficult to look at when viewing on a smaller screen (Mobile, Tablet, etc.)
 
