@@ -31,8 +31,25 @@ body {
   flex-direction: column-reverse;
   display: flex;
   grid-gap: 0.5em;
+  background-color: rgba(20, 20, 20, 0.5);
   opacity: 1;
   transition: visibility 0.5s linear, opacity 0.5s linear;
+}
+
+#leaderboardContainer {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px;
+  border-radius: 3px;
+  background-color: rgba(30, 30, 30, 0.4);
+  font-family: 'Kdam Thmor Pro';
+  font-size: 32px;
+}
+
+.leaderboardItem {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 #carSelect {

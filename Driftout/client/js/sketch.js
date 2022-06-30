@@ -10,7 +10,9 @@ var playing = false,
   carInputPrankster = document.getElementById('carInputPrankster'),
   carInputBullet = document.getElementById('carInputBullet'),
   carRadio = document.getElementById('carRadio'),
-  nameInput = document.getElementById('nameInput');
+  nameInput = document.getElementById('nameInput'),
+  leaderboardContainer = document.getElementById('leaderboardContainer'),
+  leaderboardItem = document.getElementById('leaderboardItem');
 
 // Constants
 var allCars;
@@ -122,6 +124,13 @@ function setup(){
       var newCar = Object.entries(allCars).filter(car => car[0] == data.car.name)[0][1];
       var player = new Player(data.id, data.name, data.x, data.y, newCar);
       allPlayers.push(player);
+      console.log(allPlayers);
+      leaderboardContainer.innerHTML = "Leaderboard";
+      for(var i in allPlayers){
+        var newEntry = leaderboardItem;
+        newEntry.innerHTML = allPlayers[i].name;
+        leaderboardContainer.className += newEntry;
+      }
 
   });
 
@@ -164,13 +173,6 @@ function setup(){
           }
       }
   });
-
-  // Game setup
-  // allPlayers = [
-  //   player1 = new Player('Brad', -50, 1000, allCars.tank),
-  //   player2 = new Player('Chloe', 50, 1000, allCars.sprinter),
-  //   player3 = new Player('Oreo', -150, 1000, allCars.prankster)
-  // ];
 
   var mainCanvas = createCanvas(windowWidth, windowHeight);
   mainCanvas.parent("mainCanvas");
@@ -332,9 +334,9 @@ var Player = function(id, name, x, y, car, alive) {
   this.draw = function() {
 
     // Player's car
-    console.log(this.HP, this.maxHP);
+    //console.log(this.HP, this.maxHP);
     this.drawCar(this.x, this.y, this.angle);
-    console.log("Player name: " + this.name + " at x: " + this.x + " at y: " + this.y);
+    //console.log("Player name: " + this.name + " at x: " + this.x + " at y: " + this.y);
     //console.log(this.id + " " + round(this.x) + " " + round(this.y));
 
 
