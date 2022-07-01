@@ -71,19 +71,16 @@ io.on("connection", function(socket){
 
   socket.on("removePlayerServer", () => {
     socket.emit("removePlayerClient");
-    console.log(allPlayers);
     for(var i in allPlayers) {
         if(allPlayers[i].id === socket.id) {
             allPlayers.splice(i, 1);
         }
     }
-    console.log(allPlayers);
   });
 });
 
 // The player object constructor
 var Player = function(id, name, x, y, car) {
-  console.log(car);
   this.id = id;
   this.name = name;
   this.x = x;
