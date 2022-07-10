@@ -125,18 +125,7 @@ function setup(){
       var player = new Player(data.id, data.name, data.x, data.y, newCar);
       allPlayers.push(player);
       console.log(allPlayers);
-      leaderboardContainer.innerHTML = "Leaderboard";
-      var text = "";
-      for(var i in allPlayers){
-        if(allPlayers[i].alive == true){
-          text += "<div class = 'leaderboardItem'>" + allPlayers[i].name + "</div>\n";
-        }
-        else{
-          allPlayers.splice(i, 1);
-        }
-      }
-      leaderboardContainer.innerHTML = "Leaderboard\n" + text;
-      console.log(text);
+      refreshLeaderboard();
   });
 
   socket.on("removePlayerClient", () => {
@@ -153,12 +142,7 @@ function setup(){
           var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar);
           allPlayers.push(player);
           console.log(myId);
-          //console.log(allPlayers);
-          var text = "";
-          for(var i in allPlayers){
-            text += "<div class = 'leaderboardItem'>" + allPlayers[i].name + "</div>\n";
-          }
-          leaderboardContainer.innerHTML = "Leaderboard\n" + text;
+          refreshLeaderboard();
       }
   });
 
@@ -255,6 +239,20 @@ function enterGame(){
   leaderboardContainer.style.visibility = "visible";
   leaderboardContainer.style.opacity = "1";
   //console.log(allPlayers);
+}
+
+function refreshLeaderboard(){
+  leaderboardContainer.innerHTML = "Leaderboard";
+  var text = "";
+  for(var i in allPlayers){
+    if(allPlayers[i].alive == true){
+      text += "<div class = 'leaderboardItem'>" + allPlayers[i].name + "</div>\n";
+    }
+    else{
+      allPlayers.splice(i, 1);
+    }
+  }
+  leaderboardContainer.innerHTML = "Leaderboard\n" + text;
 }
 
 function drawMap(){

@@ -61,6 +61,22 @@ body {
   text-align: center;
 }
 
+#carSelect label input{
+  background-color: black;
+}
+
+#carSelect label{
+  background-color: #02f6fa;
+  border-radius: 3px;
+  padding: 5px;
+}
+
+#carSelect ["type = radio"] {
+  background-color: black;
+  border: 3px solid white;
+  padding: 20px;
+}
+
 #nameInput {
   align-self: center;
   text-align: center;

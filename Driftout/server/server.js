@@ -142,6 +142,21 @@ var Player = function(id, name, x, y, car) {
 
   this.doCollisions = function() {
 
+      // Player doCollisions
+    if (allPlayers.length > 1){
+      for(var i in allPlayers){
+        if (allPlayers[i].id != this.id){
+          console.log("self");
+          if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < 10){
+            this.HP -= 1;
+          }
+        }
+        else{
+          console.log(((allPlayers[i].x-this.x)**2)+((allPlayers[i].y-this.y)**2));
+        }
+      }
+    }
+
       // Inside rect
     if ((this.x > 200 && this.x < 225) && (this.y > 200 && this.y < 1600)){
       this.x -= 1;
