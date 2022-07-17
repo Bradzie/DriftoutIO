@@ -12,7 +12,7 @@ var io = socketIO(server);
 app.use(express.static(publicPath));
 
 var allPlayers = [];
-var mouseIsPressed;
+var mouseIsPressed = false;
 
 // ---------- CONTSTANTS ----------
 
@@ -58,6 +58,7 @@ io.on("connection", function(socket){
               break;
           }
       }
+      //console.log(mouseIsPressed);
   })
 
   socket.on("disconnect", () => {
@@ -99,8 +100,8 @@ var Player = function(id, name, x, y, car) {
   this.drawCar = car.drawCar;
   this.boostPower = car.boostPower;
   this.angle = 0;
-  this.canBoost = 0;
-  this.boostCooldown = 1000;
+  this.canBoost = Date.now();
+  this.boostCooldown = 3000;
   this.checkPointCounter = [false, false, false, false];
   this.laps = 0
 
@@ -113,10 +114,10 @@ var Player = function(id, name, x, y, car) {
       }
 
       // Movement
-      if (mouseIsPressed == true && Date.getTime() > canBoost){
+      if (mouseIsPressed == true && Date.now() > this.canBoost){
         this.vX += Math.cos(this.angle)*this.boostPower;
         this.vY += Math.sin(this.angle)*this.boostPower;
-        canBoost = Date.getTime() + boostCooldown;
+        this.canBoost = Date.now() + this.boostCooldown;
       }
       if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
         this.vX += Math.cos(this.angle)*this.acceleration;
@@ -137,7 +138,7 @@ var Player = function(id, name, x, y, car) {
       // Health regen
 
       if(this.HP < this.maxHP){
-        this.HP += 0.05;
+        this.HP += 1;
       }
     }
   }
@@ -180,7 +181,6 @@ var Player = function(id, name, x, y, car) {
         this.checkPointCounter = [false, false, false, false];
         console.log(this.name + " has now completed " + this.laps + " laps!");
       }
-      console.log(this.name + " collided with finish line");
     }
 
     // Check for collision with check points
@@ -250,15 +250,6 @@ var Player = function(id, name, x, y, car) {
     }
   }
 
-  // To sync player positions on a wider interval
-  this.getSyncPack = function (){
-    return {
-      id: this.id,
-      x: this.x,
-      y: this.y
-    }
-  }
-
     return this;
 }
 
@@ -267,7 +258,8 @@ setInterval(() => {
     var updatePack = [];
 
     for(var i in allPlayers) {
-        allPlayers[i].events();
+        allPlayers[i].events(mouseIsPressed);
+        console.log(allPlayers.length);
         updatePack.push(allPlayers[i].getUpdatePack());
     }
 
