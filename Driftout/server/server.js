@@ -101,6 +101,8 @@ var Player = function(id, name, x, y, car) {
   this.angle = 0;
   this.canBoost = 0;
   this.boostCooldown = 1000;
+  this.checkPointCounter = [false, false, false, false];
+  this.laps = 0
 
   this.events = function(mouseIsPressed) {
 
@@ -170,58 +172,58 @@ var Player = function(id, name, x, y, car) {
     this.collision(this.x, this.y, -200, 2000, 2000, 2025, "y-1", 8, 0.7);
     this.collision(this.x, this.y, -200, 2000, -225, -200, "y+1", 8, 0.7);
 
+    // Check if inside finish line
+    if (this.collision(this.x, this.y, finishLine[0], finishLine[1],
+    finishLine[2], finishLine[3], "trigger") == true){
+      if (this.checkPointCounter.every(point => point == true)){
+        this.laps += 1;
+        this.checkPointCounter = [false, false, false, false];
+        console.log(this.name + " has now completed " + this.laps + " laps!");
+      }
+      console.log(this.name + " collided with finish line");
     }
 
-    //   // Border rect
-    // if ((this.x > 2000 && this.x < 2025) && (this.y > -225 && this.y < 2025)){
-    //   this.x -= 1;
-    //   this.HP -= Math.abs(this.vX)*8;
-    //   this.vX = -this.vX * 0.7;
-    //   }
-    //
-    // if ((this.x > -225 && this.x < -200) && (this.y > -225 && this.y < 2025)){
-    //   this.x += 1;
-    //   this.HP -= Math.abs(this.vX)*8;
-    //   this.vX = -this.vX * 0.7;
-    //   }
-    //
-    // if ((this.y > 2000 && this.y < 2025) && (this.x > -200 && this.x < 2000)){
-    //   this.y -= 1;
-    //   this.HP -= Math.abs(this.vY)*8;
-    //   this.vY = -this.vY * 0.7;
-    //   }
-    //
-    // if ((this.y > -225 && this.y < -200) && (this.x > -200 && this.x < 2000)){
-    //   this.y += 1;
-    //   this.HP -= Math.abs(this.vY)*8;
-    //   this.vY = -this.vY * 0.7;
-    //   }
-    // }
+    // Check for collision with check points
+    for(var i in checkPoints){
+      if (this.collision(this.x, this.y, checkPoints[i][0], checkPoints[i][1],
+      checkPoints[i][2], checkPoints[i][3], "trigger") == true){
+        this.checkPointCounter[i] = true;
+      }
+    }
 
+    }
     // The collision function
-    this.collision = function(playerx, playery, x1, x2, y1, y2, axisPush, damage, bounce) {
+    this.collision = function(playerx, playery, x1, x2, y1, y2, effect, damage, bounce) {
       if ((playerx > x1 && playerx < x2) && (playery > y1 && playery < y2)){
-       if (axisPush == "x-1"){
+       if (effect == "x-1"){
          this.x -= 1;
          this.HP -= Math.abs(this.vX)*damage;
          this.vX = -this.vX * bounce;
          }
-       if (axisPush == "x+1"){
+       if (effect == "x+1"){
          this.x += 1;
          this.HP -= Math.abs(this.vX)*damage;
          this.vX = Math.abs(this.vX)*bounce;
          }
-       if (axisPush == "y-1"){
+       if (effect == "y-1"){
          this.y -= 1;
          this.HP -= Math.abs(this.vY)*damage;
          this.vY = -this.vY * bounce;
          }
-       if (axisPush == "y+1"){
+       if (effect == "y+1"){
          this.y += 1;
          this.HP -= Math.abs(this.vY)*damage;
          this.vY = Math.abs(this.vY)*bounce;
          }
+       if (effect == "trigger"){
+         return true;
+         }
        }
+      else{
+        if (effect == "trigger"){
+          return false;
+        }
+      }
     }
 
   // Pack to initialize a new instance of a player
@@ -243,7 +245,8 @@ var Player = function(id, name, x, y, car) {
       y: this.y,
       angle: this.angle,
       HP: this.HP,
-      alive: this.alive
+      alive: this.alive,
+      laps: this.laps
     }
   }
 
@@ -271,18 +274,14 @@ setInterval(() => {
     io.emit("updatePack", {updatePack});
 }, 1000/75)
 
+var checkPoints = [
+  [-200, 200, 1600, 2000],
+  [-200, 200, -200, 200],
+  [1600, 2000, -200, 200],
+  [1600, 2000, 1600, 2000]
+];
 
-// // Inside rect
-// if ((this.x > 200 && this.x < 225) && (this.y > 200 && this.y < 1600)){
-// this.x -= 1;
-// this.HP -= Math.abs(this.vX)*8;
-// this.vX = -this.vX * 0.7;
-// }
-
-
-
-
-// The collision objects
+var finishLine = [975, 1025, -200, 200];
 
 // The car object constructor
 var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, drawCar){
