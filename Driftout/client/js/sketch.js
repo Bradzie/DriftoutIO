@@ -251,6 +251,7 @@ function refreshLeaderboard(){
       text += "<div class = 'leaderboardItem'>" + allPlayers[i].laps + " " + allPlayers[i].name + "</div>\n";
     }
     else{
+      exitGame();
       allPlayers.splice(i, 1);
     }
   }
