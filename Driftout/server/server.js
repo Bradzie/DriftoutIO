@@ -148,64 +148,80 @@ var Player = function(id, name, x, y, car) {
         if (allPlayers[i].id != this.id){
           console.log("self");
           if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < 10){
+            console.log();
             this.HP -= 1;
           }
         }
         else{
-          console.log(((allPlayers[i].x-this.x)**2)+((allPlayers[i].y-this.y)**2));
+          //console.log(((allPlayers[i].x-this.x)**2)+((allPlayers[i].y-this.y)**2));
+          }
         }
       }
+
+    // Inside rect
+    this.collision(this.x, this.y, 200, 225, 200, 1600, "x-1", 8, 0.7);
+    this.collision(this.x, this.y, 200, 1600, 200, 225, "y-1", 8, 0.7);
+    this.collision(this.x, this.y, 1575, 1600, 200, 1600, "x+1", 8, 0.7);
+    this.collision(this.x, this.y, 200, 1600, 1575, 1600, "y+1", 8, 0.7);
+
+    // Outside rect
+    this.collision(this.x, this.y, 2000, 2025, -225, 2025, "x-1", 8, 0.7);
+    this.collision(this.x, this.y, -225, -200, -225, 2025, "x+1", 8, 0.7);
+    this.collision(this.x, this.y, -200, 2000, 2000, 2025, "y-1", 8, 0.7);
+    this.collision(this.x, this.y, -200, 2000, -225, -200, "y+1", 8, 0.7);
+
     }
 
-      // Inside rect
-    if ((this.x > 200 && this.x < 225) && (this.y > 200 && this.y < 1600)){
-      this.x -= 1;
-      this.HP -= Math.abs(this.vX)*8;
-      this.vX = -this.vX * 0.7;
-      }
+    //   // Border rect
+    // if ((this.x > 2000 && this.x < 2025) && (this.y > -225 && this.y < 2025)){
+    //   this.x -= 1;
+    //   this.HP -= Math.abs(this.vX)*8;
+    //   this.vX = -this.vX * 0.7;
+    //   }
+    //
+    // if ((this.x > -225 && this.x < -200) && (this.y > -225 && this.y < 2025)){
+    //   this.x += 1;
+    //   this.HP -= Math.abs(this.vX)*8;
+    //   this.vX = -this.vX * 0.7;
+    //   }
+    //
+    // if ((this.y > 2000 && this.y < 2025) && (this.x > -200 && this.x < 2000)){
+    //   this.y -= 1;
+    //   this.HP -= Math.abs(this.vY)*8;
+    //   this.vY = -this.vY * 0.7;
+    //   }
+    //
+    // if ((this.y > -225 && this.y < -200) && (this.x > -200 && this.x < 2000)){
+    //   this.y += 1;
+    //   this.HP -= Math.abs(this.vY)*8;
+    //   this.vY = -this.vY * 0.7;
+    //   }
+    // }
 
-    if ((this.y > 200 && this.y < 225) && (this.x > 200 && this.x < 1600)){
-      this.y -= 1;
-      this.HP -= Math.abs(this.vY)*8;
-      this.vY = -this.vY * 0.7;
-      }
-
-    if ((this.x > 1575 && this.x < 1600) && (this.y > 200 && this.y < 1600)){
-      this.x += 1;
-      this.HP -= Math.abs(this.vX)*8;
-      this.vX = -this.vX * 0.7;
-      }
-
-    if ((this.y > 1575 && this.y < 1600) && (this.x > 200 && this.x < 1600)){
-      this.y += 1;
-      this.HP -= Math.abs(this.vY)*8;
-      this.vY = -this.vY * 0.7;
-      }
-
-      // Border rect
-    if ((this.x > 2000 && this.x < 2025) && (this.y > -225 && this.y < 2025)){
-      this.x -= 1;
-      this.HP -= Math.abs(this.vX)*8;
-      this.vX = -this.vX * 0.7;
-      }
-
-    if ((this.x > -225 && this.x < -200) && (this.y > -225 && this.y < 2025)){
-      this.x += 1;
-      this.HP -= Math.abs(this.vX)*8;
-      this.vX = -this.vX * 0.7;
-      }
-
-    if ((this.y > 2000 && this.y < 2025) && (this.x > -200 && this.x < 2000)){
-      this.y -= 1;
-      this.HP -= Math.abs(this.vY)*8;
-      this.vY = -this.vY * 0.7;
-      }
-
-    if ((this.y > -225 && this.y < -200) && (this.x > -200 && this.x < 2000)){
-      this.y += 1;
-      this.HP -= Math.abs(this.vY)*8;
-      this.vY = -this.vY * 0.7;
-      }
+    // The collision function
+    this.collision = function(playerx, playery, x1, x2, y1, y2, axisPush, damage, bounce) {
+      if ((playerx > x1 && playerx < x2) && (playery > y1 && playery < y2)){
+       if (axisPush == "x-1"){
+         this.x -= 1;
+         this.HP -= Math.abs(this.vX)*damage;
+         this.vX = -this.vX * bounce;
+         }
+       if (axisPush == "x+1"){
+         this.x += 1;
+         this.HP -= Math.abs(this.vX)*damage;
+         this.vX = Math.abs(this.vX)*bounce;
+         }
+       if (axisPush == "y-1"){
+         this.y -= 1;
+         this.HP -= Math.abs(this.vY)*damage;
+         this.vY = -this.vY * bounce;
+         }
+       if (axisPush == "y+1"){
+         this.y += 1;
+         this.HP -= Math.abs(this.vY)*damage;
+         this.vY = Math.abs(this.vY)*bounce;
+         }
+       }
     }
 
   // Pack to initialize a new instance of a player
@@ -254,6 +270,19 @@ setInterval(() => {
 
     io.emit("updatePack", {updatePack});
 }, 1000/75)
+
+
+// // Inside rect
+// if ((this.x > 200 && this.x < 225) && (this.y > 200 && this.y < 1600)){
+// this.x -= 1;
+// this.HP -= Math.abs(this.vX)*8;
+// this.vX = -this.vX * 0.7;
+// }
+
+
+
+
+// The collision objects
 
 // The car object constructor
 var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, drawCar){
