@@ -12,7 +12,9 @@ var playing = false,
   carRadio = document.getElementById('carRadio'),
   nameInput = document.getElementById('nameInput'),
   leaderboardContainer = document.getElementById('leaderboardContainer'),
-  leaderboardItem = document.getElementById('leaderboardItem');
+  leaderboardItem = document.getElementById('leaderboardItem'),
+  boostContainer = document.getElementById('boostContainer'),
+  boostContainerCooldown = document.getElementById('boostContainerCooldown');
 
 // Constants
 var allCars;
@@ -156,6 +158,7 @@ function setup(){
                   allPlayers[j].HP = data.updatePack[i].HP;
                   allPlayers[j].alive = data.updatePack[i].alive;
                   allPlayers[j].laps = data.updatePack[i].laps;
+                  allPlayers[j].boosts = data.updatePack[i].boosts;
               }
           }
       }
@@ -180,6 +183,7 @@ function draw() {
     background(100, 100, 100); // it gets a hex/rgb color
     sendInputData();
     refreshLeaderboard();
+    refreshBoostOverlay();
 
     for(var i in allPlayers) {
         if(allPlayers[i].id == myId) {
@@ -207,6 +211,8 @@ function exitGame(){
   menuContainer.style.opacity = "1";
   leaderboardContainer.style.visibility = "hidden";
   leaderboardContainer.style.opacity = "0";
+  boostContainer.style.visibility = "hidden";
+  boostContainer.style.opacity = "0";
   playing = false;
   socket.emit("removePlayerServer");
 }
@@ -240,6 +246,8 @@ function enterGame(){
   menuContainer.style.opacity = "0";
   leaderboardContainer.style.visibility = "visible";
   leaderboardContainer.style.opacity = "1";
+  boostContainer.style.visibility = "visible";
+  boostContainer.style.opacity = "1";
   //console.log(allPlayers);
 }
 
@@ -256,6 +264,20 @@ function refreshLeaderboard(){
     }
   }
   leaderboardContainer.innerHTML = "Leaderboard\n" + text;
+}
+
+function refreshBoostOverlay(){
+  for(var i in allPlayers){
+    if(allPlayers[i].id === socket.id){
+      boostContainerCooldown.innerHTML = "Boost " + allPlayers[i].boosts;
+      if(allPlayers[i].boosts == 0){
+        boostContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)"
+      }
+      else{
+        boostContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)"
+      }
+    }
+  }
 }
 
 function drawMap(){
@@ -355,6 +377,7 @@ var Player = function(id, name, x, y, car, alive) {
   this.HP = car.maxHP;
   this.maxSpeed = car.maxSpeed;
   this.maxBoosts = car.maxBoosts;
+  this.boosts = car.maxBoosts;
   this.acceleration = car.acceleration;
   this.alive = true;
   this.drawCar = car.drawCar;
