@@ -29,7 +29,7 @@ io.on("connection", function(socket){
   var player;
 
   socket.on("ready", (data) => {
-      player = new Player(socket.id, data.name, 0, 0, data.car);
+      player = new Player(socket.id, data.name, 900, Math.floor((Math.random()-0.5)*200), data.car);
       player.alive = true;
       allPlayers.push(player);
 
