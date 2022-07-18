@@ -167,7 +167,7 @@ var Player = function(id, name, x, y, car) {
               var angle = -Math.atan2(allPlayers[i].y - this.y, allPlayers[i].x - this.x);
 
               var m1 = 5;
-              var m2 = 5;
+              var m2 = 10;
 
               const u1 = rotate({x : this.vX, y : this.vY}, angle);
               const u2 = rotate({x : allPlayers[i].vX, y : allPlayers[i].vY}, angle);

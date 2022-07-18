@@ -194,6 +194,10 @@ function draw() {
         }
     }
 
+    if(allPlayers.filter(player => player.id === myId).length == 0){
+      exitGame();
+    }
+
     drawMap();
 
     for(var i in allPlayers) {
@@ -259,7 +263,7 @@ function refreshLeaderboard(){
       text += "<div class = 'leaderboardItem'>" + allPlayers[i].laps + " " + allPlayers[i].name + "</div>\n";
     }
     else{
-      exitGame();
+      //exitGame();
       allPlayers.splice(i, 1);
     }
   }
