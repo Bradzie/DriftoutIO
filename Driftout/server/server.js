@@ -29,7 +29,7 @@ io.on("connection", function(socket){
   var player;
 
   socket.on("ready", (data) => {
-      player = new Player(socket.id, data.name, 0, 0, data.car);
+      player = new Player(socket.id, data.name, 900, Math.floor((Math.random()-0.5)*200), data.car);
       player.alive = true;
       allPlayers.push(player);
 
@@ -94,11 +94,14 @@ var Player = function(id, name, x, y, car) {
   this.maxHP = car.maxHP;
   this.HP = car.maxHP;
   this.maxSpeed = car.maxSpeed;
+  this.boosts = car.maxBoosts;
   this.maxBoosts = car.maxBoosts;
   this.acceleration = car.acceleration;
   this.alive = true;
   this.drawCar = car.drawCar;
   this.boostPower = car.boostPower;
+  this.size = car.size;
+  this.mass = car.mass;
   this.angle = 0;
   this.canBoost = Date.now();
   this.boostCooldown = 3000;
@@ -114,10 +117,11 @@ var Player = function(id, name, x, y, car) {
       }
 
       // Movement
-      if (mouseIsPressed == true && Date.now() > this.canBoost){
+      if (mouseIsPressed == true && Date.now() > this.canBoost && this.boosts > 0){
         this.vX += Math.cos(this.angle)*this.boostPower;
         this.vY += Math.sin(this.angle)*this.boostPower;
         this.canBoost = Date.now() + this.boostCooldown;
+        this.boosts-=1
       }
       if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
         this.vX += Math.cos(this.angle)*this.acceleration;
@@ -138,7 +142,7 @@ var Player = function(id, name, x, y, car) {
       // Health regen
 
       if(this.HP < this.maxHP){
-        this.HP += 1;
+        this.HP += 0.2;
       }
     }
   }
@@ -149,10 +153,40 @@ var Player = function(id, name, x, y, car) {
     if (allPlayers.length > 1){
       for(var i in allPlayers){
         if (allPlayers[i].id != this.id){
-          console.log("self");
-          if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < 10){
-            console.log();
-            this.HP -= 1;
+          //console.log("self");
+          if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < 70){
+            var collidedPlayerAngle = Math.atan2(this.y - allPlayers[i].y, this.x - allPlayers[i].x);
+
+            var xVDiff = this.vX - allPlayers[i].vX;
+            var yVDiff = this.vY - allPlayers[i].vY;
+
+            var xDist = allPlayers[i].x - this.x;
+            var yDist = allPlayers[i].y - this.y;
+
+            if(xVDiff * xDist + yVDiff * yDist >= 0){
+              var angle = -Math.atan2(allPlayers[i].y - this.y, allPlayers[i].x - this.x);
+
+              var m1 = 5;
+              var m2 = 10;
+
+              const u1 = rotate({x : this.vX, y : this.vY}, angle);
+              const u2 = rotate({x : allPlayers[i].vX, y : allPlayers[i].vY}, angle);
+
+              var v1 = {x: u1.x * (m1 - m2) / (m1 + m2) + u2.x * 2 * m2 / (m1 + m2), y: u1.y};
+              var v2 = {x: u2.x * (m1 - m2) / (m1 + m2) + u1.x * 2 * m2 / (m1 + m2), y: u2.y};
+
+              var v1Final = rotate(v1, -angle);
+              var v2Final = rotate(v2, -angle);
+
+              this.HP -= Math.abs((this.vX + this.vY)/2) * 20;
+              allPlayers[i].HP -= Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * 20;
+
+              this.vX = v1Final.x;
+              this.vY = v1Final.y;
+
+              allPlayers[i].vX = v2Final.x;
+              allPlayers[i].vY = v2Final.y;
+            }
           }
         }
         else{
@@ -178,6 +212,7 @@ var Player = function(id, name, x, y, car) {
     finishLine[2], finishLine[3], "trigger") == true){
       if (this.checkPointCounter.every(point => point == true)){
         this.laps += 1;
+        this.boosts = this.maxBoosts;
         this.checkPointCounter = [false, false, false, false];
         console.log(this.name + " has now completed " + this.laps + " laps!");
       }
@@ -246,11 +281,21 @@ var Player = function(id, name, x, y, car) {
       angle: this.angle,
       HP: this.HP,
       alive: this.alive,
-      laps: this.laps
+      laps: this.laps,
+      boosts: this.boosts
     }
   }
 
     return this;
+}
+
+function rotate(velocity, angle) {
+    const rotatedVelocities = {
+        x: velocity.x * Math.cos(angle) - velocity.y * Math.sin(angle),
+        y: velocity.x * Math.sin(angle) + velocity.y * Math.cos(angle)
+    }
+
+    return rotatedVelocities;
 }
 
 // Loop speed to update player properties
@@ -276,7 +321,7 @@ var checkPoints = [
 var finishLine = [975, 1025, -200, 200];
 
 // The car object constructor
-var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, drawCar){
+var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, size, mass, drawCar){
   this.name = name;
   this.maxHP = maxHP;
   this.maxSpeed = maxSpeed;
@@ -285,11 +330,13 @@ var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boo
   this.acceleration = acceleration;
   this.drawCar = drawCar;
   this.boostPower = boostPower;
+  this.size = size;
+  this.mass = mass;
 }
 
 // Car class objects
 allCars = {
-  Racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, function(x, y, angle){
+  Racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, 25, 5, function(x, y, angle){
     push();
     fill(20,20,200);
     translate(x, y);
@@ -304,7 +351,7 @@ allCars = {
     smooth();
     pop();
   }),
-  Prankster : new Car('Prankster', 120, 6, 5, [], 0.1, 2, function(x, y, angle){
+  Prankster : new Car('Prankster', 120, 6, 4, [], 0.1, 2, 20, 4, function(x, y, angle){
     push();
     translate(x, y);
     rotate(angle);
@@ -328,7 +375,7 @@ allCars = {
     smooth();
     pop();
   }),
-  Bullet : new Car('Bullet', 100, 10, 5, [], 0.12, 2.5, function(x, y, angle){
+  Bullet : new Car('Bullet', 100, 10, 6, [], 0.12, 2.5, 25, 7, function(x, y, angle){
     push();
     translate(x, y);
     rotate(angle);
@@ -345,7 +392,7 @@ allCars = {
     smooth();
     pop();
   }),
-  Tank : new Car('Tank', 200, 4, 5, [], 0.08, 3, function(x, y, angle){
+  Tank : new Car('Tank', 200, 4, 5, [], 0.08, 3, 35, 10, function(x, y, angle){
     push();
     translate(x, y);
     rotate(angle);
@@ -356,7 +403,7 @@ allCars = {
     smooth();
     pop();
   }),
-  Sprinter : new Car('Sprinter', 80, 12, 10, [], 0.14, 2, function(x, y, angle){
+  Sprinter : new Car('Sprinter', 80, 12, 10, [], 0.14, 2, 25, 2, function(x, y, angle){
     push();
     translate(x, y);
     rotate(angle);
