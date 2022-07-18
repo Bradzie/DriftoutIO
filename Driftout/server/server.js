@@ -109,9 +109,9 @@ var Player = function(id, name, x, y, car) {
 
     if (this.alive == true){
 
-      if (this.HP < 0){
-        this.alive = false;
-      }
+      //if (this.HP < 0){
+      //  this.alive = false;
+      //}
 
       // Movement
       if (mouseIsPressed == true && Date.now() > this.canBoost){
@@ -138,7 +138,7 @@ var Player = function(id, name, x, y, car) {
       // Health regen
 
       if(this.HP < this.maxHP){
-        this.HP += 1;
+        this.HP += 0.2;
       }
     }
   }
@@ -149,10 +149,40 @@ var Player = function(id, name, x, y, car) {
     if (allPlayers.length > 1){
       for(var i in allPlayers){
         if (allPlayers[i].id != this.id){
-          console.log("self");
-          if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < 10){
-            console.log();
-            this.HP -= 1;
+          //console.log("self");
+          if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < 70){
+            var collidedPlayerAngle = Math.atan2(this.y - allPlayers[i].y, this.x - allPlayers[i].x);
+
+            var xVDiff = this.vX - allPlayers[i].vX;
+            var yVDiff = this.vY - allPlayers[i].vY;
+
+            var xDist = allPlayers[i].x - this.x;
+            var yDist = allPlayers[i].y - this.y;
+
+            if(xVDiff * xDist + yVDiff * yDist >= 0){
+              var angle = -Math.atan2(allPlayers[i].y - this.y, allPlayers[i].x - this.x);
+
+              var m1 = 5
+              var m2 = 5
+
+              const u1 = rotate({x : this.vX, y : this.vY}, angle);
+              const u2 = rotate({x : allPlayers[i].vX, y : allPlayers[i].vY}, angle);
+
+              var v1 = {x: u1.x * (m1 - m2) / (m1 + m2) + u2.x * 2 * m2 / (m1 + m2), y: u1.y};
+              var v2 = {x: u2.x * (m1 - m2) / (m1 + m2) + u1.x * 2 * m2 / (m1 + m2), y: u2.y};
+
+              var v1Final = rotate(v1, -angle);
+              var v2Final = rotate(v2, -angle);
+
+              this.HP -= Math.abs((this.vX + this.vY)/2) * 20;
+              allPlayers[i].HP -= Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * 20;
+
+              this.vX = v1Final.x;
+              this.vY = v1Final.y;
+
+              allPlayers[i].vX = v2Final.x;
+              allPlayers[i].vY = v2Final.y;
+            }
           }
         }
         else{
@@ -253,13 +283,22 @@ var Player = function(id, name, x, y, car) {
     return this;
 }
 
+function rotate(velocity, angle) {
+    const rotatedVelocities = {
+        x: velocity.x * Math.cos(angle) - velocity.y * Math.sin(angle),
+        y: velocity.x * Math.sin(angle) + velocity.y * Math.cos(angle)
+    }
+
+    return rotatedVelocities;
+}
+
 // Loop speed to update player properties
 setInterval(() => {
     var updatePack = [];
 
     for(var i in allPlayers) {
         allPlayers[i].events(mouseIsPressed);
-        console.log(allPlayers.length);
+        //console.log(allPlayers.length);
         updatePack.push(allPlayers[i].getUpdatePack());
     }
 
