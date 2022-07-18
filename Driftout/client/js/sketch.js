@@ -114,8 +114,6 @@ function setup(){
   allPlayers = [];
   myId = 0;
 
-  leaderboardContainer.innerHTML = "Leaderboard";
-
   socket = io();
 
   socket.on("myID", function(data) {
@@ -127,11 +125,7 @@ function setup(){
       var player = new Player(data.id, data.name, data.x, data.y, newCar);
       allPlayers.push(player);
       console.log(allPlayers);
-      var text = "";
-      for(var i in allPlayers){
-        text += "<div class = 'leaderboardItem'>" + allPlayers[i].name + "</div>\n";
-      }
-      leaderboardContainer.innerHTML = "Leaderboard\n" + text;
+      refreshLeaderboard();
   });
 
   socket.on("removePlayerClient", () => {
@@ -148,12 +142,7 @@ function setup(){
           var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar);
           allPlayers.push(player);
           console.log(myId);
-          console.log(allPlayers);
-          var text = "";
-          for(var i in allPlayers){
-            text += "<div class = 'leaderboardItem'>" + allPlayers[i].name + "</div>\n";
-          }
-          leaderboardContainer.innerHTML = "Leaderboard\n" + text;
+          refreshLeaderboard();
       }
   });
 
@@ -166,6 +155,7 @@ function setup(){
                   allPlayers[j].angle = data.updatePack[i].angle;
                   allPlayers[j].HP = data.updatePack[i].HP;
                   allPlayers[j].alive = data.updatePack[i].alive;
+                  allPlayers[j].laps = data.updatePack[i].laps;
               }
           }
       }
@@ -189,6 +179,7 @@ function draw() {
     resizeCanvas(windowWidth, windowHeight);
     background(100, 100, 100); // it gets a hex/rgb color
     sendInputData();
+    refreshLeaderboard();
 
     for(var i in allPlayers) {
         if(allPlayers[i].id == myId) {
@@ -249,7 +240,22 @@ function enterGame(){
   menuContainer.style.opacity = "0";
   leaderboardContainer.style.visibility = "visible";
   leaderboardContainer.style.opacity = "1";
-  console.log(allPlayers);
+  //console.log(allPlayers);
+}
+
+function refreshLeaderboard(){
+  leaderboardContainer.innerHTML = "Leaderboard";
+  var text = "";
+  for(var i in allPlayers){
+    if(allPlayers[i].alive == true){
+      text += "<div class = 'leaderboardItem'>" + allPlayers[i].laps + " " + allPlayers[i].name + "</div>\n";
+    }
+    else{
+      exitGame();
+      allPlayers.splice(i, 1);
+    }
+  }
+  leaderboardContainer.innerHTML = "Leaderboard\n" + text;
 }
 
 function drawMap(){
@@ -282,6 +288,16 @@ function drawMap(){
   mapBorderLine(200, 1600, 200, 200);
   mapBorderLine(200, 1600, 1600, 1600);
   mapBorderLine(1600, 200, 1600, 1600);
+
+  push();
+  fill(255);
+  beginShape();
+  vertex(975,-200);
+  vertex(975, 200);
+  vertex(1025, 200);
+  vertex(1025, -200);
+  endShape(CLOSE);
+  pop();
 
 }
 
@@ -343,6 +359,7 @@ var Player = function(id, name, x, y, car, alive) {
   this.alive = true;
   this.drawCar = car.drawCar;
   this.boostPower = car.boostPower;
+  this.laps = 0;
 
   this.draw = function() {
 

@@ -61,6 +61,12 @@ body {
   text-align: center;
 }
 
+#carSelect label{
+  background-color: #02f6fa;
+  border-radius: 3px;
+  padding: 3px;
+}
+
 #nameInput {
   align-self: center;
   text-align: center;

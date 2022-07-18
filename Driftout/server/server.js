@@ -12,7 +12,7 @@ var io = socketIO(server);
 app.use(express.static(publicPath));
 
 var allPlayers = [];
-var mouseIsPressed;
+var mouseIsPressed = false;
 
 // ---------- CONTSTANTS ----------
 
@@ -58,6 +58,7 @@ io.on("connection", function(socket){
               break;
           }
       }
+      //console.log(mouseIsPressed);
   })
 
   socket.on("disconnect", () => {
@@ -71,19 +72,16 @@ io.on("connection", function(socket){
 
   socket.on("removePlayerServer", () => {
     socket.emit("removePlayerClient");
-    console.log(allPlayers);
     for(var i in allPlayers) {
         if(allPlayers[i].id === socket.id) {
             allPlayers.splice(i, 1);
         }
     }
-    console.log(allPlayers);
   });
 });
 
 // The player object constructor
 var Player = function(id, name, x, y, car) {
-  console.log(car);
   this.id = id;
   this.name = name;
   this.x = x;
@@ -102,8 +100,10 @@ var Player = function(id, name, x, y, car) {
   this.drawCar = car.drawCar;
   this.boostPower = car.boostPower;
   this.angle = 0;
-  this.canBoost = 0;
-  this.boostCooldown = 1000;
+  this.canBoost = Date.now();
+  this.boostCooldown = 3000;
+  this.checkPointCounter = [false, false, false, false];
+  this.laps = 0
 
   this.events = function(mouseIsPressed) {
 
@@ -114,10 +114,10 @@ var Player = function(id, name, x, y, car) {
       }
 
       // Movement
-      if (mouseIsPressed == true && Date.getTime() > canBoost){
+      if (mouseIsPressed == true && Date.now() > this.canBoost){
         this.vX += Math.cos(this.angle)*this.boostPower;
         this.vY += Math.sin(this.angle)*this.boostPower;
-        canBoost = Date.getTime() + boostCooldown;
+        this.canBoost = Date.now() + this.boostCooldown;
       }
       if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
         this.vX += Math.cos(this.angle)*this.acceleration;
@@ -138,61 +138,91 @@ var Player = function(id, name, x, y, car) {
       // Health regen
 
       if(this.HP < this.maxHP){
-        this.HP += 0.05;
+        this.HP += 1;
       }
     }
   }
 
   this.doCollisions = function() {
 
-      // Inside rect
-    if ((this.x > 200 && this.x < 225) && (this.y > 200 && this.y < 1600)){
-      this.x -= 1;
-      this.HP -= Math.abs(this.vX)*8;
-      this.vX = -this.vX * 0.7;
+      // Player doCollisions
+    if (allPlayers.length > 1){
+      for(var i in allPlayers){
+        if (allPlayers[i].id != this.id){
+          console.log("self");
+          if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < 10){
+            console.log();
+            this.HP -= 1;
+          }
+        }
+        else{
+          //console.log(((allPlayers[i].x-this.x)**2)+((allPlayers[i].y-this.y)**2));
+          }
+        }
       }
 
-    if ((this.y > 200 && this.y < 225) && (this.x > 200 && this.x < 1600)){
-      this.y -= 1;
-      this.HP -= Math.abs(this.vY)*8;
-      this.vY = -this.vY * 0.7;
-      }
+    // Inside rect
+    this.collision(this.x, this.y, 200, 225, 200, 1600, "x-1", 8, 0.7);
+    this.collision(this.x, this.y, 200, 1600, 200, 225, "y-1", 8, 0.7);
+    this.collision(this.x, this.y, 1575, 1600, 200, 1600, "x+1", 8, 0.7);
+    this.collision(this.x, this.y, 200, 1600, 1575, 1600, "y+1", 8, 0.7);
 
-    if ((this.x > 1575 && this.x < 1600) && (this.y > 200 && this.y < 1600)){
-      this.x += 1;
-      this.HP -= Math.abs(this.vX)*8;
-      this.vX = -this.vX * 0.7;
-      }
+    // Outside rect
+    this.collision(this.x, this.y, 2000, 2025, -225, 2025, "x-1", 8, 0.7);
+    this.collision(this.x, this.y, -225, -200, -225, 2025, "x+1", 8, 0.7);
+    this.collision(this.x, this.y, -200, 2000, 2000, 2025, "y-1", 8, 0.7);
+    this.collision(this.x, this.y, -200, 2000, -225, -200, "y+1", 8, 0.7);
 
-    if ((this.y > 1575 && this.y < 1600) && (this.x > 200 && this.x < 1600)){
-      this.y += 1;
-      this.HP -= Math.abs(this.vY)*8;
-      this.vY = -this.vY * 0.7;
+    // Check if inside finish line
+    if (this.collision(this.x, this.y, finishLine[0], finishLine[1],
+    finishLine[2], finishLine[3], "trigger") == true){
+      if (this.checkPointCounter.every(point => point == true)){
+        this.laps += 1;
+        this.checkPointCounter = [false, false, false, false];
+        console.log(this.name + " has now completed " + this.laps + " laps!");
       }
+    }
 
-      // Border rect
-    if ((this.x > 2000 && this.x < 2025) && (this.y > -225 && this.y < 2025)){
-      this.x -= 1;
-      this.HP -= Math.abs(this.vX)*8;
-      this.vX = -this.vX * 0.7;
+    // Check for collision with check points
+    for(var i in checkPoints){
+      if (this.collision(this.x, this.y, checkPoints[i][0], checkPoints[i][1],
+      checkPoints[i][2], checkPoints[i][3], "trigger") == true){
+        this.checkPointCounter[i] = true;
       }
+    }
 
-    if ((this.x > -225 && this.x < -200) && (this.y > -225 && this.y < 2025)){
-      this.x += 1;
-      this.HP -= Math.abs(this.vX)*8;
-      this.vX = -this.vX * 0.7;
-      }
-
-    if ((this.y > 2000 && this.y < 2025) && (this.x > -200 && this.x < 2000)){
-      this.y -= 1;
-      this.HP -= Math.abs(this.vY)*8;
-      this.vY = -this.vY * 0.7;
-      }
-
-    if ((this.y > -225 && this.y < -200) && (this.x > -200 && this.x < 2000)){
-      this.y += 1;
-      this.HP -= Math.abs(this.vY)*8;
-      this.vY = -this.vY * 0.7;
+    }
+    // The collision function
+    this.collision = function(playerx, playery, x1, x2, y1, y2, effect, damage, bounce) {
+      if ((playerx > x1 && playerx < x2) && (playery > y1 && playery < y2)){
+       if (effect == "x-1"){
+         this.x -= 1;
+         this.HP -= Math.abs(this.vX)*damage;
+         this.vX = -this.vX * bounce;
+         }
+       if (effect == "x+1"){
+         this.x += 1;
+         this.HP -= Math.abs(this.vX)*damage;
+         this.vX = Math.abs(this.vX)*bounce;
+         }
+       if (effect == "y-1"){
+         this.y -= 1;
+         this.HP -= Math.abs(this.vY)*damage;
+         this.vY = -this.vY * bounce;
+         }
+       if (effect == "y+1"){
+         this.y += 1;
+         this.HP -= Math.abs(this.vY)*damage;
+         this.vY = Math.abs(this.vY)*bounce;
+         }
+       if (effect == "trigger"){
+         return true;
+         }
+       }
+      else{
+        if (effect == "trigger"){
+          return false;
+        }
       }
     }
 
@@ -215,16 +245,8 @@ var Player = function(id, name, x, y, car) {
       y: this.y,
       angle: this.angle,
       HP: this.HP,
-      alive: this.alive
-    }
-  }
-
-  // To sync player positions on a wider interval
-  this.getSyncPack = function (){
-    return {
-      id: this.id,
-      x: this.x,
-      y: this.y
+      alive: this.alive,
+      laps: this.laps
     }
   }
 
@@ -236,12 +258,22 @@ setInterval(() => {
     var updatePack = [];
 
     for(var i in allPlayers) {
-        allPlayers[i].events();
+        allPlayers[i].events(mouseIsPressed);
+        console.log(allPlayers.length);
         updatePack.push(allPlayers[i].getUpdatePack());
     }
 
     io.emit("updatePack", {updatePack});
 }, 1000/75)
+
+var checkPoints = [
+  [-200, 200, 1600, 2000],
+  [-200, 200, -200, 200],
+  [1600, 2000, -200, 200],
+  [1600, 2000, 1600, 2000]
+];
+
+var finishLine = [975, 1025, -200, 200];
 
 // The car object constructor
 var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, drawCar){
