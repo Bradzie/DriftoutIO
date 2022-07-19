@@ -54,6 +54,7 @@ io.on("connection", function(socket){
               allPlayers[i].angle = data.angle;
               allPlayers[i].windowWidth = data.windowWidth;
               allPlayers[i].windowHeight = data.windowHeight;
+              allPlayers[i].mouseDistanceToCar = data.mouseDistanceToCar;
               mouseIsPressed = data.mouseClick;
               break;
           }
@@ -90,6 +91,7 @@ var Player = function(id, name, x, y, car) {
   this.vY = 0;
   this.mouseX;
   this.mouseY;
+  this.mouseDistanceToCar;
   this.car = car;
   this.maxHP = car.maxHP;
   this.HP = car.maxHP;
@@ -118,12 +120,12 @@ var Player = function(id, name, x, y, car) {
 
       // Movement
       if (mouseIsPressed == true && Date.now() > this.canBoost && this.boosts > 0){
-        this.vX += Math.cos(this.angle)*this.boostPower;
-        this.vY += Math.sin(this.angle)*this.boostPower;
+        this.vX += this.vX > this.maxSpeed / 3 || this.vX < -this.maxSpeed / 3 ? Math.cos(this.angle)*this.boostPower : Math.cos(this.angle)*(this.boostPower)*3;
+        this.vY += this.vY > this.maxSpeed / 3 || this.vY < -this.maxSpeed / 3 ? Math.sin(this.angle)*this.boostPower : Math.sin(this.angle)*(this.boostPower)*3;
         //this.vX = Math.cos(this.angle)+(((this.vY+this.boostPower*2)+this.vX)/2);
         //this.vY = Math.sin(this.angle)+(((this.vX+this.boostPower*2)+this.vY)/2);
         this.canBoost = Date.now() + this.boostCooldown;
-        this.boosts-=1
+        this.boosts-=1;
       }
       if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
         this.vX += Math.cos(this.angle)*this.acceleration;
@@ -308,7 +310,7 @@ setInterval(() => {
 
     for(var i in allPlayers) {
         allPlayers[i].events(mouseIsPressed);
-        console.log(allPlayers.length);
+        //console.log(allPlayers.length);
         updatePack.push(allPlayers[i].getUpdatePack());
     }
 

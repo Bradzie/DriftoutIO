@@ -182,7 +182,7 @@ function setup(){
   var mainCanvas = createCanvas(windowWidth, windowHeight);
   mainCanvas.parent("mainCanvas");
 
-  enterGame();
+  //enterGame();
 
 }
 
@@ -377,7 +377,8 @@ function sendInputData() {
     if (mouseIsPressed === true){
       mouseClick = true;
     }
-    socket.emit("inputData", {mouseX, mouseY, angle, windowWidth, windowHeight, mouseClick});
+    var mouseDistanceToCar = Math.abs(Math.sqrt((windowHeight/2 - mouseY)**2+(windowHeight/2 - mouseY)**2));
+    socket.emit("inputData", {mouseX, mouseY, angle, windowWidth, windowHeight, mouseClick, mouseDistanceToCar});
 }
 
 
