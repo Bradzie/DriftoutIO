@@ -120,6 +120,8 @@ var Player = function(id, name, x, y, car) {
       if (mouseIsPressed == true && Date.now() > this.canBoost && this.boosts > 0){
         this.vX += Math.cos(this.angle)*this.boostPower;
         this.vY += Math.sin(this.angle)*this.boostPower;
+        //this.vX = Math.cos(this.angle)+(((this.vY+this.boostPower*2)+this.vX)/2);
+        //this.vY = Math.sin(this.angle)+(((this.vX+this.boostPower*2)+this.vY)/2);
         this.canBoost = Date.now() + this.boostCooldown;
         this.boosts-=1
       }
@@ -167,7 +169,7 @@ var Player = function(id, name, x, y, car) {
               var angle = -Math.atan2(allPlayers[i].y - this.y, allPlayers[i].x - this.x);
 
               var m1 = 5;
-              var m2 = 10;
+              var m2 = 1000;
 
               const u1 = rotate({x : this.vX, y : this.vY}, angle);
               const u2 = rotate({x : allPlayers[i].vX, y : allPlayers[i].vY}, angle);
@@ -282,7 +284,9 @@ var Player = function(id, name, x, y, car) {
       HP: this.HP,
       alive: this.alive,
       laps: this.laps,
-      boosts: this.boosts
+      boosts: this.boosts,
+      boostCooldown: this.boostCooldown,
+      canBoost: this.canBoost
     }
   }
 
@@ -375,7 +379,7 @@ allCars = {
     smooth();
     pop();
   }),
-  Bullet : new Car('Bullet', 100, 10, 6, [], 0.12, 2.5, 25, 7, function(x, y, angle){
+  Bullet : new Car('Bullet', 100, 10, 6, [], 0.12, 10, 25, 7, function(x, y, angle){
     push();
     translate(x, y);
     rotate(angle);
@@ -383,7 +387,8 @@ allCars = {
     fill(230,230,10);
     stroke(125,125,0);
     beginShape();
-    vertex(30, 0);
+    vertex(35, 0);
+    vertex(25, 0);
     vertex(15, 20);
     vertex(-30, 20);
     vertex(-30, -20);

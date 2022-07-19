@@ -12,22 +12,26 @@
   <body>
     <div id = "mainCanvas"></div>
     <div id = "menuContainer">
-      <p class = "gameTitle">DRIFTOUT IO</p>
-      <button id = "enterGameButton" onClick = "enterGame()" type = "button">
-        RACE
-      </button>
-      <input id = "nameInput" placeholder = "Name">
-      <div id = "carSelect">
-        <input id = "carInputRacer" type = "radio" name = "carRadio">
-        <label for = "carInputRacer">Racer</label>
-        <input id = "carInputSprinter" type = "radio" name = "carRadio">
-        <label for = "carInputSprinter">Sprinter</label>
-        <input id = "carInputTank" type = "radio" name = "carRadio">
-        <label for = "carInputTank">Tank</label>
-        <input id = "carInputPrankster" type = "radio" name = "carRadio">
-        <label for = "carInputPrankster">Prankster</label>
-        <input id = "carInputBullet" type = "radio" name = "carRadio">
-        <label for = "carInputBullet">Bullet</label>
+      <p class = "gameTitle">DRIFTOUT
+        <span style="color:#02f6fa">IO</span>
+      </p>
+      <div id = "inputContainer">
+        <input id = "nameInput" placeholder = "Name">
+        <div id = "carSelect">
+          <input id = "carInputRacer" type = "radio" name = "carRadio">
+          <label for = "carInputRacer">Racer</label>
+          <input id = "carInputSprinter" type = "radio" name = "carRadio">
+          <label for = "carInputSprinter">Sprinter</label>
+          <input id = "carInputTank" type = "radio" name = "carRadio">
+          <label for = "carInputTank">Tank</label>
+          <input id = "carInputPrankster" type = "radio" name = "carRadio">
+          <label for = "carInputPrankster">Prankster</label>
+          <input id = "carInputBullet" type = "radio" name = "carRadio">
+          <label for = "carInputBullet">Bullet</label>
+          <button id = "enterGameButton" onClick = "enterGame()" type = "button">
+            RACE
+          </button>
+        </div>
       </div>
     </div>
     <div id = "leaderboardContainer">

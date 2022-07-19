@@ -70,7 +70,8 @@ function preload(){
       fill(230,230,10);
       stroke(125,125,0);
       beginShape();
-      vertex(30, 0);
+      vertex(30, -10);
+      vertex(30, 10);
       vertex(15, 20);
       vertex(-30, 20);
       vertex(-30, -20);
@@ -116,6 +117,10 @@ function setup(){
   allPlayers = [];
   myId = 0;
 
+  nameInput.focus();
+  menuContainer.style.visibility = "visible";
+  menuContainer.style.opacity = "1";
+
   socket = io();
 
   socket.on("myID", function(data) {
@@ -159,6 +164,8 @@ function setup(){
                   allPlayers[j].alive = data.updatePack[i].alive;
                   allPlayers[j].laps = data.updatePack[i].laps;
                   allPlayers[j].boosts = data.updatePack[i].boosts;
+                  allPlayers[j].canBoost = data.updatePack[i].canBoost;
+                  allPlayers[j].boostCooldown = data.updatePack[i].boostCooldown;
               }
           }
       }
@@ -174,6 +181,8 @@ function setup(){
 
   var mainCanvas = createCanvas(windowWidth, windowHeight);
   mainCanvas.parent("mainCanvas");
+
+  enterGame();
 
 }
 
@@ -279,6 +288,15 @@ function refreshBoostOverlay(){
       }
       else{
         boostContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)"
+        if(allPlayers[i].canBoost > Date.now()){
+          boostContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)"
+          var firedAt = allPlayers[i].canBoost - allPlayers[i].boostCooldown;
+          boostContainerCooldown.style.width = ((((Date.now() - firedAt) / (allPlayers[i].canBoost - firedAt))*100)-10) + "%";
+        }
+        else{
+          boostContainerCooldown.style.width = "90%"
+          boostContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)"
+        }
       }
     }
   }
@@ -305,15 +323,7 @@ function drawMap(){
   endShape(CLOSE);
   pop();
 
-  mapBorderLine(-200, -200, 2000, -200);
-  mapBorderLine(-200, 2000, -200, -200);
-  mapBorderLine(-200, 2000, 2000, 2000);
-  mapBorderLine(2000, -200, 2000, 2000);
-
-  mapBorderLine(200, 200, 1600, 200);
-  mapBorderLine(200, 1600, 200, 200);
-  mapBorderLine(200, 1600, 1600, 1600);
-  mapBorderLine(1600, 200, 1600, 1600);
+  createMapBorders([[-200, -200, 2000, -200], [-200, 2000, -200, -200], [-200, 2000, 2000, 2000], [2000, -200, 2000, 2000], [200, 200, 1600, 200], [200, 1600, 200, 200], [200, 1600, 1600, 1600], [1600, 200, 1600, 1600]]);
 
   push();
   fill(255);
@@ -327,13 +337,19 @@ function drawMap(){
 
 }
 
+function createMapBorders(borderArray){
+  for(var i in borderArray){
+    mapBorderLine(borderArray[i][0], borderArray[i][1], borderArray[i][2], borderArray[i][3])
+  }
+}
+
 function mapBorderLine(x1, y1, x2, y2){
   var count = 0;
   var max = 0;
   var isRed = true;
 
   strokeCap(ROUND);
-  strokeWeight(50);
+  strokeWeight(30);
 
   max = Math.sqrt(((x2-x1)**2)+((y2-y1)**2)) / 75
 
@@ -386,16 +402,14 @@ var Player = function(id, name, x, y, car, alive) {
   this.alive = true;
   this.drawCar = car.drawCar;
   this.boostPower = car.boostPower;
+  this.canBoost = true;
+  this.boostCooldown = 0;
   this.laps = 0;
 
   this.draw = function() {
 
     // Player's car
-    //console.log(this.HP, this.maxHP);
     this.drawCar(this.x, this.y, this.angle);
-    //console.log("Player name: " + this.name + " at x: " + this.x + " at y: " + this.y);
-    //console.log(this.id + " " + round(this.x) + " " + round(this.y));
-
 
     // Player's name
     textSize(20);
