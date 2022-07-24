@@ -9,6 +9,7 @@ var playing = false,
   carInputSprinter = document.getElementById('carInputSprinter'),
   carInputPrankster = document.getElementById('carInputPrankster'),
   carInputBullet = document.getElementById('carInputBullet'),
+  carInputFragile = document.getElementById('carInputFragile'),
   carRadio = document.getElementById('carRadio'),
   nameInput = document.getElementById('nameInput'),
   gameGuiContainer = document.getElementById('gameGuiContainer'),
@@ -110,7 +111,22 @@ function preload(){
       smooth();
       pop();
     }),
-    Fragile : new Car('Fragile', 70, 6, 5, [], 0.1, 2.5),
+    Fragile : new Car('Fragile', 70, 6, 5, [], 0.1, 2.5, 25, 1, function(x, y, angle){
+      push();
+      translate(x, y);
+      rotate(angle);
+      strokeWeight(5);
+      fill(255, 210, 120);
+      stroke(100, 100, 100);
+      beginShape();
+      vertex(0, 25);
+      vertex(25, 0);
+      vertex(0, -25);
+      vertex(-25, 0);
+      endShape(CLOSE);
+      smooth();
+      pop();
+    }),
     Spike : new Car('Spike', 150, 5, 3, [], 0.12, 3)
   };
 }
@@ -258,6 +274,9 @@ function enterGame(){
   }
   if(carInputBullet.checked == true){
     carChoice = allCars.Bullet;
+  }
+  if(carInputFragile.checked == true){
+    carChoice = allCars.Fragile;
   }
 
   socket.emit("ready", {name: nameInput.value, car: carChoice});
