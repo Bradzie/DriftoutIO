@@ -10,6 +10,7 @@ var playing = false,
   carInputPrankster = document.getElementById('carInputPrankster'),
   carInputBullet = document.getElementById('carInputBullet'),
   carInputFragile = document.getElementById('carInputFragile'),
+  carInputSpike = document.getElementById('carInputSpike'),
   carRadio = document.getElementById('carRadio'),
   nameInput = document.getElementById('nameInput'),
   gameGuiContainer = document.getElementById('gameGuiContainer'),
@@ -127,7 +128,37 @@ function preload(){
       smooth();
       pop();
     }),
-    Spike : new Car('Spike', 150, 5, 3, [], 0.12, 3)
+    Spike : new Car('Spike', 150, 5, 3, [], 0.12, 3, 30, 8, function(x, y, angle){
+      push();
+      translate(x, y);
+      rotate(angle);
+      strokeWeight(3);
+      fill(150, 150, 150);
+      stroke(50, 50, 50);
+      beginShape();
+      vertex(0, 32);
+      vertex(27, -18);
+      vertex(-27, -18);
+      endShape(CLOSE);
+      beginShape();
+      vertex(0, -32);
+      vertex(-27, 18);
+      vertex(27, 18);
+      endShape(CLOSE);
+      beginShape();
+      vertex(-32, 0);
+      vertex(18, 27);
+      vertex(18, -27);
+      endShape(CLOSE);
+      beginShape();
+      vertex(32, 0);
+      vertex(-18, 27);
+      vertex(-18, -27);
+      endShape(CLOSE);
+      fill(0, 0, 0);
+      circle(0,0,45);
+      pop();
+    })
   };
 }
 
@@ -277,6 +308,9 @@ function enterGame(){
   }
   if(carInputFragile.checked == true){
     carChoice = allCars.Fragile;
+  }
+  if(carInputSpike.checked == true){
+    carChoice = allCars.Spike;
   }
 
   socket.emit("ready", {name: nameInput.value, car: carChoice});
