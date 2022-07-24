@@ -3,7 +3,7 @@ html, body{
 }
 
 body {
-  background-color: grey;
+  background-color: #001261;
   width: 100%;
 	height: 100%;
   margin: 0;
@@ -41,6 +41,24 @@ body {
   transition: visibility 1s linear, opacity 0.5s linear;
 }
 
+#notificationContainer {
+  position: fixed;
+  text-align: center;
+  left: 50%;
+  top: 15%;
+  transform: translate(-50%);
+  font-size: 2.5em;
+  color: white;
+  text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+  cursor: pointer;
+}
+
+#gameGuiContainer {
+  opacity: 0;
+  visibility: hidden;
+  transition: visibility 0.5s linear, opacity 0.5s linear;
+}
+
 #boostContainer {
   position: absolute;
   width: 4em;
@@ -52,9 +70,6 @@ body {
   font-family: 'Kdam Thmor Pro';
   font-size: 32px;
   color: white;
-  opacity: 0;
-  visibility: hidden;
-  transition: visibility 0.5s linear, opacity 0.5s linear;
 }
 
 #boostContainerCooldown {
@@ -77,9 +92,6 @@ body {
   font-family: 'Kdam Thmor Pro';
   font-size: 32px;
   color: white;
-  opacity: 0;
-  visibility: hidden;
-  transition: visibility 0.5s linear, opacity 0.5s linear;
 }
 
 .leaderboardItem {
@@ -114,13 +126,13 @@ body {
   transform: translateZ(-10px);
   border-radius: 0.3em;
   font-size: 1.5em;
-  padding-left: 1em;
-  padding-right: 1em;
+  padding-left: 0.8em;
+  padding-right: 0.8em;
   font-weight: bolder;
   background-color: #02f6fa;
   align-self: center;
   z-index: 100;
-  border: 4px solid white;
+  border: none;
   font-family: 'Kdam Thmor Pro';
 }
 
