@@ -11,6 +11,8 @@ var playing = false,
   carInputBullet = document.getElementById('carInputBullet'),
   carRadio = document.getElementById('carRadio'),
   nameInput = document.getElementById('nameInput'),
+  gameGuiContainer = document.getElementById('gameGuiContainer'),
+  notificationContainer = document.getElementById('notificationContainer'),
   leaderboardContainer = document.getElementById('leaderboardContainer'),
   leaderboardItem = document.getElementById('leaderboardItem'),
   boostContainer = document.getElementById('boostContainer'),
@@ -19,11 +21,13 @@ var playing = false,
 // Constants
 var allCars;
 var allPlayers = [];
+var notifications = [];
+var nextNotification = 0;
 
 // Load prior to game start
 function preload(){
   allCars = {
-    Racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, function(x, y, angle){
+    Racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, 25, 5, function(x, y, angle){
       push();
       fill(20,20,200);
       translate(x, y);
@@ -38,7 +42,7 @@ function preload(){
       smooth();
       pop();
     }),
-    Prankster : new Car('Prankster', 120, 6, 5, [], 0.1, 2, function(x, y, angle){
+    Prankster : new Car('Prankster', 120, 6, 5, [], 0.1, 2, 20, 4, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -62,7 +66,7 @@ function preload(){
       smooth();
       pop();
     }),
-    Bullet : new Car('Bullet', 100, 10, 5, [], 0.12, 2.5, function(x, y, angle){
+    Bullet : new Car('Bullet', 100, 12, 5, [], 0.08, 2.5, 25, 7, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -70,7 +74,8 @@ function preload(){
       fill(230,230,10);
       stroke(125,125,0);
       beginShape();
-      vertex(30, 0);
+      vertex(30, -10);
+      vertex(30, 10);
       vertex(15, 20);
       vertex(-30, 20);
       vertex(-30, -20);
@@ -79,7 +84,7 @@ function preload(){
       smooth();
       pop();
     }),
-    Tank : new Car('Tank', 200, 4, 5, [], 0.08, 3, function(x, y, angle){
+    Tank : new Car('Tank', 200, 4, 5, [], 0.08, 3, 35, 10, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -90,7 +95,7 @@ function preload(){
       smooth();
       pop();
     }),
-    Sprinter : new Car('Sprinter', 80, 12, 10, [], 0.14, 2, function(x, y, angle){
+    Sprinter : new Car('Sprinter', 80, 12, 10, [], 0.14, 2, 25, 2, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -116,6 +121,12 @@ function setup(){
   allPlayers = [];
   myId = 0;
 
+  nameInput.focus();
+  nameInput.select();
+
+  menuContainer.style.visibility = "visible";
+  menuContainer.style.opacity = "1";
+
   socket = io();
 
   socket.on("myID", function(data) {
@@ -126,7 +137,7 @@ function setup(){
       var newCar = Object.entries(allCars).filter(car => car[0] == data.car.name)[0][1];
       var player = new Player(data.id, data.name, data.x, data.y, newCar);
       allPlayers.push(player);
-      console.log(allPlayers);
+      //console.log(allPlayers);
       refreshLeaderboard();
   });
 
@@ -143,7 +154,7 @@ function setup(){
           var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack[i].car.name)[0][1];
           var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar);
           allPlayers.push(player);
-          console.log(myId);
+          //console.log(myId);
           refreshLeaderboard();
       }
   });
@@ -159,9 +170,16 @@ function setup(){
                   allPlayers[j].alive = data.updatePack[i].alive;
                   allPlayers[j].laps = data.updatePack[i].laps;
                   allPlayers[j].boosts = data.updatePack[i].boosts;
+                  allPlayers[j].canBoost = data.updatePack[i].canBoost;
+                  allPlayers[j].boostCooldown = data.updatePack[i].boostCooldown;
               }
           }
       }
+  });
+
+  socket.on("notifcationData", function(data) {
+    console.log(data.notification);
+    notifications.push(data.notification);
   });
 
   socket.on("someoneLeft", function(data) {
@@ -175,6 +193,8 @@ function setup(){
   var mainCanvas = createCanvas(windowWidth, windowHeight);
   mainCanvas.parent("mainCanvas");
 
+  //enterGame();
+
 }
 
 function draw() {
@@ -184,6 +204,7 @@ function draw() {
     sendInputData();
     refreshLeaderboard();
     refreshBoostOverlay();
+    refreshNotifications();
 
     for(var i in allPlayers) {
         if(allPlayers[i].id == myId) {
@@ -213,12 +234,11 @@ function draw() {
 function exitGame(){
   menuContainer.style.visibility = "visible";
   menuContainer.style.opacity = "1";
-  leaderboardContainer.style.visibility = "hidden";
-  leaderboardContainer.style.opacity = "0";
-  boostContainer.style.visibility = "hidden";
-  boostContainer.style.opacity = "0";
+  gameGuiContainer.style.visibility = "hidden";
+  gameGuiContainer.style.opacity = "0";
   playing = false;
   socket.emit("removePlayerServer");
+  enterGameButton.setAttribute('onClick', 'enterGame()');
 }
 
 function enterGame(){
@@ -226,33 +246,43 @@ function enterGame(){
   playing = true;
   if(carInputRacer.checked == true){
     carChoice = allCars.Racer;
-    console.log('racer');
   }
   if(carInputTank.checked == true){
     carChoice = allCars.Tank;
-    console.log('tank');
   }
   if(carInputSprinter.checked == true){
     carChoice = allCars.Sprinter;
-    console.log('sprinter');
   }
   if(carInputPrankster.checked == true){
     carChoice = allCars.Prankster;
-    console.log('prankster');
   }
   if(carInputBullet.checked == true){
     carChoice = allCars.Bullet;
-    console.log('bullet');
   }
 
   socket.emit("ready", {name: nameInput.value, car: carChoice});
+
+  enterGameButton.setAttribute('onClick', '');
   menuContainer.style.visibility = "hidden";
   menuContainer.style.opacity = "0";
-  leaderboardContainer.style.visibility = "visible";
-  leaderboardContainer.style.opacity = "1";
-  boostContainer.style.visibility = "visible";
-  boostContainer.style.opacity = "1";
+  gameGuiContainer.style.visibility = "visible";
+  gameGuiContainer.style.opacity = "1";
   //console.log(allPlayers);
+}
+
+function refreshNotifications(){
+  if (notifications.length > 0){
+    if (millis() > nextNotification){
+      notificationContainer.innerHTML = notifications[0];
+      nextNotification = millis() + 2000;
+      notifications.shift();
+    }
+  }
+  else{
+    if (millis() > nextNotification){
+      notificationContainer.innerHTML = "";
+    }
+  }
 }
 
 function refreshLeaderboard(){
@@ -279,6 +309,15 @@ function refreshBoostOverlay(){
       }
       else{
         boostContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)"
+        if(allPlayers[i].canBoost > Date.now()){
+          boostContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)"
+          var firedAt = allPlayers[i].canBoost - allPlayers[i].boostCooldown;
+          boostContainerCooldown.style.width = ((((Date.now() - firedAt) / (allPlayers[i].canBoost - firedAt))*100)-10) + "%";
+        }
+        else{
+          boostContainerCooldown.style.width = "90%"
+          boostContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)"
+        }
       }
     }
   }
@@ -305,46 +344,50 @@ function drawMap(){
   endShape(CLOSE);
   pop();
 
-  mapBorderLine(-200, -200, 2000, -200);
-  mapBorderLine(-200, 2000, -200, -200);
-  mapBorderLine(-200, 2000, 2000, 2000);
-  mapBorderLine(2000, -200, 2000, 2000);
-
-  mapBorderLine(200, 200, 1600, 200);
-  mapBorderLine(200, 1600, 200, 200);
-  mapBorderLine(200, 1600, 1600, 1600);
-  mapBorderLine(1600, 200, 1600, 1600);
-
   push();
-  fill(255);
-  beginShape();
-  vertex(975,-200);
-  vertex(975, 200);
-  vertex(1025, 200);
-  vertex(1025, -200);
-  endShape(CLOSE);
+  mapLine(1020, -200, 1020, 200, [0,0,0], [230, 230, 230], 20);
+  mapLine(1000, -200, 1000, 200, [230,230,230], [0,0,0], 20);
+  mapLine(980, -200, 980, 200, [0,0,0], [230, 230, 230], 20);
   pop();
+
+  createMapBorders([[-200, -200, 2000, -200], [-200, 2000, -200, -200], [-200, 2000, 2000, 2000], [2000, -200, 2000, 2000], [200, 200, 1600, 200], [200, 1600, 200, 200], [200, 1600, 1600, 1600], [1600, 200, 1600, 1600]]);
+
+  // push();
+  // fill(255);
+  // beginShape();
+  // vertex(975,-200);
+  // vertex(975, 200);
+  // vertex(1025, 200);
+  // vertex(1025, -200);
+  // endShape(CLOSE);
+  // pop();
 
 }
 
-function mapBorderLine(x1, y1, x2, y2){
+function createMapBorders(borderArray){
+  for(var i in borderArray){
+    mapLine(borderArray[i][0], borderArray[i][1], borderArray[i][2], borderArray[i][3], [230, 0, 0]);
+  }
+}
+
+function mapLine(x1, y1, x2, y2, colour1 = [0,0,0], colour2 = [220,220,220], thickness = 30){
   var count = 0;
   var max = 0;
-  var isRed = true;
+  var isColour = true;
 
   strokeCap(ROUND);
-  strokeWeight(50);
+  strokeWeight(thickness);
 
   max = Math.sqrt(((x2-x1)**2)+((y2-y1)**2)) / 75
 
   while(count<21){
-    if (isRed == true){
-      stroke(255,0,0);
-      isRed = false;
+    if (isColour == true){
+      stroke(colour1);
+      isColour = false;
     }
     else{
-      stroke(255,255,255);
-      isRed = true;
+      stroke(colour2);
+      isColour = true;
     }
     line(x1+(((x2-x1)/21)*count),y1+(((y2-y1)/21)*count),x2,y2);
     strokeCap(SQUARE);
@@ -361,7 +404,8 @@ function sendInputData() {
     if (mouseIsPressed === true){
       mouseClick = true;
     }
-    socket.emit("inputData", {mouseX, mouseY, angle, windowWidth, windowHeight, mouseClick});
+    var mouseDistanceToCar = Math.abs(Math.sqrt((windowHeight/2 - mouseY)**2+(windowHeight/2 - mouseY)**2));
+    socket.emit("inputData", {mouseX, mouseY, angle, windowWidth, windowHeight, mouseClick, mouseDistanceToCar});
 }
 
 
@@ -386,16 +430,15 @@ var Player = function(id, name, x, y, car, alive) {
   this.alive = true;
   this.drawCar = car.drawCar;
   this.boostPower = car.boostPower;
+  this.mass = car.mass;
+  this.canBoost = true;
+  this.boostCooldown = 0;
   this.laps = 0;
 
   this.draw = function() {
 
     // Player's car
-    //console.log(this.HP, this.maxHP);
     this.drawCar(this.x, this.y, this.angle);
-    //console.log("Player name: " + this.name + " at x: " + this.x + " at y: " + this.y);
-    //console.log(this.id + " " + round(this.x) + " " + round(this.y));
-
 
     // Player's name
     textSize(20);
@@ -431,7 +474,7 @@ var Player = function(id, name, x, y, car, alive) {
 
 
 // The car object constructor
-var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, drawCar){
+var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, size, mass, drawCar){
   this.name = name;
   this.maxHP = maxHP;
   this.maxSpeed = maxSpeed;
@@ -440,4 +483,6 @@ var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boo
   this.acceleration = acceleration;
   this.drawCar = drawCar;
   this.boostPower = boostPower;
+  this.mass = mass;
+  this.size = size;
 }

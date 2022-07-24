@@ -13,6 +13,7 @@ app.use(express.static(publicPath));
 
 var allPlayers = [];
 var mouseIsPressed = false;
+var notifications = [];
 
 // ---------- CONTSTANTS ----------
 
@@ -35,13 +36,12 @@ io.on("connection", function(socket){
 
 
       socket.emit("myID", {id: player.id});
-      console.log(player.id);
+      //console.log(player.id);
       socket.broadcast.emit('newPlayer', player.getInitPack());
 
       var initPack = [];
       for(var i in allPlayers) {
           initPack.push(allPlayers[i].getInitPack());
-          console.log(allPlayers[i].name);
       }
       socket.emit("initPack", {initPack: initPack});
   });
@@ -54,6 +54,7 @@ io.on("connection", function(socket){
               allPlayers[i].angle = data.angle;
               allPlayers[i].windowWidth = data.windowWidth;
               allPlayers[i].windowHeight = data.windowHeight;
+              allPlayers[i].mouseDistanceToCar = data.mouseDistanceToCar;
               mouseIsPressed = data.mouseClick;
               break;
           }
@@ -90,6 +91,7 @@ var Player = function(id, name, x, y, car) {
   this.vY = 0;
   this.mouseX;
   this.mouseY;
+  this.mouseDistanceToCar;
   this.car = car;
   this.maxHP = car.maxHP;
   this.HP = car.maxHP;
@@ -114,14 +116,17 @@ var Player = function(id, name, x, y, car) {
 
       if (this.HP < 0){
         this.alive = false;
+        notifications.push(this.name + " Crashed!");
       }
 
       // Movement
       if (mouseIsPressed == true && Date.now() > this.canBoost && this.boosts > 0){
-        this.vX += Math.cos(this.angle)*this.boostPower;
-        this.vY += Math.sin(this.angle)*this.boostPower;
+        this.vX += this.vX > this.maxSpeed / 3 || this.vX < -this.maxSpeed / 3 ? Math.cos(this.angle)*this.boostPower : Math.cos(this.angle)*(this.boostPower)*3;
+        this.vY += this.vY > this.maxSpeed / 3 || this.vY < -this.maxSpeed / 3 ? Math.sin(this.angle)*this.boostPower : Math.sin(this.angle)*(this.boostPower)*3;
+        //this.vX = Math.cos(this.angle)+(((this.vY+this.boostPower*2)+this.vX)/2);
+        //this.vY = Math.sin(this.angle)+(((this.vX+this.boostPower*2)+this.vY)/2);
         this.canBoost = Date.now() + this.boostCooldown;
-        this.boosts-=1
+        this.boosts-=1;
       }
       if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
         this.vX += Math.cos(this.angle)*this.acceleration;
@@ -153,8 +158,7 @@ var Player = function(id, name, x, y, car) {
     if (allPlayers.length > 1){
       for(var i in allPlayers){
         if (allPlayers[i].id != this.id){
-          //console.log("self");
-          if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < 70){
+          if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < this.size + allPlayers[i].size){
             var collidedPlayerAngle = Math.atan2(this.y - allPlayers[i].y, this.x - allPlayers[i].x);
 
             var xVDiff = this.vX - allPlayers[i].vX;
@@ -166,8 +170,8 @@ var Player = function(id, name, x, y, car) {
             if(xVDiff * xDist + yVDiff * yDist >= 0){
               var angle = -Math.atan2(allPlayers[i].y - this.y, allPlayers[i].x - this.x);
 
-              var m1 = 5;
-              var m2 = 10;
+              var m1 = this.mass;
+              var m2 = allPlayers[i].mass;
 
               const u1 = rotate({x : this.vX, y : this.vY}, angle);
               const u2 = rotate({x : allPlayers[i].vX, y : allPlayers[i].vY}, angle);
@@ -196,16 +200,16 @@ var Player = function(id, name, x, y, car) {
       }
 
     // Inside rect
-    this.collision(this.x, this.y, 200, 225, 200, 1600, "x-1", 8, 0.7);
-    this.collision(this.x, this.y, 200, 1600, 200, 225, "y-1", 8, 0.7);
-    this.collision(this.x, this.y, 1575, 1600, 200, 1600, "x+1", 8, 0.7);
-    this.collision(this.x, this.y, 200, 1600, 1575, 1600, "y+1", 8, 0.7);
+    this.collision(this.x, this.y, 200, 225, 200, 1600, "x-1", 8, 0.4);
+    this.collision(this.x, this.y, 200, 1600, 200, 225, "y-1", 8, 0.4);
+    this.collision(this.x, this.y, 1575, 1600, 200, 1600, "x+1", 8, 0.4);
+    this.collision(this.x, this.y, 200, 1600, 1575, 1600, "y+1", 8, 0.4);
 
     // Outside rect
-    this.collision(this.x, this.y, 2000, 2025, -225, 2025, "x-1", 8, 0.7);
-    this.collision(this.x, this.y, -225, -200, -225, 2025, "x+1", 8, 0.7);
-    this.collision(this.x, this.y, -200, 2000, 2000, 2025, "y-1", 8, 0.7);
-    this.collision(this.x, this.y, -200, 2000, -225, -200, "y+1", 8, 0.7);
+    this.collision(this.x, this.y, 2000, 2025, -225, 2025, "x-1", 8, 0.4);
+    this.collision(this.x, this.y, -225, -200, -225, 2025, "x+1", 8, 0.4);
+    this.collision(this.x, this.y, -200, 2000, 2000, 2025, "y-1", 8, 0.4);
+    this.collision(this.x, this.y, -200, 2000, -225, -200, "y+1", 8, 0.4);
 
     // Check if inside finish line
     if (this.collision(this.x, this.y, finishLine[0], finishLine[1],
@@ -214,6 +218,7 @@ var Player = function(id, name, x, y, car) {
         this.laps += 1;
         this.boosts = this.maxBoosts;
         this.checkPointCounter = [false, false, false, false];
+        notifications.push(this.name + " Completed a lap!");
         console.log(this.name + " has now completed " + this.laps + " laps!");
       }
     }
@@ -232,22 +237,22 @@ var Player = function(id, name, x, y, car) {
       if ((playerx > x1 && playerx < x2) && (playery > y1 && playery < y2)){
        if (effect == "x-1"){
          this.x -= 1;
-         this.HP -= Math.abs(this.vX)*damage;
+         this.HP -= (Math.abs(this.vX)*damage) + 2;
          this.vX = -this.vX * bounce;
          }
        if (effect == "x+1"){
          this.x += 1;
-         this.HP -= Math.abs(this.vX)*damage;
+         this.HP -= (Math.abs(this.vX)*damage) + 2;
          this.vX = Math.abs(this.vX)*bounce;
          }
        if (effect == "y-1"){
          this.y -= 1;
-         this.HP -= Math.abs(this.vY)*damage;
+         this.HP -= (Math.abs(this.vY)*damage) + 2;
          this.vY = -this.vY * bounce;
          }
        if (effect == "y+1"){
          this.y += 1;
-         this.HP -= Math.abs(this.vY)*damage;
+         this.HP -= (Math.abs(this.vY)*damage) + 2;
          this.vY = Math.abs(this.vY)*bounce;
          }
        if (effect == "trigger"){
@@ -282,7 +287,9 @@ var Player = function(id, name, x, y, car) {
       HP: this.HP,
       alive: this.alive,
       laps: this.laps,
-      boosts: this.boosts
+      boosts: this.boosts,
+      boostCooldown: this.boostCooldown,
+      canBoost: this.canBoost
     }
   }
 
@@ -302,9 +309,14 @@ function rotate(velocity, angle) {
 setInterval(() => {
     var updatePack = [];
 
+    if (notifications.length > 0){
+      io.emit("notifcationData", {notification: notifications[0]});
+      notifications = notifications.slice(1);
+    }
+
     for(var i in allPlayers) {
         allPlayers[i].events(mouseIsPressed);
-        console.log(allPlayers.length);
+        //console.log(allPlayers.length);
         updatePack.push(allPlayers[i].getUpdatePack());
     }
 
@@ -375,7 +387,7 @@ allCars = {
     smooth();
     pop();
   }),
-  Bullet : new Car('Bullet', 100, 10, 6, [], 0.12, 2.5, 25, 7, function(x, y, angle){
+  Bullet : new Car('Bullet', 100, 10, 6, [], 0.3, 10, 25, 7, function(x, y, angle){
     push();
     translate(x, y);
     rotate(angle);
@@ -383,7 +395,8 @@ allCars = {
     fill(230,230,10);
     stroke(125,125,0);
     beginShape();
-    vertex(30, 0);
+    vertex(35, 0);
+    vertex(25, 0);
     vertex(15, 20);
     vertex(-30, 20);
     vertex(-30, -20);

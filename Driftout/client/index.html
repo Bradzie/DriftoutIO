@@ -5,6 +5,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kdam+Thmor+Pro&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans" rel="stylesheet">
     <link rel="icon" href="./assets/icon.png">
     <meta charset="utf-8">
     <title>Driftout.IO</title>
@@ -12,30 +13,39 @@
   <body>
     <div id = "mainCanvas"></div>
     <div id = "menuContainer">
-      <p class = "gameTitle">DRIFTOUT IO</p>
-      <button id = "enterGameButton" onClick = "enterGame()" type = "button">
-        RACE
-      </button>
-      <input id = "nameInput" placeholder = "Name">
-      <div id = "carSelect">
-        <input id = "carInputRacer" type = "radio" name = "carRadio">
-        <label for = "carInputRacer">Racer</label>
-        <input id = "carInputSprinter" type = "radio" name = "carRadio">
-        <label for = "carInputSprinter">Sprinter</label>
-        <input id = "carInputTank" type = "radio" name = "carRadio">
-        <label for = "carInputTank">Tank</label>
-        <input id = "carInputPrankster" type = "radio" name = "carRadio">
-        <label for = "carInputPrankster">Prankster</label>
-        <input id = "carInputBullet" type = "radio" name = "carRadio">
-        <label for = "carInputBullet">Bullet</label>
+      <p class = "gameTitle">DRIFTOUT
+        <span style="color:#02f6fa">IO</span>
+      </p>
+      <div id = "inputContainer">
+        <input id = "nameInput" placeholder = "Name">
+        <div id = "carSelect">
+          <input id = "carInputRacer" type = "radio" name = "carRadio">
+          <label for = "carInputRacer">Racer</label>
+          <input id = "carInputSprinter" type = "radio" name = "carRadio">
+          <label for = "carInputSprinter">Sprinter</label>
+          <input id = "carInputTank" type = "radio" name = "carRadio">
+          <label for = "carInputTank">Tank</label>
+          <input id = "carInputPrankster" type = "radio" name = "carRadio">
+          <label for = "carInputPrankster">Prankster</label>
+          <input id = "carInputBullet" type = "radio" name = "carRadio">
+          <label for = "carInputBullet">Bullet</label>
+          <button id = "enterGameButton" onClick = "enterGame()" type = "button">
+            RACE ᐅ
+          </button>
+        </div>
       </div>
     </div>
-    <div id = "leaderboardContainer">
-      Leaderboard
-    </div>
-    <div id="boostContainer">
-      <div id="boostContainerCooldown">
-        Boost
+    <div id = "gameGuiContainer">
+      <div id = "leaderboardContainer">
+        Leaderboard
+      </div>
+      <div id="boostContainer">
+        <div id="boostContainerCooldown">
+          Boost
+        </div>
+      </div>
+      <div id="notificationContainer">
+        Notification
       </div>
     </div>
   </body>
