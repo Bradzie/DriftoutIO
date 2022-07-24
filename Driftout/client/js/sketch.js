@@ -326,6 +326,8 @@ function enterGame(){
 function refreshNotifications(){
   if (notifications.length > 0){
     if (millis() > nextNotification){
+      notificationContainer.style.opacity = "1";
+      notificationContainer.style.width = "150%";
       notificationContainer.innerHTML = notifications[0];
       nextNotification = millis() + 2000;
       notifications.shift();
@@ -333,7 +335,8 @@ function refreshNotifications(){
   }
   else{
     if (millis() > nextNotification){
-      notificationContainer.innerHTML = "";
+      notificationContainer.style.opacity = "0";
+      notificationContainer.style.width = "100%";
     }
   }
 }
