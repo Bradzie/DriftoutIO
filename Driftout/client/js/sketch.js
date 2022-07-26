@@ -25,11 +25,19 @@ var allCars;
 var allPlayers = [];
 var notifications = [];
 var nextNotification = 0;
+var currentEntities = [];
 
 // Load prior to game start
 function preload(){
   allCars = {
-    Racer : new Car('Racer', 150, 6, 8, [], 0.11, 2.5, 25, 5, function(x, y, angle){
+    Racer : new Car('Racer', 150, 6, 8, {
+      MaxHP : 12,
+      RegenHP : 2,
+      MaxBoosts: 1,
+      MoveSpeed : [0.01, 0.5],
+      SingleHeal : 40,
+      SingleBoost : 7.5
+    }, 0.11, 2.5, 25, 5, null, null, function(x, y, angle){
       push();
       fill(20,20,200);
       translate(x, y);
@@ -44,7 +52,44 @@ function preload(){
       smooth();
       pop();
     }),
-    Prankster : new Car('Prankster', 120, 6, 5, [], 0.1, 2, 20, 4, function(x, y, angle){
+    Prankster : new Car('Prankster', 120, 6, 5, {
+      MaxHP : 10,
+      RegenHP : 2,
+      TrapDamage: 8,
+      TrapCooldown : 0.6,
+      TrapSize : 3,
+      SingleHeal : 40
+    }, 0.1, 2, 20, 4, 1000, function(x, y, angle){
+      return {
+        name : "Trap",
+        x : x,
+        y : y,
+        vX : Math.cos((angle + 180) % 360) * 10,
+        vY : Math.sin((angle + 180) % 360) * 10,
+        size : 20,
+        damage : 40,
+        cooldown : 1000,
+        draw : function(x, y){
+          push();
+          translate(x, y);
+          strokeWeight(5);
+          fill(50,255,150);
+          stroke(0,150,50);
+          beginShape();
+          vertex(0, 20);
+          vertex(5, 5);
+          vertex(20, 0);
+          vertex(5, -5);
+          vertex(0, -20);
+          vertex(-5, -5);
+          vertex(-20, 0);
+          vertex(-5, 5);
+          endShape(CLOSE);
+          smooth();
+          pop();
+        }
+      };
+    }, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -68,7 +113,14 @@ function preload(){
       smooth();
       pop();
     }),
-    Bullet : new Car('Bullet', 100, 12, 5, [], 0.08, 2.5, 25, 7, function(x, y, angle){
+    Bullet : new Car('Bullet', 100, 12, 5, {
+      MaxHP : 10,
+      RegenHP : 3,
+      MaxBoosts: 1,
+      MoveSpeed : [0.005, 0.8],
+      DashResist : 3,
+      DashPower : 10
+    }, 0.08, 2.5, 25, 7, null, null, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -86,7 +138,14 @@ function preload(){
       smooth();
       pop();
     }),
-    Tank : new Car('Tank', 200, 4, 5, [], 0.08, 3, 35, 10, function(x, y, angle){
+    Tank : new Car('Tank', 200, 4, 5, {
+      MaxHP : 14,
+      RegenHP : 2,
+      MaxBoosts: 1,
+      BoostPower : 0.4,
+      BouncePower : 0.1,
+      SingleHeal : 25
+    }, 0.08, 3, 35, 10, null, null, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -97,7 +156,14 @@ function preload(){
       smooth();
       pop();
     }),
-    Sprinter : new Car('Sprinter', 80, 12, 10, [], 0.14, 2, 25, 2, function(x, y, angle){
+    Sprinter : new Car('Sprinter', 80, 12, 10, {
+      MaxHP : 8,
+      RegenHP : 3,
+      MaxBoosts: 1,
+      SteadyHandling : 0.05,
+      SingleHeal : 40,
+      SingleBoost : 6
+    }, 0.14, 2, 25, 2, null, null, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -112,7 +178,14 @@ function preload(){
       smooth();
       pop();
     }),
-    Fragile : new Car('Fragile', 70, 6, 5, [], 0.1, 2.5, 25, 1, function(x, y, angle){
+    Fragile : new Car('Fragile', 70, 6, 5, {
+      MaxHP : 20,
+      RegenHP : 3,
+      MaxBoosts: 2,
+      MoveSpeed : [0.015, 0.6],
+      GiftCooldown : 0.8,
+      SingleBoost : 7.5
+    }, 0.1, 2.5, 25, 1, null, null, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -128,7 +201,14 @@ function preload(){
       smooth();
       pop();
     }),
-    Spike : new Car('Spike', 150, 5, 3, [], 0.12, 3, 30, 8, function(x, y, angle){
+    Spike : new Car('Spike', 150, 5, 3, {
+      MaxHP : 12,
+      RegenHP : 2,
+      MaxBoosts: 1,
+      MoveSpeed : [0.01, 0.4],
+      CollisionDamage : 15,
+      BodySize : 8
+    }, 0.12, 3, 30, 8, null, null, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -156,7 +236,7 @@ function preload(){
       vertex(-18, -27);
       endShape(CLOSE);
       fill(0, 0, 0);
-      circle(0,0,45);
+      circle(0,0,40);
       pop();
     })
   };
@@ -219,14 +299,27 @@ function setup(){
                   allPlayers[j].boosts = data.updatePack[i].boosts;
                   allPlayers[j].canBoost = data.updatePack[i].canBoost;
                   allPlayers[j].boostCooldown = data.updatePack[i].boostCooldown;
+                  allPlayers[j].canAbility = data.updatePack[i].canAbility;
+                  allPlayers[j].abilityCooldown = data.updatePack[i].abilityCooldown;
               }
           }
       }
   });
 
-  socket.on("notifcationData", function(data) {
-    console.log(data.notification);
-    notifications.push(data.notification);
+  socket.on("syncedData", function(data) {
+    //console.log(data);
+    if(data.notification.length > 0){
+      notifications.push(data.notification);
+    }
+    if(data.currentEntities != []){
+      var newEntity = allCars.Prankster.ability(data.currentEntities.x, data.currentEntities.y, data.currentEntities.angle)
+      newEntity.vX = data.currentEntities.vX;
+      newEntity.vY = data.currentEntities.vY;
+      //currentEntities.push(data.currentEntities);
+      currentEntities.push(newEntity);
+      //console.log(allCars.Prankster.ability());
+      console.log(currentEntities);
+    }
   });
 
   socket.on("someoneLeft", function(data) {
@@ -245,8 +338,8 @@ function setup(){
 }
 
 function draw() {
+  resizeCanvas(windowWidth, windowHeight);
   if (playing == true){
-    resizeCanvas(windowWidth, windowHeight);
     background(100, 100, 100); // it gets a hex/rgb color
     sendInputData();
     refreshLeaderboard();
@@ -267,6 +360,14 @@ function draw() {
     }
 
     drawMap();
+
+    for(var i in currentEntities){
+      currentEntities[i].draw(currentEntities[i].x, currentEntities[i].y);
+      currentEntities[i].x += currentEntities[i].vX;
+      currentEntities[i].y += currentEntities[i].vY;
+      currentEntities[i].vX *= 0.95;
+      currentEntities[i].vY *= 0.95;
+    }
 
     for(var i in allPlayers) {
       if(allPlayers[i].alive == true){
@@ -315,6 +416,7 @@ function enterGame(){
 
   socket.emit("ready", {name: nameInput.value, car: carChoice});
 
+  notifications = [];
   enterGameButton.setAttribute('onClick', '');
   menuContainer.style.visibility = "hidden";
   menuContainer.style.opacity = "0";
@@ -327,7 +429,6 @@ function refreshNotifications(){
   if (notifications.length > 0){
     if (millis() > nextNotification){
       notificationContainer.style.opacity = "1";
-      notificationContainer.style.width = "150%";
       notificationContainer.innerHTML = notifications[0];
       nextNotification = millis() + 2000;
       notifications.shift();
@@ -336,7 +437,6 @@ function refreshNotifications(){
   else{
     if (millis() > nextNotification){
       notificationContainer.style.opacity = "0";
-      notificationContainer.style.width = "100%";
     }
   }
 }
@@ -457,11 +557,15 @@ function mapLine(x1, y1, x2, y2, colour1 = [0,0,0], colour2 = [220,220,220], thi
 function sendInputData() {
     var angle = atan2(mouseY - windowHeight/2, mouseX - windowWidth/2);
     var mouseClick = false;
+    var spacePressed = false;
     if (mouseIsPressed === true){
       mouseClick = true;
     }
+    if (keyIsDown(32)){
+      spacePressed = true;
+    }
     var mouseDistanceToCar = Math.abs(Math.sqrt((windowHeight/2 - mouseY)**2+(windowHeight/2 - mouseY)**2));
-    socket.emit("inputData", {mouseX, mouseY, angle, windowWidth, windowHeight, mouseClick, mouseDistanceToCar});
+    socket.emit("inputData", {mouseX, mouseY, angle, windowWidth, windowHeight, mouseClick, mouseDistanceToCar, spacePressed});
 }
 
 
@@ -530,7 +634,7 @@ var Player = function(id, name, x, y, car, alive) {
 
 
 // The car object constructor
-var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, size, mass, drawCar){
+var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, size, mass, abilityCooldown, ability, drawCar){
   this.name = name;
   this.maxHP = maxHP;
   this.maxSpeed = maxSpeed;
@@ -541,4 +645,6 @@ var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boo
   this.boostPower = boostPower;
   this.mass = mass;
   this.size = size;
+  this.ability = ability;
+  this.abilityCooldown = abilityCooldown;
 }
