@@ -2,7 +2,7 @@
 
 ## A fast-paced royle/racing game inspired by driftin.io built with socket.io, p5js and node.js.
 
-*This is not currently hosted online due to very early development. You can however run the latest version locally but there are a few steps.*
+*This is not currently hosted online due to very early development. You can however run the latest version on your local machine or network, but there are a few steps.*
 
 ## How to Run:
 
@@ -11,13 +11,13 @@
 3. Install Express and Socket.io libraries using npm in terminal ("npm install express" / "npm install socket.io")
 4. Run the local node server in terminal with "node _WhereverYouPutIt_\DriftoutIO\Driftout\server\server.js"
 5. Open a localhost tab on port 3000 in your preferred web browser ("localhost:3000" as the address)
+5a. You can also open a tab with the current network ip followed by :3000 (e.g. 1.1.1.1:3000) to access the website from different machines
 
 ## Bugs:
 
 There are currently multiple bugs on list to be corrected one by one - I will update this list as often as I can so it stays relevant.
 
 1. Rapid refresh of the page causes issues new players to be created with null x and y values
-2. 'Race' button requires two clicks
-3. CSS Main menu container and title scrambles on smaller screens
-4. Sometimes, but rarely, lap checkpoints can be completely missed
+2. CSS Main menu container and title scrambles on smaller screens
+3. Sometimes, but rarely, lap checkpoints can be completely missed
 
