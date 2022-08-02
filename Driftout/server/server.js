@@ -6,6 +6,7 @@ var socketIO = require("socket.io");
 // Needs replacement upon cloud hosting?
 var publicPath = path.join(__dirname, "../client")
 var port = process.env.PORT || 3000;
+var host = process.env.HOST || '0.0.0.0';
 var app = express();
 var server = http.createServer(app);
 var io = socketIO(server);
@@ -24,9 +25,9 @@ var grip = 0.99;
 
 // ---------- ---------- ----------
 
-server.listen(port, function(){
-  console.log("Server started on port " + port);
-});
+server.listen(port, host);
+
+console.log("Server started on port " + port);
 
 io.on("connection", function(socket){
   console.log("New connection, ID: " + socket.id);
@@ -133,9 +134,17 @@ var Player = function(id, name, x, y, car) {
 
       // ability
       if (spacePressed == true && Date.now() > this.canAbility){
-        if (this.ability != null){
-          currentEntities.push(this.ability(this.x, this.y, this.angle));
-          sendEntities.push(this.ability(this.x, this.y, this.angle));
+        if (this.ability != null && this.car.name == "Prankster"){
+          if (currentEntities.filter(entity => entity.ownerId == this.id).length >= 5){
+            for (i in currentEntities){
+              if (currentEntities[i].ownerId == this.id){
+                currentEntities.splice(i, 1);
+                break;
+              }
+            }
+          }
+          currentEntities.push(this.ability(this.x, this.y, this.angle, this.id));
+          //sendEntities.push(this.ability(this.x, this.y, this.angle, this.id));
           this.canAbility = Date.now() + this.abilityCooldown;
           this.vX += Math.cos((this.angle) % 360) * 3;
           this.vY += Math.sin((this.angle) % 360) * 3;
@@ -185,9 +194,23 @@ var Player = function(id, name, x, y, car) {
 
   this.doCollisions = function() {
 
-      // Player doCollisions
+    // Entity Collisions
+    for (var i in currentEntities){
+      if (currentEntities[i].ownerId != this.id){
+        if (Math.sqrt(((this.x-currentEntities[i].x)**2)+((this.y-currentEntities[i].y)**2)) < this.size + currentEntities[i].size){
+          this.vX *= 0.3;
+          this.vY *= 0.3;
+          this.HP -= currentEntities[i].damage;
+          console.log(currentEntities.length);
+          currentEntities.splice(i, 1);
+          console.log(currentEntities.length);
+        }
+      }
+    }
+
+    // Player Collisions
     if (allPlayers.length > 1){
-      for(var i in allPlayers){
+      for (var i in allPlayers){
         if (allPlayers[i].id != this.id){
           if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < this.size + allPlayers[i].size){
             var collidedPlayerAngle = Math.atan2(this.y - allPlayers[i].y, this.x - allPlayers[i].x);
@@ -261,7 +284,7 @@ var Player = function(id, name, x, y, car) {
 
     }
     // The collision function
-    this.collision = function(playerx, playery, x1, x2, y1, y2, effect, damage, bounce) {
+    this.collision = function(playerx, playery, x1, x2, y1, y2, effect, damage=0, bounce=0) {
       if ((playerx > x1 && playerx < x2) && (playery > y1 && playery < y2)){
        if (effect == "x-1"){
          this.x -= 1;
@@ -283,9 +306,12 @@ var Player = function(id, name, x, y, car) {
          this.HP -= (Math.abs(this.vY)*damage) + 2;
          this.vY = Math.abs(this.vY)*bounce;
          }
+      if (effect == "stick"){
+        return 0;
+      }
        if (effect == "trigger"){
-         return true;
-         }
+        return true;
+        }
        }
       else{
         if (effect == "trigger"){
@@ -335,10 +361,8 @@ function rotate(velocity, angle) {
     return rotatedVelocities;
 }
 
-// Loop speed to update player properties
+// Loop speed to update entities
 setInterval(() => {
-    var updatePack = [];
-
     if (notifications.length > 0){
       io.emit("syncedData", {
         notification: notifications[0],
@@ -346,23 +370,37 @@ setInterval(() => {
       });
       notifications = notifications.slice(1);
     }
-    if (sendEntities.length > 0){
-      console.log(sendEntities);
       io.emit("syncedData", {
         notification: [],
-        currentEntities: sendEntities[0]
+        currentEntities: currentEntities
       });
-      console.log("sent");
-      sendEntities = sendEntities.slice(1);
-    }
 
-    for(var i in allPlayers) {
-        allPlayers[i].events(mouseIsPressed);
-        //console.log(allPlayers.length);
-        updatePack.push(allPlayers[i].getUpdatePack());
+    if (currentEntities.length > 0){
+      for (var i in currentEntities){
+        if (currentEntities[i].newEntity == true){
+          currentEntities[i].newEntity = false;
+          currentEntities[i].createdAt = Date.now();
+        }
+        currentEntities[i].vX *= 0.95;
+        currentEntities[i].vY *= 0.95;
+        currentEntities[i].x += currentEntities[i].vX;
+        currentEntities[i].y += currentEntities[i].vY;
+        // if (currentEntities[i].createdAt + 10000 > Date.now()){
+        //   currentEntities.splice(i, i+1);
+        // }
+      }
     }
+}, 1000/75)
 
-    io.emit("updatePack", {updatePack});
+
+// loop spped to update player properties
+setInterval(() => {
+  var updatePack = [];
+  for(var i in allPlayers) {
+      allPlayers[i].events(mouseIsPressed);
+      updatePack.push(allPlayers[i].getUpdatePack());
+  }
+  io.emit("updatePack", {updatePack});
 }, 1000/75)
 
 var checkPoints = [
@@ -421,7 +459,7 @@ allCars = {
     TrapCooldown : 0.6,
     TrapSize : 3,
     SingleHeal : 40
-  }, 0.1, 2, 20, 4, 1000, function(x, y, angle){
+  }, 0.1, 2, 20, 4, 1000, function(x, y, angle, ownerId){
     return {
       name : "Trap",
       x : x,
@@ -431,26 +469,29 @@ allCars = {
       size : 20,
       damage : 40,
       cooldown : 1000,
-      draw : function(x, y, angle){
-        push();
-        translate(x, y);
-        rotate(angle);
-        strokeWeight(5);
-        fill(50,255,150);
-        stroke(0,150,50);
-        beginShape();
-        vertex(0, 20);
-        vertex(5, 5);
-        vertex(20, 0);
-        vertex(5, -5);
-        vertex(0, -20);
-        vertex(-5, -5);
-        vertex(-20, 0);
-        vertex(-5, 5);
-        endShape(CLOSE);
-        smooth();
-        pop();
-      }
+      ownerId: ownerId,
+      newEntity : true,
+      createdAt : 0
+      // draw : function(x, y, angle){
+      //   push();
+      //   translate(x, y);
+      //   rotate(angle);
+      //   strokeWeight(5);
+      //   fill(50,255,150);
+      //   stroke(0,150,50);
+      //   beginShape();
+      //   vertex(0, 20);
+      //   vertex(5, 5);
+      //   vertex(20, 0);
+      //   vertex(5, -5);
+      //   vertex(0, -20);
+      //   vertex(-5, -5);
+      //   vertex(-20, 0);
+      //   vertex(-5, 5);
+      //   endShape(CLOSE);
+      //   smooth();
+      //   pop();
+      // }
     };
   }, function(x, y, angle){
     push();
@@ -501,7 +542,7 @@ allCars = {
     smooth();
     pop();
   }),
-  Tank : new Car('Tank', 200, 4, 5, {
+  Tank : new Car('Tank', 2000, 4, 5, {
     MaxHP : 14,
     RegenHP : 2,
     MaxBoosts: 1,

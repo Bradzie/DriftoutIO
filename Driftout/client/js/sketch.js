@@ -69,6 +69,9 @@ function preload(){
         size : 20,
         damage : 40,
         cooldown : 1000,
+        ownerId : "",
+        newEntity : true,
+        createdAt : 0,
         draw : function(x, y){
           push();
           translate(x, y);
@@ -311,14 +314,37 @@ function setup(){
     if(data.notification.length > 0){
       notifications.push(data.notification);
     }
-    if(data.currentEntities != []){
-      var newEntity = allCars.Prankster.ability(data.currentEntities.x, data.currentEntities.y, data.currentEntities.angle)
-      newEntity.vX = data.currentEntities.vX;
-      newEntity.vY = data.currentEntities.vY;
+    if(playing == true){
+      //var newEntity = allCars.Prankster.ability(data.currentEntities.x, data.currentEntities.y, data.currentEntities.angle)
+      //newEntity.vX = data.currentEntities.vX;
+      //newEntity.vY = data.currentEntities.vY;
       //currentEntities.push(data.currentEntities);
-      currentEntities.push(newEntity);
+      currentEntities = data.currentEntities;
+      console.log(currentEntities.length);
+      if (currentEntities.length == 0 && data.currentEntities.length > 0){
+        data.currentEntities.map(entity => entity.newEntity = true);
+      }
+      for (var i in data.currentEntities){
+        if (data.currentEntities[i].newEntity == true){
+          currentEntities.push(data.currentEntities[i]);
+        }
+        else{
+          if(currentEntities.length > 0){
+            currentEntities[i].x = data.currentEntities[i].x;
+            currentEntities[i].y = data.currentEntities[i].y;
+            currentEntities[i].vX = data.currentEntities[i].vX;
+            currentEntities[i].vY = data.currentEntities[i].vY;
+          }
+        }
+      }
+      for (var i in currentEntities){
+        if (currentEntities[i].name == "Trap" && typeof currentEntities[i].draw == "undefined"){
+          var setDraw = allCars.Prankster.ability(currentEntities[i].x,currentEntities[i].y,currentEntities[i].angle);
+          Object.assign(currentEntities[i], {draw : setDraw.draw});
+        }
+      }
       //console.log(allCars.Prankster.ability());
-      console.log(currentEntities);
+      //console.log(currentEntities);
     }
   });
 
@@ -339,7 +365,7 @@ function setup(){
 
 function draw() {
   resizeCanvas(windowWidth, windowHeight);
-  if (playing == true){
+  if (playing == true && allPlayers.filter(player => player.id === myId).length == 1){
     background(100, 100, 100); // it gets a hex/rgb color
     sendInputData();
     refreshLeaderboard();
@@ -355,26 +381,23 @@ function draw() {
         }
     }
 
-    if(allPlayers.filter(player => player.id === myId).length == 0){
-      exitGame();
-    }
-
     drawMap();
 
     for(var i in currentEntities){
-      currentEntities[i].draw(currentEntities[i].x, currentEntities[i].y);
-      currentEntities[i].x += currentEntities[i].vX;
-      currentEntities[i].y += currentEntities[i].vY;
-      currentEntities[i].vX *= 0.95;
-      currentEntities[i].vY *= 0.95;
+      if (typeof currentEntities[i].draw != "undefined"){
+        currentEntities[i].draw(currentEntities[i].x, currentEntities[i].y);
+      }
     }
 
     for(var i in allPlayers) {
       if(allPlayers[i].alive == true){
-        //translate(width/2 - allPlayers[i].x, height/2 - allPlayers[i].y);
-        //allPlayers[i].events();
         allPlayers[i].draw();
       }
+    }
+
+
+    if(allPlayers.filter(player => player.id === myId).length == 0){
+      exitGame();
     }
   }
 }
@@ -384,12 +407,14 @@ function exitGame(){
   menuContainer.style.opacity = "1";
   gameGuiContainer.style.visibility = "hidden";
   gameGuiContainer.style.opacity = "0";
+  console.log("removed?");
   playing = false;
   socket.emit("removePlayerServer");
   enterGameButton.setAttribute('onClick', 'enterGame()');
 }
 
 function enterGame(){
+  console.log("button pressed")
   var carChoice = '';
   playing = true;
   if(carInputRacer.checked == true){
@@ -416,12 +441,16 @@ function enterGame(){
 
   socket.emit("ready", {name: nameInput.value, car: carChoice});
 
+  console.log("player created");
+
   notifications = [];
   enterGameButton.setAttribute('onClick', '');
   menuContainer.style.visibility = "hidden";
   menuContainer.style.opacity = "0";
   gameGuiContainer.style.visibility = "visible";
   gameGuiContainer.style.opacity = "1";
+
+  console.log("css change");
   //console.log(allPlayers);
 }
 
