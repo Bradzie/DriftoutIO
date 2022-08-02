@@ -18,7 +18,9 @@ var playing = false,
   leaderboardContainer = document.getElementById('leaderboardContainer'),
   leaderboardItem = document.getElementById('leaderboardItem'),
   boostContainer = document.getElementById('boostContainer'),
-  boostContainerCooldown = document.getElementById('boostContainerCooldown');
+  boostContainerCooldown = document.getElementById('boostContainerCooldown'),
+  abilityContainer = document.getElementById('abilityContainer'),
+  abilityContainerCooldown = document.getElementById('abilityContainerCooldown');
 
 // Constants
 var allCars;
@@ -123,7 +125,13 @@ function preload(){
       MoveSpeed : [0.005, 0.8],
       DashResist : 3,
       DashPower : 10
-    }, 0.08, 2.5, 25, 7, null, null, function(x, y, angle){
+    }, 0.08, 2.5, 25, 7, 3000, function(){
+      return {
+      name : "Dash",
+      dashResist : 30,
+      dashPower : 10
+    }
+    }, function(x, y, angle){
       push();
       translate(x, y);
       rotate(angle);
@@ -320,7 +328,6 @@ function setup(){
       //newEntity.vY = data.currentEntities.vY;
       //currentEntities.push(data.currentEntities);
       currentEntities = data.currentEntities;
-      console.log(currentEntities.length);
       if (currentEntities.length == 0 && data.currentEntities.length > 0){
         data.currentEntities.map(entity => entity.newEntity = true);
       }
@@ -370,6 +377,7 @@ function draw() {
     sendInputData();
     refreshLeaderboard();
     refreshBoostOverlay();
+    refreshAbilityOverlay();
     refreshNotifications();
 
     for(var i in allPlayers) {
@@ -483,6 +491,31 @@ function refreshLeaderboard(){
     }
   }
   leaderboardContainer.innerHTML = "Leaderboard\n" + text;
+}
+
+function refreshAbilityOverlay(){
+  for(var i in allPlayers){
+    if(allPlayers[i].id === socket.id){
+      console.log(1);
+      console.log(allPlayers[i].ability);
+      if(allPlayers[i].ability != null){
+        console.log("ability");
+        abilityContainerCooldown.innerHTML = allPlayers[i].ability().name;
+        abilityContainer.style.opacity = "1";
+        if(allPlayers[i].canAbility > Date.now()){
+          var firedAt = allPlayers[i].canAbility - allPlayers[i].abilityCooldown;
+          abilityContainerCooldown.style.width = ((((Date.now() - firedAt) / (allPlayers[i].canAbility - firedAt))*100)-10) + "%";
+        }
+        else{
+          abilityContainerCooldown.style.width = "90%";
+        }
+      }
+      else{
+        abilityContainer.style.opacity = "0";
+        break;
+      }
+    }
+  }
 }
 
 function refreshBoostOverlay(){
@@ -617,6 +650,8 @@ var Player = function(id, name, x, y, car, alive) {
   this.boosts = car.maxBoosts;
   this.acceleration = car.acceleration;
   this.alive = true;
+  this.ability = car.ability;
+  this.canAbility = Date.now();
   this.drawCar = car.drawCar;
   this.boostPower = car.boostPower;
   this.mass = car.mass;

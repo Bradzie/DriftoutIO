@@ -134,6 +134,8 @@ var Player = function(id, name, x, y, car) {
 
       // ability
       if (spacePressed == true && Date.now() > this.canAbility){
+
+        // Prankster Ability
         if (this.ability != null && this.car.name == "Prankster"){
           if (currentEntities.filter(entity => entity.ownerId == this.id).length >= 5){
             for (i in currentEntities){
@@ -150,6 +152,16 @@ var Player = function(id, name, x, y, car) {
           this.vY += Math.sin((this.angle) % 360) * 3;
           console.log(currentEntities);
           console.log(sendEntities);
+        }
+
+        // Bullet Ability
+        if (this.ability != null && this.car.name == "Bullet"){
+          this.canAbility = Date.now() + allCars.Bullet.abilityCooldown;
+          this.vX += Math.cos((this.angle) % 360) * 10;
+          this.vY += Math.sin((this.angle) % 360) * 10;
+          console.log("boost!");
+          console.log(allCars.Bullet.abilityCooldown);
+
         }
       }
 
@@ -236,8 +248,8 @@ var Player = function(id, name, x, y, car) {
               var v1Final = rotate(v1, -angle);
               var v2Final = rotate(v2, -angle);
 
-              this.HP -= Math.abs((this.vX + this.vY)/2) * 20;
-              allPlayers[i].HP -= Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * 20;
+              this.HP -= allPlayers[i].car.name == "Spike" ? Math.abs((this.vX + this.vY)/2) * 30 : Math.abs((this.vX + this.vY)/2) * 20;
+              allPlayers[i].HP -= this.car.name == "Spike" ? Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * 20 : Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * 30;
 
               this.vX = v1Final.x;
               this.vY = v1Final.y;
@@ -459,7 +471,7 @@ allCars = {
     TrapCooldown : 0.6,
     TrapSize : 3,
     SingleHeal : 40
-  }, 0.1, 2, 20, 4, 1000, function(x, y, angle, ownerId){
+  }, 0.1, 2, 20, 4, 4000, function(x, y, angle, ownerId){
     return {
       name : "Trap",
       x : x,
@@ -523,8 +535,14 @@ allCars = {
     MaxBoosts: 1,
     MoveSpeed : [0.005, 0.8],
     DashResist : 3,
-    DashPower : 10
-  }, 0.08, 2.5, 25, 7, null, null, function(x, y, angle){
+    DashPower : 0.4
+  }, 0.08, 2.5, 25, 7, 3000, function(){
+    return {
+    name : "Dash",
+    dashResist : 30,
+    dashPower : 10
+  }
+  }, function(x, y, angle){
     push();
     translate(x, y);
     rotate(angle);
@@ -542,7 +560,7 @@ allCars = {
     smooth();
     pop();
   }),
-  Tank : new Car('Tank', 2000, 4, 5, {
+  Tank : new Car('Tank', 200, 4, 5, {
     MaxHP : 14,
     RegenHP : 2,
     MaxBoosts: 1,
