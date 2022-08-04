@@ -12,16 +12,14 @@ var server = http.createServer(app);
 var io = socketIO(server);
 app.use(express.static(publicPath));
 
+// ---------- CONTSTANTS ----------
+
+var grip = 0.99;
 var allPlayers = [];
 var mouseIsPressed = false;
 var spacePressed = false;
 var notifications = [];
 var currentEntities = [];
-var sendEntities = [];
-
-// ---------- CONTSTANTS ----------
-
-var grip = 0.99;
 
 // ---------- ---------- ----------
 
@@ -128,11 +126,7 @@ var Player = function(id, name, x, y, car) {
         notifications.push(this.name + " Crashed!");
       }
 
-      // console.log(Date.now());
-      // console.log(this.abilityCooldown);
-      // console.log(this.car);
-
-      // ability
+      // Ability
       if (spacePressed == true && Date.now() > this.canAbility){
 
         // Prankster Ability
@@ -146,7 +140,6 @@ var Player = function(id, name, x, y, car) {
             }
           }
           currentEntities.push(this.ability(this.x, this.y, this.angle, this.id));
-          //sendEntities.push(this.ability(this.x, this.y, this.angle, this.id));
           this.canAbility = Date.now() + this.abilityCooldown;
           this.vX += Math.cos((this.angle) % 360) * 3;
           this.vY += Math.sin((this.angle) % 360) * 3;
@@ -318,9 +311,6 @@ var Player = function(id, name, x, y, car) {
          this.HP -= (Math.abs(this.vY)*damage) + 2;
          this.vY = Math.abs(this.vY)*bounce;
          }
-      if (effect == "stick"){
-        return 0;
-      }
        if (effect == "trigger"){
         return true;
         }
@@ -449,21 +439,8 @@ allCars = {
     MoveSpeed : [0.01, 0.5],
     SingleHeal : 40,
     SingleBoost : 7.5
-  }, 0.11, 2.5, 25, 5, null, null, function(x, y, angle){
-    push();
-    fill(20,20,200);
-    translate(x, y);
-    rotate(angle);
-    stroke(100,100,255);
-    strokeWeight(5);
-    beginShape();
-    vertex(25, 0);
-    vertex(-25, 20);
-    vertex(-25, -20);
-    endShape(CLOSE);
-    smooth();
-    pop();
-  }),
+  }, 0.11, 2.5, 25, 5, null, null, null),
+
   Prankster : new Car('Prankster', 120, 6, 5, {
     MaxHP : 10,
     RegenHP : 2,
@@ -484,51 +461,9 @@ allCars = {
       ownerId: ownerId,
       newEntity : true,
       createdAt : 0
-      // draw : function(x, y, angle){
-      //   push();
-      //   translate(x, y);
-      //   rotate(angle);
-      //   strokeWeight(5);
-      //   fill(50,255,150);
-      //   stroke(0,150,50);
-      //   beginShape();
-      //   vertex(0, 20);
-      //   vertex(5, 5);
-      //   vertex(20, 0);
-      //   vertex(5, -5);
-      //   vertex(0, -20);
-      //   vertex(-5, -5);
-      //   vertex(-20, 0);
-      //   vertex(-5, 5);
-      //   endShape(CLOSE);
-      //   smooth();
-      //   pop();
-      // }
     };
-  }, function(x, y, angle){
-    push();
-    translate(x, y);
-    rotate(angle);
-    strokeWeight(5);
-    fill(50,255,150);
-    stroke(0,150,50);
-    beginShape();
-    vertex(-10, 10);
-    vertex(-10, -10);
-    vertex(-25, -20);
-    vertex(-25, 20);
-    endShape(CLOSE);
-    fill(200,0,200);
-    stroke(255,100,255);
-    beginShape();
-    vertex(30, 20);
-    vertex(-10, 20);
-    vertex(-10, -20);
-    vertex(30, -20);
-    endShape(CLOSE);
-    smooth();
-    pop();
-  }),
+  }, null),
+
   Bullet : new Car('Bullet', 100, 12, 5, {
     MaxHP : 10,
     RegenHP : 3,
@@ -542,24 +477,8 @@ allCars = {
     dashResist : 30,
     dashPower : 10
   }
-  }, function(x, y, angle){
-    push();
-    translate(x, y);
-    rotate(angle);
-    strokeWeight(5);
-    fill(230,230,10);
-    stroke(125,125,0);
-    beginShape();
-    vertex(30, -10);
-    vertex(30, 10);
-    vertex(15, 20);
-    vertex(-30, 20);
-    vertex(-30, -20);
-    vertex(15, -20);
-    endShape(CLOSE);
-    smooth();
-    pop();
-  }),
+}, null),
+
   Tank : new Car('Tank', 200, 4, 5, {
     MaxHP : 14,
     RegenHP : 2,
@@ -567,17 +486,8 @@ allCars = {
     BoostPower : 0.4,
     BouncePower : 0.1,
     SingleHeal : 25
-  }, 0.08, 3, 35, 10, null, null, function(x, y, angle){
-    push();
-    translate(x, y);
-    rotate(angle);
-    strokeWeight(5);
-    fill(50,255,150);
-    stroke(0,150,50);
-    circle(0,0,70);
-    smooth();
-    pop();
-  }),
+  }, 0.08, 3, 35, 10, null, null, null),
+
   Sprinter : new Car('Sprinter', 80, 12, 10, {
     MaxHP : 8,
     RegenHP : 3,
@@ -585,21 +495,8 @@ allCars = {
     SteadyHandling : 0.05,
     SingleHeal : 40,
     SingleBoost : 6
-  }, 0.14, 2, 25, 2, null, null, function(x, y, angle){
-    push();
-    translate(x, y);
-    rotate(angle);
-    strokeWeight(5);
-    fill(255,0,0);
-    stroke(125,0,0);
-    beginShape();
-    vertex(30, 0);
-    vertex(-30, 18);
-    vertex(-30, -18);
-    endShape(CLOSE);
-    smooth();
-    pop();
-  }),
+  }, 0.14, 2, 25, 2, null, null, null),
+
   Fragile : new Car('Fragile', 70, 6, 5, {
     MaxHP : 20,
     RegenHP : 3,
@@ -607,22 +504,8 @@ allCars = {
     MoveSpeed : [0.015, 0.6],
     GiftCooldown : 0.8,
     SingleBoost : 7.5
-  }, 0.1, 2.5, 25, 1, null, null, function(x, y, angle){
-    push();
-    translate(x, y);
-    rotate(angle);
-    strokeWeight(5);
-    fill(255, 210, 120);
-    stroke(100, 100, 100);
-    beginShape();
-    vertex(0, 25);
-    vertex(25, 0);
-    vertex(0, -25);
-    vertex(-25, 0);
-    endShape(CLOSE);
-    smooth();
-    pop();
-  }),
+  }, 0.1, 2.5, 25, 1, null, null, null),
+
   Spike : new Car('Spike', 150, 5, 3, {
     MaxHP : 12,
     RegenHP : 2,
@@ -630,35 +513,5 @@ allCars = {
     MoveSpeed : [0.01, 0.4],
     CollisionDamage : 15,
     BodySize : 8
-  }, 0.12, 3, 30, 8, null, null, function(x, y, angle){
-    push();
-    translate(x, y);
-    rotate(angle);
-    strokeWeight(3);
-    fill(150, 150, 150);
-    stroke(50, 50, 50);
-    beginShape();
-    vertex(0, 32);
-    vertex(27, -18);
-    vertex(-27, -18);
-    endShape(CLOSE);
-    beginShape();
-    vertex(0, -32);
-    vertex(-27, 18);
-    vertex(27, 18);
-    endShape(CLOSE);
-    beginShape();
-    vertex(-32, 0);
-    vertex(18, 27);
-    vertex(18, -27);
-    endShape(CLOSE);
-    beginShape();
-    vertex(32, 0);
-    vertex(-18, 27);
-    vertex(-18, -27);
-    endShape(CLOSE);
-    fill(0, 0, 0);
-    circle(0,0,40);
-    pop();
-  })
+  }, 0.12, 3, 30, 8, null, null, null)
 };
