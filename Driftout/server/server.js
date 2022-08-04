@@ -115,6 +115,7 @@ var Player = function(id, name, x, y, car) {
   this.ability = allCars.Prankster.ability;
   this.abilityCooldown = car.abilityCooldown;
   this.canAbility = Date.now();
+  this.upgradePoints = 0;
 
   this.events = function(mouseIsPressed) {
 
@@ -144,7 +145,6 @@ var Player = function(id, name, x, y, car) {
           this.vX += Math.cos((this.angle) % 360) * 3;
           this.vY += Math.sin((this.angle) % 360) * 3;
           console.log(currentEntities);
-          console.log(sendEntities);
         }
 
         // Bullet Ability
@@ -276,6 +276,7 @@ var Player = function(id, name, x, y, car) {
         this.checkPointCounter = [false, false, false, false];
         notifications.push(this.name + " Completed a lap!");
         console.log(this.name + " has now completed " + this.laps + " laps!");
+        this.upgradePoints += 1;
       }
     }
 
@@ -347,7 +348,8 @@ var Player = function(id, name, x, y, car) {
       boostCooldown: this.boostCooldown,
       canBoost: this.canBoost,
       abilityCooldown: this.abilityCooldown,
-      canAbility: this.canAbility
+      canAbility: this.canAbility,
+      upgradePoints: this.upgradePoints
     }
   }
 
@@ -453,8 +455,8 @@ allCars = {
       name : "Trap",
       x : x,
       y : y,
-      vX : Math.cos((angle + 135) % 360) * 10,
-      vY : Math.sin((angle + 135) % 360) * 10,
+      vX : Math.cos((angle + 135) % 360) * 14,
+      vY : Math.sin((angle + 135) % 360) * 14,
       size : 20,
       damage : 40,
       cooldown : 1000,

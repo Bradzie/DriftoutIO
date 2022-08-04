@@ -20,7 +20,10 @@ var playing = false,
   boostContainer = document.getElementById('boostContainer'),
   boostContainerCooldown = document.getElementById('boostContainerCooldown'),
   abilityContainer = document.getElementById('abilityContainer'),
-  abilityContainerCooldown = document.getElementById('abilityContainerCooldown');
+  abilityContainerCooldown = document.getElementById('abilityContainerCooldown'),
+  debugContainer = document.getElementById('debugContainer'),
+  upgradeContainer = document.getElementById('upgradeContainer'),
+  upgradeItem = document.getElementById('upgradeItem');
 
 // Constants
 var allCars;
@@ -90,6 +93,7 @@ function setup(){
                   allPlayers[j].boostCooldown = data.updatePack[i].boostCooldown;
                   allPlayers[j].canAbility = data.updatePack[i].canAbility;
                   allPlayers[j].abilityCooldown = data.updatePack[i].abilityCooldown;
+                  allPlayers[j].upgradePoints = data.updatePack[i].upgradePoints;
               }
           }
       }
@@ -147,6 +151,7 @@ function draw() {
     refreshBoostOverlay();
     refreshAbilityOverlay();
     refreshNotifications();
+    refreshUpgradeOverlay();
 
     for(var i in allPlayers) {
         if(allPlayers[i].id == myId) {
@@ -223,6 +228,19 @@ function enterGame(){
   gameGuiContainer.style.opacity = "1";
 }
 
+function refreshUpgradeOverlay(){
+  for(var i in allPlayers){
+    if(allPlayers[i].id === socket.id){
+      if(allPlayers[i].upgradePoints > 0){
+        upgradeContainer.style.opacity = "1";
+      }
+      else{
+        upgradeContainer.style.opacity = "0";
+      }
+    }
+  }
+}
+
 function refreshNotifications(){
   if (notifications.length > 0){
     if (millis() > nextNotification){
@@ -263,10 +281,12 @@ function refreshAbilityOverlay(){
         abilityContainerCooldown.innerHTML = allPlayers[i].ability().name;
         abilityContainer.style.opacity = "1";
         if(allPlayers[i].canAbility > Date.now()){
+          abilityContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)";
           var firedAt = allPlayers[i].canAbility - allPlayers[i].abilityCooldown;
           abilityContainerCooldown.style.width = ((((Date.now() - firedAt) / (allPlayers[i].canAbility - firedAt))*100)-10) + "%";
         }
         else{
+          abilityContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)";
           abilityContainerCooldown.style.width = "90%";
         }
       }
@@ -281,14 +301,18 @@ function refreshAbilityOverlay(){
 function refreshBoostOverlay(){
   for(var i in allPlayers){
     if(allPlayers[i].id === socket.id){
+
+      // DEBUG CONTAINER UPDATES
+        debugContainer.innerHTML = allPlayers[i].upgradePoints;
+
       boostContainerCooldown.innerHTML = "Boost " + allPlayers[i].boosts;
       if(allPlayers[i].boosts == 0){
-        boostContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)"
+        boostContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)";
       }
       else{
-        boostContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)"
+        boostContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)";
         if(allPlayers[i].canBoost > Date.now()){
-          boostContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)"
+          boostContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)";
           var firedAt = allPlayers[i].canBoost - allPlayers[i].boostCooldown;
           boostContainerCooldown.style.width = ((((Date.now() - firedAt) / (allPlayers[i].canBoost - firedAt))*100)-10) + "%";
         }
@@ -408,6 +432,7 @@ var Player = function(id, name, x, y, car, alive) {
   this.canBoost = true;
   this.boostCooldown = 0;
   this.laps = 0;
+  this.upgradePoints = 0;
 
   this.draw = function() {
 
