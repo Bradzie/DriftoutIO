@@ -86,6 +86,7 @@ function setup(){
                   allPlayers[j].y = data.updatePack[i].y;
                   allPlayers[j].angle = data.updatePack[i].angle;
                   allPlayers[j].HP = data.updatePack[i].HP;
+                  allPlayers[j].maxHP = data.updatePack[i].maxHP;
                   allPlayers[j].alive = data.updatePack[i].alive;
                   allPlayers[j].laps = data.updatePack[i].laps;
                   allPlayers[j].boosts = data.updatePack[i].boosts;
@@ -226,11 +227,23 @@ function enterGame(){
   menuContainer.style.opacity = "0";
   gameGuiContainer.style.visibility = "visible";
   gameGuiContainer.style.opacity = "1";
+  upgradeContainer.innerHTML = "";
 }
 
 function refreshUpgradeOverlay(){
   for(var i in allPlayers){
     if(allPlayers[i].id === socket.id){
+      console.log(1);
+      if(upgradeContainer.innerHTML == ""){
+        console.log(2);
+        var upgradeBlocks = "";
+        var displayNum = 0;
+        for(var j in Object.entries(allPlayers[i].car.upgrades)){
+          displayNum++;
+          upgradeBlocks += "<div id='upgradeItem'>" + Object.keys(allPlayers[i].car.upgrades)[j] + "<span style='color:#02f6fa'>[" + displayNum + "]</span></div>";
+        }
+        upgradeContainer.innerHTML = upgradeBlocks;
+      }
       if(allPlayers[i].upgradePoints > 0){
         upgradeContainer.style.opacity = "1";
       }
@@ -274,10 +287,10 @@ function refreshLeaderboard(){
 function refreshAbilityOverlay(){
   for(var i in allPlayers){
     if(allPlayers[i].id === socket.id){
-      console.log(1);
-      console.log(allPlayers[i].ability);
+      //console.log(1);
+      //console.log(allPlayers[i].ability);
       if(allPlayers[i].ability != null){
-        console.log("ability");
+        //console.log("ability");
         abilityContainerCooldown.innerHTML = allPlayers[i].ability().name;
         abilityContainer.style.opacity = "1";
         if(allPlayers[i].canAbility > Date.now()){
@@ -394,14 +407,33 @@ function sendInputData() {
     var angle = atan2(mouseY - windowHeight/2, mouseX - windowWidth/2);
     var mouseClick = false;
     var spacePressed = false;
+    var numPressed = null;
     if (mouseIsPressed === true){
       mouseClick = true;
+    }
+    if (keyIsDown(49)){
+      numPressed = 1;
+    }
+    if (keyIsDown(50)){
+      numPressed = 2;
+    }
+    if (keyIsDown(51)){
+      numPressed = 3;
+    }
+    if (keyIsDown(52)){
+      numPressed = 4;
+    }
+    if (keyIsDown(53)){
+      numPressed = 5;
+    }
+    if (keyIsDown(54)){
+      numPressed = 6;
     }
     if (keyIsDown(32)){
       spacePressed = true;
     }
     var mouseDistanceToCar = Math.abs(Math.sqrt((windowHeight/2 - mouseY)**2+(windowHeight/2 - mouseY)**2));
-    socket.emit("inputData", {mouseX, mouseY, angle, windowWidth, windowHeight, mouseClick, mouseDistanceToCar, spacePressed});
+    socket.emit("inputData", {mouseX, mouseY, angle, windowWidth, windowHeight, mouseClick, mouseDistanceToCar, spacePressed, numPressed});
 }
 
 
@@ -432,7 +464,7 @@ var Player = function(id, name, x, y, car, alive) {
   this.canBoost = true;
   this.boostCooldown = 0;
   this.laps = 0;
-  this.upgradePoints = 0;
+  this.upgradePoints = 1;
 
   this.draw = function() {
 
@@ -491,10 +523,10 @@ var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boo
 allCars = {
   Racer : new Car('Racer', 150, 6, 8, {
     MaxHP : 12,
-    RegenHP : 2,
+    RegenHP : 0.05,
     MaxBoosts: 1,
     MoveSpeed : [0.01, 0.5],
-    SingleHeal : 40,
+    SingleHeal : 0.4,
     SingleBoost : 7.5
   }, 0.11, 2.5, 25, 5, null, null, function(x, y, angle){
     push();
@@ -513,12 +545,12 @@ allCars = {
   }),
   Prankster : new Car('Prankster', 120, 6, 5, {
     MaxHP : 10,
-    RegenHP : 2,
+    RegenHP : 0.05,
     TrapDamage: 8,
     TrapCooldown : 0.6,
     TrapSize : 3,
-    SingleHeal : 40
-  }, 0.1, 2, 20, 4, 1000, function(x, y, angle){
+    SingleHeal : 0.4
+  }, 0.1, 2, 20, 4, 4000, function(x, y, angle){
     return {
       name : "Trap",
       x : x,
@@ -527,7 +559,7 @@ allCars = {
       vY : Math.sin((angle + 180) % 360) * 10,
       size : 20,
       damage : 40,
-      cooldown : 1000,
+      cooldown : 4000,
       ownerId : "",
       newEntity : true,
       createdAt : 0,
@@ -577,7 +609,7 @@ allCars = {
   }),
   Bullet : new Car('Bullet', 100, 12, 5, {
     MaxHP : 10,
-    RegenHP : 3,
+    RegenHP : 0.08,
     MaxBoosts: 1,
     MoveSpeed : [0.005, 0.8],
     DashResist : 3,
@@ -608,11 +640,11 @@ allCars = {
   }),
   Tank : new Car('Tank', 200, 4, 5, {
     MaxHP : 14,
-    RegenHP : 2,
+    RegenHP : 0.04,
     MaxBoosts: 1,
     BoostPower : 0.4,
     BouncePower : 0.1,
-    SingleHeal : 25
+    SingleHeal : 0.25
   }, 0.08, 3, 35, 10, null, null, function(x, y, angle){
     push();
     translate(x, y);
@@ -626,12 +658,17 @@ allCars = {
   }),
   Sprinter : new Car('Sprinter', 80, 12, 10, {
     MaxHP : 8,
-    RegenHP : 3,
+    RegenHP : 0.05,
     MaxBoosts: 1,
     SteadyHandling : 0.05,
-    SingleHeal : 40,
+    SingleHeal : 0.4,
     SingleBoost : 6
-  }, 0.14, 2, 25, 2, null, null, function(x, y, angle){
+  }, 0.14, 2, 25, 2, 6000, function(){
+    return {
+      name : "Steady",
+      handling : 2
+    }
+  }, function(x, y, angle){
     push();
     translate(x, y);
     rotate(angle);
@@ -648,12 +685,16 @@ allCars = {
   }),
   Fragile : new Car('Fragile', 70, 6, 5, {
     MaxHP : 20,
-    RegenHP : 3,
+    RegenHP : 0.06,
     MaxBoosts: 2,
     MoveSpeed : [0.015, 0.6],
     GiftCooldown : 0.8,
     SingleBoost : 7.5
-  }, 0.1, 2.5, 25, 1, null, null, function(x, y, angle){
+  }, 0.1, 2.5, 25, 1, 26000, function(){
+    return {
+    name : "Gift"
+    }
+  }, function(x, y, angle){
     push();
     translate(x, y);
     rotate(angle);
@@ -671,7 +712,7 @@ allCars = {
   }),
   Spike : new Car('Spike', 150, 5, 3, {
     MaxHP : 12,
-    RegenHP : 2,
+    RegenHP : 0.03,
     MaxBoosts: 1,
     MoveSpeed : [0.01, 0.4],
     CollisionDamage : 15,

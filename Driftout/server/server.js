@@ -5,8 +5,8 @@ var socketIO = require("socket.io");
 
 // Needs replacement upon cloud hosting?
 var publicPath = path.join(__dirname, "../client")
-var port = process.env.PORT || 3000;
-var host = process.env.HOST || '0.0.0.0';
+var port = process.env.PORT || 80;
+//var host = process.env.HOST || '0.0.0.0';
 var app = express();
 var server = http.createServer(app);
 var io = socketIO(server);
@@ -18,6 +18,7 @@ var grip = 0.99;
 var allPlayers = [];
 var mouseIsPressed = false;
 var spacePressed = false;
+var numPressed = null;
 var notifications = [];
 var currentEntities = [];
 
@@ -59,6 +60,7 @@ io.on("connection", function(socket){
               allPlayers[i].mouseDistanceToCar = data.mouseDistanceToCar;
               mouseIsPressed = data.mouseClick;
               spacePressed = data.spacePressed;
+              numPressed = data.numPressed;
               break;
           }
       }
@@ -98,6 +100,7 @@ var Player = function(id, name, x, y, car) {
   this.car = car;
   this.maxHP = car.maxHP;
   this.HP = car.maxHP;
+  this.regen = 0;
   this.maxSpeed = car.maxSpeed;
   this.boosts = car.maxBoosts;
   this.maxBoosts = car.maxBoosts;
@@ -107,15 +110,112 @@ var Player = function(id, name, x, y, car) {
   this.boostPower = car.boostPower;
   this.size = car.size;
   this.mass = car.mass;
+  this.collisionDamage = car.name == "Spike" ? 30 : 20;
   this.angle = 0;
   this.canBoost = Date.now();
   this.boostCooldown = 3000;
   this.checkPointCounter = [false, false, false, false];
   this.laps = 0
-  this.ability = allCars.Prankster.ability;
   this.abilityCooldown = car.abilityCooldown;
   this.canAbility = Date.now();
-  this.upgradePoints = 0;
+  this.upgradePoints = 1;
+
+  if(this.car.name == "Prankster"){
+    this.ability = allCars.Prankster.ability;
+  }
+  if(this.car.name == "Bullet"){
+    this.ability = allCars.Bullet.ability;
+    this.abilityDuration = Date.now();
+    this.resisting = false;
+  }
+  if(this.car.name == "Fragile"){
+    this.ability = allCars.Fragile.ability;
+  }
+  if(this.car.name == "Sprinter"){
+    this.ability = allCars.Sprinter.ability;
+    this.abilityDuration = Date.now();
+  }
+
+  this.doUpgrade = function(upgradeName, value=0){
+    if(upgradeName == "MaxHP"){
+      this.maxHP += value;
+      this.HP += value;
+    }
+    if(upgradeName == "RegenHP"){
+      this.regen += value;
+    }
+    if(upgradeName == "MaxBoosts"){
+      this.maxBoosts += value;
+      this.boosts += value;
+    }
+    if(upgradeName == "MoveSpeed"){
+      this.acceleration += value[0];
+      this.maxSpeed += value[1];
+    }
+    if(upgradeName == "SingleHeal"){
+      console.log("single heal");
+      if(this.HP + (this.maxHP * value) > this.maxHP){
+        this.HP = this.maxHP;
+      }
+      else{
+        this.HP += this.maxHP * value;
+      }
+    }
+    if(upgradeName == "SingleBoost"){
+      this.vX += Math.cos(this.angle)*value;
+      this.vY += Math.sin(this.angle)*value;
+    }
+    if(upgradeName == "TrapDamage"){
+      console.log("To be made");
+      // this.car.ability = function(x, y, angle, ownerId){
+      //   return {
+      //     name : "Trap",
+      //     x : x,
+      //     y : y,
+      //     vX : Math.cos((angle + 135) % 360) * 14,
+      //     vY : Math.sin((angle + 135) % 360) * 14,
+      //     size : 20,
+      //     damage : 40,
+      //     cooldown : 1000,
+      //     ownerId: ownerId,
+      //     newEntity : true,
+      //     createdAt : 0
+      //   };
+      // }
+    }
+    if(upgradeName == "TrapCooldown"){
+      this.abilityCooldown -= 250;
+    }
+    if(upgradeName == "TrapSize"){
+      console.log("To be made");
+    }
+    if(upgradeName == "GiftCooldown"){
+      this.abilityCooldown -= 500;
+    }
+    if(upgradeName == "DashPower"){
+      var newStats = [this.ability().dashResist, this.ability().dashPower + 10]
+      this.ability = function(){
+        return {
+          name : "Dash",
+          dashResist : newStats[0],
+          dashPower : newStats[1]
+        }
+      };
+    }
+    if (upgradeName == "DashResist"){
+      var newStats = [this.ability().dashResist - this.car.upgrades.dashResist, this.ability().dashPower]
+      this.ability = function(){
+        return {
+          name : "Dash",
+          dashResist : newStats[0],
+          dashPower : newStats[1]
+        }
+      };
+    }
+    if(upgradeName == "CollisionDamage"){
+      this.collisionDamage += 5;
+    }
+  }
 
   this.events = function(mouseIsPressed) {
 
@@ -127,8 +227,40 @@ var Player = function(id, name, x, y, car) {
         notifications.push(this.name + " Crashed!");
       }
 
-      // Ability
+      // Upgrades
+      if (this.upgradePoints > 0 && numPressed != null){
+        for(var i in Object.entries(this.car.upgrades)){
+          if(numPressed-1 == i){
+            this.doUpgrade(Object.keys(this.car.upgrades)[i], Object.values(this.car.upgrades)[i]);
+            this.upgradePoints -= 1;
+          }
+        }
+      }
+
+      // ------ Abilities ------
+
+      // On Loop
+
+      if (this.car.name == "Sprinter"){
+        if (this.abilityDuration < Date.now()){
+          this.acceleration = this.car.acceleration;
+          this.maxSpeed = this.car.maxSpeed;
+        }
+      }
+
+      if (this.car.name == "Bullet"){
+        if (this.abilityDuration < Date.now()){
+          this.resisting = false;
+        }
+      }
+
+      // On trigger
+
       if (spacePressed == true && Date.now() > this.canAbility){
+
+        // console.log("?");
+        // console.log(this.car.name);
+        // console.log(this.ability);
 
         // Prankster Ability
         if (this.ability != null && this.car.name == "Prankster"){
@@ -141,6 +273,7 @@ var Player = function(id, name, x, y, car) {
             }
           }
           currentEntities.push(this.ability(this.x, this.y, this.angle, this.id));
+          console.log(this.abilityCooldown);
           this.canAbility = Date.now() + this.abilityCooldown;
           this.vX += Math.cos((this.angle) % 360) * 3;
           this.vY += Math.sin((this.angle) % 360) * 3;
@@ -149,12 +282,25 @@ var Player = function(id, name, x, y, car) {
 
         // Bullet Ability
         if (this.ability != null && this.car.name == "Bullet"){
-          this.canAbility = Date.now() + allCars.Bullet.abilityCooldown;
-          this.vX += Math.cos((this.angle) % 360) * 10;
-          this.vY += Math.sin((this.angle) % 360) * 10;
-          console.log("boost!");
-          console.log(allCars.Bullet.abilityCooldown);
+          this.canAbility = Date.now() + this.abilityCooldown;
+          this.vX += Math.cos((this.angle) % 360) * this.ability().dashPower;
+          this.vY += Math.sin((this.angle) % 360) * this.ability().dashPower;
+          this.abilityDuration = Date.now() + 1000;
+          this.resisting = true;
+        }
 
+        // Sprinter Ability
+        if (this.ability != null && this.car.name == "Sprinter"){
+          this.canAbility = Date.now() + this.abilityCooldown;
+          this.abilityDuration = Date.now() + 2000;
+          this.acceleration = this.ability().handling[0];
+          this.maxSpeed = this.ability().handling[1];
+        }
+
+        // Fragile Ability
+        if (this.ability != null && this.car.name == "Fragile"){
+          this.canAbility = Date.now() + this.abilityCooldown;
+          this.upgradePoints += 1;
         }
       }
 
@@ -163,13 +309,14 @@ var Player = function(id, name, x, y, car) {
       if (mouseIsPressed == true && Date.now() > this.canBoost && this.boosts > 0){
         this.vX += this.vX > this.maxSpeed / 3 || this.vX < -this.maxSpeed / 3 ? Math.cos(this.angle)*this.boostPower : Math.cos(this.angle)*(this.boostPower)*3;
         this.vY += this.vY > this.maxSpeed / 3 || this.vY < -this.maxSpeed / 3 ? Math.sin(this.angle)*this.boostPower : Math.sin(this.angle)*(this.boostPower)*3;
-        //this.vX = Math.cos(this.angle)+(((this.vY+this.boostPower*2)+this.vX)/2);
-        //this.vY = Math.sin(this.angle)+(((this.vX+this.boostPower*2)+this.vY)/2);
         this.canBoost = Date.now() + this.boostCooldown;
         this.boosts-=1;
+        console.log(this.HP);
       }
 
       // Movement
+
+
 
       if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
         this.vX += Math.cos(this.angle)*this.acceleration;
@@ -191,8 +338,8 @@ var Player = function(id, name, x, y, car) {
 
       // Health regen
 
-      if(this.HP < this.maxHP){
-        this.HP += 0.2;
+      if(this.HP < this.maxHP && this.regen > 0){
+        this.HP += this.regen;
       }
     }
   }
@@ -241,8 +388,13 @@ var Player = function(id, name, x, y, car) {
               var v1Final = rotate(v1, -angle);
               var v2Final = rotate(v2, -angle);
 
-              this.HP -= allPlayers[i].car.name == "Spike" ? Math.abs((this.vX + this.vY)/2) * 30 : Math.abs((this.vX + this.vY)/2) * 20;
-              allPlayers[i].HP -= this.car.name == "Spike" ? Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * 20 : Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * 30;
+              if (this.resisting == true){
+                this.HP -= Math.abs((this.vX + this.vY)/2) * (allPlayers[i].collisionDamage * this.ability().dashResist);
+              }
+              else{
+                this.HP -= Math.abs((this.vX + this.vY)/2) * allPlayers[i].collisionDamage;
+              }
+              allPlayers[i].HP -= Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * this.collisionDamage;
 
               this.vX = v1Final.x;
               this.vY = v1Final.y;
@@ -342,6 +494,7 @@ var Player = function(id, name, x, y, car) {
       y: this.y,
       angle: this.angle,
       HP: this.HP,
+      maxHP : this.maxHP,
       alive: this.alive,
       laps: this.laps,
       boosts: this.boosts,
@@ -403,6 +556,7 @@ setInterval(() => {
   for(var i in allPlayers) {
       allPlayers[i].events(mouseIsPressed);
       updatePack.push(allPlayers[i].getUpdatePack());
+      numPressed = null;
   }
   io.emit("updatePack", {updatePack});
 }, 1000/75)
@@ -436,10 +590,10 @@ var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boo
 allCars = {
   Racer : new Car('Racer', 150, 6, 8, {
     MaxHP : 12,
-    RegenHP : 2,
+    RegenHP : 0.005,
     MaxBoosts: 1,
     MoveSpeed : [0.01, 0.5],
-    SingleHeal : 40,
+    SingleHeal : 0.4,
     SingleBoost : 7.5
   }, 0.11, 2.5, 25, 5, null, null, null),
 
@@ -449,7 +603,7 @@ allCars = {
     TrapDamage: 8,
     TrapCooldown : 0.6,
     TrapSize : 3,
-    SingleHeal : 40
+    SingleHeal : 0.4
   }, 0.1, 2, 20, 4, 4000, function(x, y, angle, ownerId){
     return {
       name : "Trap",
@@ -459,7 +613,7 @@ allCars = {
       vY : Math.sin((angle + 135) % 360) * 14,
       size : 20,
       damage : 40,
-      cooldown : 1000,
+      cooldown : 4000,
       ownerId: ownerId,
       newEntity : true,
       createdAt : 0
@@ -471,12 +625,12 @@ allCars = {
     RegenHP : 3,
     MaxBoosts: 1,
     MoveSpeed : [0.005, 0.8],
-    DashResist : 3,
+    DashResist : 0.05,
     DashPower : 0.4
   }, 0.08, 2.5, 25, 7, 3000, function(){
     return {
     name : "Dash",
-    dashResist : 30,
+    dashResist : 0.2,
     dashPower : 10
   }
 }, null),
@@ -487,17 +641,24 @@ allCars = {
     MaxBoosts: 1,
     BoostPower : 0.4,
     BouncePower : 0.1,
-    SingleHeal : 25
-  }, 0.08, 3, 35, 10, null, null, null),
+    SingleHeal : 0.25
+  }, 0.08, 3, 35, 10, null, function(){
+    return null
+  }, null),
 
   Sprinter : new Car('Sprinter', 80, 12, 10, {
     MaxHP : 8,
     RegenHP : 3,
     MaxBoosts: 1,
-    SteadyHandling : 0.05,
-    SingleHeal : 40,
+    SteadyHandling : 0.2,
+    SingleHeal : 0.4,
     SingleBoost : 6
-  }, 0.14, 2, 25, 2, null, null, null),
+  }, 0.14, 2, 25, 2, 8000, function(){
+    return {
+      name : "Grip",
+      handling : [0.6, 6]
+    }
+  }, null),
 
   Fragile : new Car('Fragile', 70, 6, 5, {
     MaxHP : 20,
@@ -506,7 +667,11 @@ allCars = {
     MoveSpeed : [0.015, 0.6],
     GiftCooldown : 0.8,
     SingleBoost : 7.5
-  }, 0.1, 2.5, 25, 1, null, null, null),
+  }, 0.1, 2.5, 25, 1, 26000, function(){
+    return {
+    name : "Gift"
+ }
+  }, null),
 
   Spike : new Car('Spike', 150, 5, 3, {
     MaxHP : 12,
@@ -515,5 +680,7 @@ allCars = {
     MoveSpeed : [0.01, 0.4],
     CollisionDamage : 15,
     BodySize : 8
-  }, 0.12, 3, 30, 8, null, null, null)
+  }, 0.12, 3, 30, 8, null, function(){
+    return null
+  }, null)
 };
