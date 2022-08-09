@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Bradzie/DriftoutIO/issues"
   },
-  "homepage": "https://github.com/Bradzie/DriftoutIO#readme"
+  "homepage": "https://github.com/Bradzie/DriftoutIO#readme",
+  "dependencies": {
+    "express": "^4.18.1"
+  }
 }
