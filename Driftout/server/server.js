@@ -5,8 +5,8 @@ var socketIO = require("socket.io");
 
 // Needs replacement upon cloud hosting?
 var publicPath = path.join(__dirname, "../client")
-var port = process.env.PORT || 3000;
-var host = process.env.HOST || '0.0.0.0';
+var port = process.env.PORT || 80;
+//var host = process.env.HOST || '0.0.0.0';
 var app = express();
 var server = http.createServer(app);
 var io = socketIO(server);
