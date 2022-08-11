@@ -1,0 +1,19 @@
+{
+  "name": "driftoutio",
+  "version": "1.0.0",
+  "description": "Online real-time racing game",
+  "main": "Driftout/server/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bradzie/DriftoutIO.git"
+  },
+  "author": "Brad Geary",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Bradzie/DriftoutIO/issues"
+  },
+  "homepage": "https://github.com/Bradzie/DriftoutIO#readme"
+}
