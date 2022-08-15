@@ -6,7 +6,7 @@ var socketIO = require("socket.io");
 // Needs replacement upon cloud hosting?
 var publicPath = path.join(__dirname, "../client")
 var port = process.env.PORT || 80;
-//var host = process.env.HOST || '0.0.0.0';
+var host = process.env.HOST || '0.0.0.0';
 var app = express();
 var server = http.createServer(app);
 var io = socketIO(server);
@@ -54,7 +54,7 @@ io.on("connection", function(socket){
           if(allPlayers[i].id === socket.id) {
               allPlayers[i].mouseX = data.mouseX;
               allPlayers[i].mouseY = data.mouseY;
-              allPlayers[i].angle = data.angle;
+              allPlayers[i].angle = data.clientPlayerAngle;
               allPlayers[i].windowWidth = data.windowWidth;
               allPlayers[i].windowHeight = data.windowHeight;
               allPlayers[i].mouseDistanceToCar = data.mouseDistanceToCar;
