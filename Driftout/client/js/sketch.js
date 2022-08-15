@@ -244,7 +244,7 @@ function refreshUpgradeOverlay(){
           displayNum++;
           upgradeBlocks += "<div id='upgradeItem'>" + Object.keys(allPlayers[i].car.upgrades)[j] + "<span style='color:#02f6fa'>[" + displayNum + "]</span></div>";
         }
-        upgradeContainer.innerHTML = upgradeBlocks;
+        upgradeContainer.innerHTML = "<span style='color:#02f6fa'>" + allPlayers[i].upgradePoints + "</span>" + " Upgrade Points" + upgradeBlocks;
       }
       if(allPlayers[i].upgradePoints > 0){
         upgradeContainer.style.opacity = "1";

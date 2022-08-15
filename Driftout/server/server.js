@@ -19,6 +19,7 @@ var allPlayers = [];
 var mouseIsPressed = false;
 var spacePressed = false;
 var numPressed = null;
+var numLock = false;
 var notifications = [];
 var currentEntities = [];
 
@@ -229,12 +230,18 @@ var Player = function(id, name, x, y, car) {
 
       // Upgrades
       if (this.upgradePoints > 0 && numPressed != null){
-        for(var i in Object.entries(this.car.upgrades)){
-          if(numPressed-1 == i){
-            this.doUpgrade(Object.keys(this.car.upgrades)[i], Object.values(this.car.upgrades)[i]);
-            this.upgradePoints -= 1;
+        if (!numLock){
+          numLock = true;
+          for(var i in Object.entries(this.car.upgrades)){
+            if(numPressed-1 == i){
+              this.doUpgrade(Object.keys(this.car.upgrades)[i], Object.values(this.car.upgrades)[i]);
+              this.upgradePoints -= 1;
+            }
           }
         }
+      }
+      else{
+        numLock = false;
       }
 
       // ------ Abilities ------
