@@ -54,7 +54,7 @@ io.on("connection", function(socket){
           if(allPlayers[i].id === socket.id) {
               allPlayers[i].mouseX = data.mouseX;
               allPlayers[i].mouseY = data.mouseY;
-              allPlayers[i].angle = data.angle;
+              allPlayers[i].angle = data.clientPlayerAngle;
               allPlayers[i].windowWidth = data.windowWidth;
               allPlayers[i].windowHeight = data.windowHeight;
               allPlayers[i].mouseDistanceToCar = data.mouseDistanceToCar;
