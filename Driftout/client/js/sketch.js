@@ -31,6 +31,7 @@ var allPlayers = [];
 var notifications = [];
 var nextNotification = 0;
 var currentEntities = [];
+var clientPlayerAngle = 0;
 
 // Load prior to game start / Maybe for larger assets?
 function preload(){
@@ -156,6 +157,7 @@ function draw() {
 
     for(var i in allPlayers) {
         if(allPlayers[i].id == myId) {
+          allPlayers[i].angle = clientPlayerAngle;
           if(allPlayers[i].alive == false){
             exitGame();
           }
@@ -234,7 +236,7 @@ function refreshUpgradeOverlay(){
   for(var i in allPlayers){
     if(allPlayers[i].id === socket.id){
       console.log(1);
-      if(upgradeContainer.innerHTML == ""){
+      //if(upgradeContainer.innerHTML == ""){
         console.log(2);
         var upgradeBlocks = "";
         var displayNum = 0;
@@ -242,8 +244,8 @@ function refreshUpgradeOverlay(){
           displayNum++;
           upgradeBlocks += "<div id='upgradeItem'>" + Object.keys(allPlayers[i].car.upgrades)[j] + "<span style='color:#02f6fa'>[" + displayNum + "]</span></div>";
         }
-        upgradeContainer.innerHTML = upgradeBlocks;
-      }
+        upgradeContainer.innerHTML = "<span style='color:#02f6fa'>" + allPlayers[i].upgradePoints + "</span>" + " Upgrade Points" + upgradeBlocks;
+      //}
       if(allPlayers[i].upgradePoints > 0){
         upgradeContainer.style.opacity = "1";
       }
@@ -404,7 +406,7 @@ function mapLine(x1, y1, x2, y2, colour1 = [0,0,0], colour2 = [220,220,220], thi
 }
 
 function sendInputData() {
-    var angle = atan2(mouseY - windowHeight/2, mouseX - windowWidth/2);
+    clientPlayerAngle = atan2(mouseY - windowHeight/2, mouseX - windowWidth/2);
     var mouseClick = false;
     var spacePressed = false;
     var numPressed = null;
@@ -433,7 +435,7 @@ function sendInputData() {
       spacePressed = true;
     }
     var mouseDistanceToCar = Math.abs(Math.sqrt((windowHeight/2 - mouseY)**2+(windowHeight/2 - mouseY)**2));
-    socket.emit("inputData", {mouseX, mouseY, angle, windowWidth, windowHeight, mouseClick, mouseDistanceToCar, spacePressed, numPressed});
+    socket.emit("inputData", {mouseX, mouseY, clientPlayerAngle, windowWidth, windowHeight, mouseClick, mouseDistanceToCar, spacePressed, numPressed});
 }
 
 
