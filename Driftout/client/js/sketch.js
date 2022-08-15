@@ -236,7 +236,7 @@ function refreshUpgradeOverlay(){
   for(var i in allPlayers){
     if(allPlayers[i].id === socket.id){
       console.log(1);
-      if(upgradeContainer.innerHTML == ""){
+      //if(upgradeContainer.innerHTML == ""){
         console.log(2);
         var upgradeBlocks = "";
         var displayNum = 0;
@@ -245,7 +245,7 @@ function refreshUpgradeOverlay(){
           upgradeBlocks += "<div id='upgradeItem'>" + Object.keys(allPlayers[i].car.upgrades)[j] + "<span style='color:#02f6fa'>[" + displayNum + "]</span></div>";
         }
         upgradeContainer.innerHTML = "<span style='color:#02f6fa'>" + allPlayers[i].upgradePoints + "</span>" + " Upgrade Points" + upgradeBlocks;
-      }
+      //}
       if(allPlayers[i].upgradePoints > 0){
         upgradeContainer.style.opacity = "1";
       }
