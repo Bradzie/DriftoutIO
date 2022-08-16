@@ -318,7 +318,7 @@ function refreshBoostOverlay(){
     if(allPlayers[i].id === socket.id){
 
       // DEBUG CONTAINER UPDATES
-        debugContainer.innerHTML = allPlayers[i].upgradePoints;
+        //debugContainer.innerHTML = allPlayers[i].upgradePoints;
 
       boostContainerCooldown.innerHTML = "Boost " + allPlayers[i].boosts;
       if(allPlayers[i].boosts == 0){
