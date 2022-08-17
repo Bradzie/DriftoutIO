@@ -216,6 +216,9 @@ var Player = function(id, name, x, y, car) {
     if(upgradeName == "CollisionDamage"){
       this.collisionDamage += 5;
     }
+    if(upgradeName == "BoostPower"){
+      this.boostPower += newStats[0]
+    }
   }
 
   this.events = function(mouseIsPressed) {
@@ -372,6 +375,9 @@ var Player = function(id, name, x, y, car) {
       for (var i in allPlayers){
         if (allPlayers[i].id != this.id){
           if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < this.size + allPlayers[i].size){
+
+            // Physics Calc
+
             var collidedPlayerAngle = Math.atan2(this.y - allPlayers[i].y, this.x - allPlayers[i].x);
 
             var xVDiff = this.vX - allPlayers[i].vX;
@@ -395,6 +401,8 @@ var Player = function(id, name, x, y, car) {
               var v1Final = rotate(v1, -angle);
               var v2Final = rotate(v2, -angle);
 
+              //Damage Calc
+
               if (this.resisting == true){
                 this.HP -= Math.abs((this.vX + this.vY)/2) * (allPlayers[i].collisionDamage * this.ability().dashResist);
               }
@@ -402,6 +410,8 @@ var Player = function(id, name, x, y, car) {
                 this.HP -= Math.abs((this.vX + this.vY)/2) * allPlayers[i].collisionDamage;
               }
               allPlayers[i].HP -= Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * this.collisionDamage;
+
+              //Apply Movement
 
               this.vX = v1Final.x;
               this.vY = v1Final.y;

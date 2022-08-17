@@ -3,11 +3,15 @@ html, body{
 }
 
 body {
-  background: linear-gradient(white, black);
+  background: linear-gradient(#84b5c4, black);
   width: 100%;
 	height: 100%;
   margin: 0;
   overflow: hidden;
+}
+
+a:link{
+  text-decoration: none;
 }
 
 #gameUIContainer {
@@ -40,11 +44,11 @@ body {
   width: 100%;
   height: 100%;
   position: absolute;
-  justify-content: center;
+
   flex-direction: column-reverse;
   display: flex;
   grid-gap: 1em;
-  background: linear-gradient(grey, black);
+  background:  linear-gradient(#015873, #84b5c4, grey);
   opacity: 0;
   visibility: hidden;
   transition: visibility 1s linear, opacity 0.5s linear;
@@ -173,6 +177,12 @@ body {
   color: white;
 }
 
+#authorContainer {
+  font-size: 24px;
+  font-weight: 600;
+  text-align: left;
+}
+
 #carSelect {
   align-items: center;
   text-align: center;
@@ -198,6 +208,7 @@ body {
   align-self: center;
   justify-content: center;
   display: inline-block;
+  
 }
 
 #enterGameButton {
@@ -230,7 +241,7 @@ body {
 }
 
 .gameTitle {
-  top: -1em;
+  top: -0.5em;
   left: 50%;
   transform: translate(-50%);
   text-align: center;
@@ -239,4 +250,7 @@ body {
   /*border-bottom: 10px solid #02f6fa;*/
   white-space: nowrap;
   text-shadow: -2px -2px 0 white, 2px -2px 0 white, -2px 2px 0 white, 2px 2px 0 white;
+  padding: 1rem;
+  border: 5px solid transparent;
+
 }
