@@ -341,10 +341,10 @@ var Player = function(id, name, x, y, car) {
       }
 
       // Apply mouse distance
-      if (this.mouseDistanceToCar < 10){
-        this.vX *= this.mouseDistanceToCar/10;
-        this.vY *= this.mouseDistanceToCar/10;
-      }
+      // if (this.mouseDistanceToCar < 30){
+      //   this.vX *= (this.mouseDistanceToCar + 10)/40;
+      //   this.vY *= (this.mouseDistanceToCar + 10)/40;
+      // }
 
       // Apply movement to player location
       this.x += this.vX;
