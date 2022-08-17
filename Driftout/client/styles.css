@@ -198,8 +198,8 @@ a:link{
 #nameInput {
   align-self: center;
   text-align: center;
-  font-size: 3em;
-  padding: 0.5em;
+  font-size: 2.5em;
+  padding: 5px 1em, 1em, 5px;
   margin: 0 auto;
   display: block;
 }
@@ -208,7 +208,7 @@ a:link{
   align-self: center;
   justify-content: center;
   display: inline-block;
-  
+
 }
 
 #enterGameButton {
