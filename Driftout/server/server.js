@@ -77,10 +77,10 @@ io.on("connection", function(socket){
       }
   });
 
-  socket.on("removePlayerServer", () => {
-    socket.emit("removePlayerClient");
+  socket.on("removePlayerServer", (playerID) => {
+    socket.emit("removePlayerClient", playerID);
     for(var i in allPlayers) {
-        if(allPlayers[i].id === socket.id) {
+        if(allPlayers[i].id === playerID) {
             allPlayers.splice(i, 1);
         }
     }
@@ -229,6 +229,7 @@ var Player = function(id, name, x, y, car) {
       if (this.HP < 0){
         this.alive = false;
         notifications.push(this.name + " Crashed!");
+        //socket.emit("removePlayerClient", this.id);
       }
 
       // Upgrades
@@ -314,6 +315,12 @@ var Player = function(id, name, x, y, car) {
         }
       }
 
+      // Debug on mouseIsPressed
+
+      if(mouseIsPressed == true){
+        console.log(allPlayers.length);
+      }
+
       // Boosts
 
       if (mouseIsPressed == true && Date.now() > this.canBoost && this.boosts > 0){
@@ -326,13 +333,17 @@ var Player = function(id, name, x, y, car) {
 
       // Movement
 
-
-
       if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
         this.vX += Math.cos(this.angle)*this.acceleration;
       }
       if (this.vY < this.maxSpeed && this.vY > -this.maxSpeed){
         this.vY += Math.sin(this.angle)*this.acceleration;
+      }
+
+      // Apply mouse distance
+      if (this.mouseDistanceToCar < 10){
+        this.vX *= this.mouseDistanceToCar/10;
+        this.vY *= this.mouseDistanceToCar/10;
       }
 
       // Apply movement to player location
@@ -571,8 +582,8 @@ setInterval(() => {
 setInterval(() => {
   var updatePack = [];
   for(var i in allPlayers) {
-      allPlayers[i].events(mouseIsPressed);
       updatePack.push(allPlayers[i].getUpdatePack());
+      allPlayers[i].events(mouseIsPressed);
       numPressed = null;
   }
   io.emit("updatePack", {updatePack});
