@@ -16,10 +16,6 @@ app.use(express.static(publicPath));
 
 var grip = 0.99;
 var allPlayers = [];
-var mouseIsPressed = false;
-var spacePressed = false;
-var numPressed = null;
-var numLock = false;
 var notifications = [];
 var currentEntities = [];
 
@@ -59,9 +55,9 @@ io.on("connection", function(socket){
               allPlayers[i].windowWidth = data.windowWidth;
               allPlayers[i].windowHeight = data.windowHeight;
               allPlayers[i].mouseDistanceToCar = data.mouseDistanceToCar;
-              mouseIsPressed = data.mouseClick;
-              spacePressed = data.spacePressed;
-              numPressed = data.numPressed;
+              allPlayers[i].mouseIsPressed = data.mouseClick;
+              allPlayers[i].spacePressed = data.spacePressed;
+              allPlayers[i].numPressed = data.numPressed;
               break;
           }
       }
@@ -77,10 +73,10 @@ io.on("connection", function(socket){
       }
   });
 
-  socket.on("removePlayerServer", () => {
-    socket.emit("removePlayerClient");
+  socket.on("removePlayerServer", (playerID) => {
+    socket.emit("removePlayerClient", playerID);
     for(var i in allPlayers) {
-        if(allPlayers[i].id === socket.id) {
+        if(allPlayers[i].id === playerID) {
             allPlayers.splice(i, 1);
         }
     }
@@ -98,6 +94,9 @@ var Player = function(id, name, x, y, car) {
   this.mouseX;
   this.mouseY;
   this.mouseDistanceToCar;
+  this.mouseIsPressed = false;
+  this.spacePressed = false;
+  this.numPressed = null;
   this.car = car;
   this.maxHP = car.maxHP;
   this.HP = car.maxHP;
@@ -216,9 +215,12 @@ var Player = function(id, name, x, y, car) {
     if(upgradeName == "CollisionDamage"){
       this.collisionDamage += 5;
     }
+    if(upgradeName == "BoostPower"){
+      this.boostPower += newStats[0]
+    }
   }
 
-  this.events = function(mouseIsPressed) {
+  this.events = function() {
 
     if (this.alive == true){
 
@@ -226,14 +228,15 @@ var Player = function(id, name, x, y, car) {
       if (this.HP < 0){
         this.alive = false;
         notifications.push(this.name + " Crashed!");
+        //socket.emit("removePlayerClient", this.id);
       }
 
       // Upgrades
-      if (this.upgradePoints > 0 && numPressed != null){
-        if (!numLock){
-          numLock = true;
+      if (this.upgradePoints > 0 && this.numPressed != null){
+        if (!this.numLock){
+          this.numLock = true;
           for(var i in Object.entries(this.car.upgrades)){
-            if(numPressed-1 == i){
+            if(this.numPressed-1 == i){
               this.doUpgrade(Object.keys(this.car.upgrades)[i], Object.values(this.car.upgrades)[i]);
               this.upgradePoints -= 1;
             }
@@ -241,8 +244,9 @@ var Player = function(id, name, x, y, car) {
         }
       }
       else{
-        numLock = false;
+        this.numLock = false;
       }
+      this.numPressed = null;
 
       // ------ Abilities ------
 
@@ -263,7 +267,7 @@ var Player = function(id, name, x, y, car) {
 
       // On trigger
 
-      if (spacePressed == true && Date.now() > this.canAbility){
+      if (this.spacePressed == true && Date.now() > this.canAbility){
 
         // console.log("?");
         // console.log(this.car.name);
@@ -311,9 +315,15 @@ var Player = function(id, name, x, y, car) {
         }
       }
 
+      // Debug on mouseIsPressed
+
+      if(this.mouseIsPressed == true){
+        console.log(allPlayers.length);
+      }
+
       // Boosts
 
-      if (mouseIsPressed == true && Date.now() > this.canBoost && this.boosts > 0){
+      if (this.mouseIsPressed == true && Date.now() > this.canBoost && this.boosts > 0){
         this.vX += this.vX > this.maxSpeed / 3 || this.vX < -this.maxSpeed / 3 ? Math.cos(this.angle)*this.boostPower : Math.cos(this.angle)*(this.boostPower)*3;
         this.vY += this.vY > this.maxSpeed / 3 || this.vY < -this.maxSpeed / 3 ? Math.sin(this.angle)*this.boostPower : Math.sin(this.angle)*(this.boostPower)*3;
         this.canBoost = Date.now() + this.boostCooldown;
@@ -323,13 +333,17 @@ var Player = function(id, name, x, y, car) {
 
       // Movement
 
-
-
       if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
         this.vX += Math.cos(this.angle)*this.acceleration;
       }
       if (this.vY < this.maxSpeed && this.vY > -this.maxSpeed){
         this.vY += Math.sin(this.angle)*this.acceleration;
+      }
+
+      // Apply mouse distance
+      if (this.mouseDistanceToCar < 10){
+        this.vX *= this.mouseDistanceToCar/10;
+        this.vY *= this.mouseDistanceToCar/10;
       }
 
       // Apply movement to player location
@@ -372,6 +386,9 @@ var Player = function(id, name, x, y, car) {
       for (var i in allPlayers){
         if (allPlayers[i].id != this.id){
           if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < this.size + allPlayers[i].size){
+
+            // Physics Calc
+
             var collidedPlayerAngle = Math.atan2(this.y - allPlayers[i].y, this.x - allPlayers[i].x);
 
             var xVDiff = this.vX - allPlayers[i].vX;
@@ -395,6 +412,8 @@ var Player = function(id, name, x, y, car) {
               var v1Final = rotate(v1, -angle);
               var v2Final = rotate(v2, -angle);
 
+              //Damage Calc
+
               if (this.resisting == true){
                 this.HP -= Math.abs((this.vX + this.vY)/2) * (allPlayers[i].collisionDamage * this.ability().dashResist);
               }
@@ -402,6 +421,8 @@ var Player = function(id, name, x, y, car) {
                 this.HP -= Math.abs((this.vX + this.vY)/2) * allPlayers[i].collisionDamage;
               }
               allPlayers[i].HP -= Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * this.collisionDamage;
+
+              //Apply Movement
 
               this.vX = v1Final.x;
               this.vY = v1Final.y;
@@ -561,9 +582,8 @@ setInterval(() => {
 setInterval(() => {
   var updatePack = [];
   for(var i in allPlayers) {
-      allPlayers[i].events(mouseIsPressed);
       updatePack.push(allPlayers[i].getUpdatePack());
-      numPressed = null;
+      allPlayers[i].events();
   }
   io.emit("updatePack", {updatePack});
 }, 1000/75)

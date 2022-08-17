@@ -62,13 +62,6 @@ function setup(){
       refreshLeaderboard();
   });
 
-  socket.on("removePlayerClient", () => {
-    for(var i in allPlayers) {
-      if(allPlayers[i].id === socket.id) {
-        allPlayers.splice(i, 1);
-      }
-    }
-  });
 
   socket.on("initPack", function(data) {
       for(var i in data.initPack) {
@@ -192,8 +185,10 @@ function exitGame(){
   gameGuiContainer.style.visibility = "hidden";
   gameGuiContainer.style.opacity = "0";
   playing = false;
-  socket.emit("removePlayerServer");
+  socket.emit("removePlayerServer", myId);
   enterGameButton.setAttribute('onClick', 'enterGame()');
+  allPlayers=[];
+  console.log(allPlayers);
 }
 
 function enterGame(){
@@ -235,9 +230,6 @@ function enterGame(){
 function refreshUpgradeOverlay(){
   for(var i in allPlayers){
     if(allPlayers[i].id === socket.id){
-      console.log(1);
-      //if(upgradeContainer.innerHTML == ""){
-        console.log(2);
         var upgradeBlocks = "";
         var displayNum = 0;
         for(var j in Object.entries(allPlayers[i].car.upgrades)){
@@ -318,7 +310,7 @@ function refreshBoostOverlay(){
     if(allPlayers[i].id === socket.id){
 
       // DEBUG CONTAINER UPDATES
-        debugContainer.innerHTML = allPlayers[i].upgradePoints;
+        //debugContainer.innerHTML = allPlayers[i].upgradePoints;
 
       boostContainerCooldown.innerHTML = "Boost " + allPlayers[i].boosts;
       if(allPlayers[i].boosts == 0){
@@ -434,7 +426,8 @@ function sendInputData() {
     if (keyIsDown(32)){
       spacePressed = true;
     }
-    var mouseDistanceToCar = Math.abs(Math.sqrt((windowHeight/2 - mouseY)**2+(windowHeight/2 - mouseY)**2));
+    //var mouseDistanceToCar = Math.abs(Math.sqrt((windowHeight/2 - mouseY)**2+(windowHeight/2 - mouseY)**2));
+    var mouseDistanceToCar = Math.abs((windowHeight/2 + windowWidth/2) - (mouseX+mouseY));
     socket.emit("inputData", {mouseX, mouseY, clientPlayerAngle, windowWidth, windowHeight, mouseClick, mouseDistanceToCar, spacePressed, numPressed});
 }
 
