@@ -10,8 +10,16 @@ body {
   overflow: hidden;
 }
 
+a{
+  color:#476596;
+}
+
 a:link{
   text-decoration: none;
+}
+
+a:hover{
+  color: white;
 }
 
 #gameUIContainer {
@@ -44,11 +52,11 @@ a:link{
   width: 100%;
   height: 100%;
   position: absolute;
-
+  align-content: center;
   flex-direction: column-reverse;
   display: flex;
   grid-gap: 1em;
-  background:  linear-gradient(#015873, #84b5c4, grey);
+  background:  linear-gradient(#015873, #84b5c4, #015873, #13163b);
   opacity: 0;
   visibility: hidden;
   transition: visibility 1s linear, opacity 0.5s linear;
@@ -181,6 +189,7 @@ a:link{
   font-size: 24px;
   font-weight: 600;
   text-align: left;
+  transform: translateY(1em);
 }
 
 #carSelect {
@@ -207,21 +216,19 @@ a:link{
 #inputContainer {
   align-self: center;
   justify-content: center;
-  display: inline-block;
-
+  display: flex;
+  transform: translateY(2em);
 }
 
 #enterGameButton {
   transform: translateZ(-10px);
-  margin: 0 auto;
-  display: block;
-  border-radius: 0.3em;
+  border-radius: 0.2em;
   font-size: 1.5em;
   padding-left: 0.8em;
   padding-right: 0.8em;
   font-weight: bolder;
   background-color: #02f6fa;
-  align-self: center;
+  align-self: right;
   z-index: 100;
   border: none;
   font-family: 'Kdam Thmor Pro';
@@ -230,7 +237,38 @@ a:link{
 
 #enterGameButton:hover{
   background-color: #008f91;
+}
+
+#changeClassButton{
+  border-radius: 0.2em;
+  font-size: 1.5em;
+  padding-left: 0.8em;
+  padding-right: 0.8em;
+  font-weight: bolder;
+  background-color: #02f6fa;
+  align-self: left;
+  border: none;
+  font-family: 'Kdam Thmor Pro';
+  text-align: center;
+}
+
+#changeClassButton:hover{
+  background-color: #008f91;
+}
+
+#classImage{
+  border-radius: 0.2em;
+}
+
+#classDisplay{
+  width: 20%;
   align-self: center;
+  display: flex;
+  transform: translateY(2em);
+  grid-gap: 0.5em;
+  background-color: rgba(230, 230, 230, 0.6);
+  border: 0.2em solid #02f6fa;
+  padding: 0.3em;
 }
 
 #mainCanvas {

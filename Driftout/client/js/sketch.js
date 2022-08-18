@@ -3,6 +3,7 @@ var playing = false,
   mainCanvas = document.getElementById("mainCanvas"),
   gameTitle = document.getElementById("gameTitle"),
   enterGameButton = document.getElementById('enterGameButton'),
+  changeClassButton = document.getElementById('changeClassButton')
   menuContainer = document.getElementById("menuContainer"),
   carInputRacer = document.getElementById('carInputRacer'),
   carInputTank = document.getElementById('carInputTank'),
@@ -12,6 +13,8 @@ var playing = false,
   carInputFragile = document.getElementById('carInputFragile'),
   carInputSpike = document.getElementById('carInputSpike'),
   carRadio = document.getElementById('carRadio'),
+  classDisplay = document.getElementById('classDisplay'),
+  classImage = document.getElementById('classImage'),
   nameInput = document.getElementById('nameInput'),
   gameGuiContainer = document.getElementById('gameGuiContainer'),
   notificationContainer = document.getElementById('notificationContainer'),
@@ -32,6 +35,25 @@ var notifications = [];
 var nextNotification = 0;
 var currentEntities = [];
 var clientPlayerAngle = 0;
+var classIndex = 0;
+var classEntries = [
+  "Racer<br>■■□ Speed<br>■■□ Handling<br>■■□ Durability",
+  "Sprinter<br>■■■ Speed<br>■□□ Handling<br>■□□ Durability<br>Ability: Steady",
+  "Tank<br>■□□ Speed<br>■■■ Handling<br>■■■ Durability",
+  "Prankster<br>■■□ Speed<br>■■□ Handling<br>■□□ Durability<br>Ability: Trap",
+  "Bullet<br>■■■ Speed<br>■□□ Handling<br>■■■ Durability<br>Ability: Dash",
+  "Fragile<br>■□□ Speed<br>■□□ Handling<br>■□□ Durability<br>Ability: Gift",
+  "Spike<br>■□□ Speed<br>■■■ Handling<br>■■□ Durability"
+]
+var classAssetPaths = [
+  "./assets/racer.png",
+  "./assets/sprinter.png",
+  "./assets/tank.png",
+  "./assets/prankster.png",
+  "./assets/bullet.png",
+  "./assets/fragile.png",
+  "./assets/spike.png"
+]
 
 // Load prior to game start / Maybe for larger assets?
 function preload(){
@@ -46,8 +68,12 @@ function setup(){
   nameInput.focus();
   nameInput.select();
 
+  frameRate(30);
+
   menuContainer.style.visibility = "visible";
   menuContainer.style.opacity = "1";
+
+  classDisplay.innerHTML = "<div id='classImage'><img src = " + classAssetPaths[classIndex] + "></div>" + classEntries[classIndex];
 
   socket = io();
 
@@ -59,7 +85,6 @@ function setup(){
       var newCar = Object.entries(allCars).filter(car => car[0] == data.car.name)[0][1];
       var player = new Player(data.id, data.name, data.x, data.y, newCar);
       allPlayers.push(player);
-      refreshLeaderboard();
   });
 
 
@@ -68,7 +93,6 @@ function setup(){
           var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack[i].car.name)[0][1];
           var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar);
           allPlayers.push(player);
-          refreshLeaderboard();
       }
   });
 
@@ -142,11 +166,8 @@ function draw() {
   if (playing == true && allPlayers.filter(player => player.id === myId).length == 1){
     background(100, 100, 100); // it gets a hex/rgb color
     sendInputData();
-    refreshLeaderboard();
-    refreshBoostOverlay();
-    refreshAbilityOverlay();
-    refreshNotifications();
-    refreshUpgradeOverlay();
+    //refreshBoostOverlay();
+    refreshDisplays();
 
     for(var i in allPlayers) {
         if(allPlayers[i].id == myId) {
@@ -194,25 +215,25 @@ function exitGame(){
 function enterGame(){
   var carChoice = '';
   playing = true;
-  if(carInputRacer.checked == true){
+  if(classIndex == 0){
     carChoice = allCars.Racer;
   }
-  if(carInputTank.checked == true){
-    carChoice = allCars.Tank;
-  }
-  if(carInputSprinter.checked == true){
+  if(classIndex == 1){
     carChoice = allCars.Sprinter;
   }
-  if(carInputPrankster.checked == true){
+  if(classIndex == 2){
+    carChoice = allCars.Tank;
+  }
+  if(classIndex == 3){
     carChoice = allCars.Prankster;
   }
-  if(carInputBullet.checked == true){
+  if(classIndex == 4){
     carChoice = allCars.Bullet;
   }
-  if(carInputFragile.checked == true){
+  if(classIndex == 5){
     carChoice = allCars.Fragile;
   }
-  if(carInputSpike.checked == true){
+  if(classIndex == 6){
     carChoice = allCars.Spike;
   }
 
@@ -227,28 +248,16 @@ function enterGame(){
   upgradeContainer.innerHTML = "";
 }
 
-function refreshUpgradeOverlay(){
-  for(var i in allPlayers){
-    if(allPlayers[i].id === socket.id){
-        var upgradeBlocks = "";
-        var displayNum = 0;
-        for(var j in Object.entries(allPlayers[i].car.upgrades)){
-          displayNum++;
-          upgradeBlocks += "<div id='upgradeItem'>" + Object.keys(allPlayers[i].car.upgrades)[j] + "<span style='color:#02f6fa'>[" + displayNum + "]</span></div>";
-        }
-        upgradeContainer.innerHTML = "<span style='color:#02f6fa'>" + allPlayers[i].upgradePoints + "</span>" + " Upgrade Points" + upgradeBlocks;
-      //}
-      if(allPlayers[i].upgradePoints > 0){
-        upgradeContainer.style.opacity = "1";
-      }
-      else{
-        upgradeContainer.style.opacity = "0";
-      }
-    }
+function changeClass(){
+  classIndex++;
+  if(classIndex >= Object.keys(allCars).length){
+    classIndex=0;
   }
+  classDisplay.innerHTML = "<div id='classImage'><img src = " + classAssetPaths[classIndex] + "></div>" + classEntries[classIndex];
 }
 
-function refreshNotifications(){
+function refreshDisplays(){
+  // Notification Overlay
   if (notifications.length > 0){
     if (millis() > nextNotification){
       notificationContainer.style.opacity = "1";
@@ -262,48 +271,86 @@ function refreshNotifications(){
       notificationContainer.style.opacity = "0";
     }
   }
-}
 
-function refreshLeaderboard(){
   leaderboardContainer.innerHTML = "Leaderboard";
   var text = "";
+
   for(var i in allPlayers){
+
+    // Upgrade Overlay
+    if(allPlayers[i].id === socket.id){
+      var upgradeBlocks = "";
+      var displayNum = 0;
+      for(var j in Object.entries(allPlayers[i].car.upgrades)){
+        displayNum++;
+        upgradeBlocks += "<div id='upgradeItem'>" + Object.keys(allPlayers[i].car.upgrades)[j] + "<span style='color:#02f6fa'>[" + displayNum + "]</span></div>";
+      }
+      upgradeContainer.innerHTML = "<span style='color:#02f6fa'>" + allPlayers[i].upgradePoints + "</span>" + " Upgrade Points" + upgradeBlocks;
+      if(allPlayers[i].upgradePoints > 0){
+        upgradeContainer.style.opacity = "1";
+      }
+      else{
+        upgradeContainer.style.opacity = "0";
+      }
+    }
+
+    // Leaderboard Overlay
     if(allPlayers[i].alive == true){
       text += "<div class = 'leaderboardItem'>" + allPlayers[i].laps + " " + allPlayers[i].name + "</div>\n";
     }
     else{
       allPlayers.splice(i, 1);
     }
-  }
-  leaderboardContainer.innerHTML = "Leaderboard\n" + text;
-}
 
-function refreshAbilityOverlay(){
-  for(var i in allPlayers){
-    if(allPlayers[i].id === socket.id){
-      //console.log(1);
-      //console.log(allPlayers[i].ability);
-      if(allPlayers[i].ability != null){
-        //console.log("ability");
-        abilityContainerCooldown.innerHTML = allPlayers[i].ability().name;
-        abilityContainer.style.opacity = "1";
-        if(allPlayers[i].canAbility > Date.now()){
-          abilityContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)";
-          var firedAt = allPlayers[i].canAbility - allPlayers[i].abilityCooldown;
-          abilityContainerCooldown.style.width = ((((Date.now() - firedAt) / (allPlayers[i].canAbility - firedAt))*100)-10) + "%";
+
+    // Check array still defined
+    if(allPlayers[i]){
+
+
+      // Ability Overlay
+      if(allPlayers[i].id === socket.id){
+        if(allPlayers[i].ability != null){
+          abilityContainerCooldown.innerHTML = allPlayers[i].ability().name;
+          abilityContainer.style.opacity = "1";
+          if(allPlayers[i].canAbility > Date.now()){
+            abilityContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)";
+            var abilityFiredAt = allPlayers[i].canAbility - allPlayers[i].abilityCooldown;
+            abilityContainerCooldown.style.width = ((((Date.now() - abilityFiredAt) / (allPlayers[i].canAbility - abilityFiredAt))*100)-10) + "%";
+          }
+          else{
+            abilityContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)";
+            abilityContainerCooldown.style.width = "90%";
+          }
         }
         else{
-          abilityContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)";
-          abilityContainerCooldown.style.width = "90%";
+          abilityContainer.style.opacity = "0";
         }
-      }
-      else{
-        abilityContainer.style.opacity = "0";
-        break;
+
+
+      // Boost Overlay
+        boostContainerCooldown.innerHTML = "Boost " + allPlayers[i].boosts;
+        if(allPlayers[i].boosts == 0){
+          boostContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)";
+        }
+        else{
+          boostContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)";
+          if(allPlayers[i].canBoost > Date.now()){
+            boostContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)";
+            var boostFiredAt = allPlayers[i].canBoost - allPlayers[i].boostCooldown;
+            boostContainerCooldown.style.width = ((((Date.now() - boostFiredAt) / (allPlayers[i].canBoost - boostFiredAt))*100)-10) + "%";
+          }
+          else{
+            boostContainerCooldown.style.width = "90%"
+            boostContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)"
+          }
+        }
       }
     }
   }
+
+  leaderboardContainer.innerHTML = "Leaderboard\n" + text;
 }
+
 
 function refreshBoostOverlay(){
   for(var i in allPlayers){
