@@ -85,7 +85,6 @@ function setup(){
       var newCar = Object.entries(allCars).filter(car => car[0] == data.car.name)[0][1];
       var player = new Player(data.id, data.name, data.x, data.y, newCar);
       allPlayers.push(player);
-      refreshLeaderboard();
   });
 
 
@@ -94,7 +93,6 @@ function setup(){
           var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack[i].car.name)[0][1];
           var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar);
           allPlayers.push(player);
-          refreshLeaderboard();
       }
   });
 
@@ -168,9 +166,7 @@ function draw() {
   if (playing == true && allPlayers.filter(player => player.id === myId).length == 1){
     background(100, 100, 100); // it gets a hex/rgb color
     sendInputData();
-    refreshLeaderboard();
-    refreshBoostOverlay();
-    refreshAbilityOverlay();
+    //refreshBoostOverlay();
     refreshDisplays();
 
     for(var i in allPlayers) {
@@ -276,6 +272,9 @@ function refreshDisplays(){
     }
   }
 
+  leaderboardContainer.innerHTML = "Leaderboard";
+  var text = "";
+
   for(var i in allPlayers){
 
     // Upgrade Overlay
@@ -296,49 +295,62 @@ function refreshDisplays(){
     }
 
     // Leaderboard Overlay
-  }
-}
-
-function refreshLeaderboard(){
-  leaderboardContainer.innerHTML = "Leaderboard";
-  var text = "";
-  for(var i in allPlayers){
     if(allPlayers[i].alive == true){
       text += "<div class = 'leaderboardItem'>" + allPlayers[i].laps + " " + allPlayers[i].name + "</div>\n";
     }
     else{
       allPlayers.splice(i, 1);
     }
-  }
-  leaderboardContainer.innerHTML = "Leaderboard\n" + text;
-}
 
-function refreshAbilityOverlay(){
-  for(var i in allPlayers){
-    if(allPlayers[i].id === socket.id){
-      //console.log(1);
-      //console.log(allPlayers[i].ability);
-      if(allPlayers[i].ability != null){
-        //console.log("ability");
-        abilityContainerCooldown.innerHTML = allPlayers[i].ability().name;
-        abilityContainer.style.opacity = "1";
-        if(allPlayers[i].canAbility > Date.now()){
-          abilityContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)";
-          var firedAt = allPlayers[i].canAbility - allPlayers[i].abilityCooldown;
-          abilityContainerCooldown.style.width = ((((Date.now() - firedAt) / (allPlayers[i].canAbility - firedAt))*100)-10) + "%";
+
+    // Check array still defined
+    if(allPlayers[i]){
+
+
+      // Ability Overlay
+      if(allPlayers[i].id === socket.id){
+        if(allPlayers[i].ability != null){
+          abilityContainerCooldown.innerHTML = allPlayers[i].ability().name;
+          abilityContainer.style.opacity = "1";
+          if(allPlayers[i].canAbility > Date.now()){
+            abilityContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)";
+            var abilityFiredAt = allPlayers[i].canAbility - allPlayers[i].abilityCooldown;
+            abilityContainerCooldown.style.width = ((((Date.now() - abilityFiredAt) / (allPlayers[i].canAbility - abilityFiredAt))*100)-10) + "%";
+          }
+          else{
+            abilityContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)";
+            abilityContainerCooldown.style.width = "90%";
+          }
         }
         else{
-          abilityContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)";
-          abilityContainerCooldown.style.width = "90%";
+          abilityContainer.style.opacity = "0";
         }
-      }
-      else{
-        abilityContainer.style.opacity = "0";
-        break;
+
+
+      // Boost Overlay
+        boostContainerCooldown.innerHTML = "Boost " + allPlayers[i].boosts;
+        if(allPlayers[i].boosts == 0){
+          boostContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)";
+        }
+        else{
+          boostContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)";
+          if(allPlayers[i].canBoost > Date.now()){
+            boostContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)";
+            var boostFiredAt = allPlayers[i].canBoost - allPlayers[i].boostCooldown;
+            boostContainerCooldown.style.width = ((((Date.now() - boostFiredAt) / (allPlayers[i].canBoost - boostFiredAt))*100)-10) + "%";
+          }
+          else{
+            boostContainerCooldown.style.width = "90%"
+            boostContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)"
+          }
+        }
       }
     }
   }
+
+  leaderboardContainer.innerHTML = "Leaderboard\n" + text;
 }
+
 
 function refreshBoostOverlay(){
   for(var i in allPlayers){
