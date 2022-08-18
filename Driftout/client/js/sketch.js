@@ -3,6 +3,7 @@ var playing = false,
   mainCanvas = document.getElementById("mainCanvas"),
   gameTitle = document.getElementById("gameTitle"),
   enterGameButton = document.getElementById('enterGameButton'),
+  changeClassButton = document.getElementById('changeClassButton')
   menuContainer = document.getElementById("menuContainer"),
   carInputRacer = document.getElementById('carInputRacer'),
   carInputTank = document.getElementById('carInputTank'),
@@ -12,6 +13,8 @@ var playing = false,
   carInputFragile = document.getElementById('carInputFragile'),
   carInputSpike = document.getElementById('carInputSpike'),
   carRadio = document.getElementById('carRadio'),
+  classDisplay = document.getElementById('classDisplay'),
+  classImage = document.getElementById('classImage'),
   nameInput = document.getElementById('nameInput'),
   gameGuiContainer = document.getElementById('gameGuiContainer'),
   notificationContainer = document.getElementById('notificationContainer'),
@@ -32,6 +35,25 @@ var notifications = [];
 var nextNotification = 0;
 var currentEntities = [];
 var clientPlayerAngle = 0;
+var classIndex = 0;
+var classEntries = [
+  "Racer<br>■■□ Speed<br>■■□ Handling<br>■■□ Durability",
+  "Sprinter<br>■■■ Speed<br>■□□ Handling<br>■□□ Durability<br>Ability: Steady",
+  "Tank<br>■□□ Speed<br>■■■ Handling<br>■■■ Durability",
+  "Prankster<br>■■□ Speed<br>■■□ Handling<br>■□□ Durability<br>Ability: Trap",
+  "Bullet<br>■■■ Speed<br>■□□ Handling<br>■■■ Durability<br>Ability: Dash",
+  "Fragile<br>■□□ Speed<br>■□□ Handling<br>■□□ Durability<br>Ability: Gift",
+  "Spike<br>■□□ Speed<br>■■■ Handling<br>■■□ Durability"
+]
+var classAssetPaths = [
+  "./assets/racer.png",
+  "./assets/sprinter.png",
+  "./assets/tank.png",
+  "./assets/prankster.png",
+  "./assets/bullet.png",
+  "./assets/fragile.png",
+  "./assets/spike.png"
+]
 
 // Load prior to game start / Maybe for larger assets?
 function preload(){
@@ -46,8 +68,12 @@ function setup(){
   nameInput.focus();
   nameInput.select();
 
+  frameRate(30);
+
   menuContainer.style.visibility = "visible";
   menuContainer.style.opacity = "1";
+
+  classDisplay.innerHTML = "<div id='classImage'><img src = " + classAssetPaths[classIndex] + "></div>" + classEntries[classIndex];
 
   socket = io();
 
@@ -145,8 +171,7 @@ function draw() {
     refreshLeaderboard();
     refreshBoostOverlay();
     refreshAbilityOverlay();
-    refreshNotifications();
-    refreshUpgradeOverlay();
+    refreshDisplays();
 
     for(var i in allPlayers) {
         if(allPlayers[i].id == myId) {
@@ -194,25 +219,25 @@ function exitGame(){
 function enterGame(){
   var carChoice = '';
   playing = true;
-  if(carInputRacer.checked == true){
+  if(classIndex == 0){
     carChoice = allCars.Racer;
   }
-  if(carInputTank.checked == true){
-    carChoice = allCars.Tank;
-  }
-  if(carInputSprinter.checked == true){
+  if(classIndex == 1){
     carChoice = allCars.Sprinter;
   }
-  if(carInputPrankster.checked == true){
+  if(classIndex == 2){
+    carChoice = allCars.Tank;
+  }
+  if(classIndex == 3){
     carChoice = allCars.Prankster;
   }
-  if(carInputBullet.checked == true){
+  if(classIndex == 4){
     carChoice = allCars.Bullet;
   }
-  if(carInputFragile.checked == true){
+  if(classIndex == 5){
     carChoice = allCars.Fragile;
   }
-  if(carInputSpike.checked == true){
+  if(classIndex == 6){
     carChoice = allCars.Spike;
   }
 
@@ -227,28 +252,16 @@ function enterGame(){
   upgradeContainer.innerHTML = "";
 }
 
-function refreshUpgradeOverlay(){
-  for(var i in allPlayers){
-    if(allPlayers[i].id === socket.id){
-        var upgradeBlocks = "";
-        var displayNum = 0;
-        for(var j in Object.entries(allPlayers[i].car.upgrades)){
-          displayNum++;
-          upgradeBlocks += "<div id='upgradeItem'>" + Object.keys(allPlayers[i].car.upgrades)[j] + "<span style='color:#02f6fa'>[" + displayNum + "]</span></div>";
-        }
-        upgradeContainer.innerHTML = "<span style='color:#02f6fa'>" + allPlayers[i].upgradePoints + "</span>" + " Upgrade Points" + upgradeBlocks;
-      //}
-      if(allPlayers[i].upgradePoints > 0){
-        upgradeContainer.style.opacity = "1";
-      }
-      else{
-        upgradeContainer.style.opacity = "0";
-      }
-    }
+function changeClass(){
+  classIndex++;
+  if(classIndex >= Object.keys(allCars).length){
+    classIndex=0;
   }
+  classDisplay.innerHTML = "<div id='classImage'><img src = " + classAssetPaths[classIndex] + "></div>" + classEntries[classIndex];
 }
 
-function refreshNotifications(){
+function refreshDisplays(){
+  // Notification Overlay
   if (notifications.length > 0){
     if (millis() > nextNotification){
       notificationContainer.style.opacity = "1";
@@ -261,6 +274,28 @@ function refreshNotifications(){
     if (millis() > nextNotification){
       notificationContainer.style.opacity = "0";
     }
+  }
+
+  for(var i in allPlayers){
+
+    // Upgrade Overlay
+    if(allPlayers[i].id === socket.id){
+      var upgradeBlocks = "";
+      var displayNum = 0;
+      for(var j in Object.entries(allPlayers[i].car.upgrades)){
+        displayNum++;
+        upgradeBlocks += "<div id='upgradeItem'>" + Object.keys(allPlayers[i].car.upgrades)[j] + "<span style='color:#02f6fa'>[" + displayNum + "]</span></div>";
+      }
+      upgradeContainer.innerHTML = "<span style='color:#02f6fa'>" + allPlayers[i].upgradePoints + "</span>" + " Upgrade Points" + upgradeBlocks;
+      if(allPlayers[i].upgradePoints > 0){
+        upgradeContainer.style.opacity = "1";
+      }
+      else{
+        upgradeContainer.style.opacity = "0";
+      }
+    }
+
+    // Leaderboard Overlay
   }
 }
 

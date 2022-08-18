@@ -15,32 +15,38 @@
     <div id = "menuContainer">
       <div id=linksContainer>
         <a href=https://github.com/Bradzie/DriftoutIO>
-          <span style="color:#476596">
-            Source Code
-          </span>
+          Source Code
         </a>
       </div>
       <div id = "authorContainer">
         Inspired by
         <a href=http://driftin.io/>
-          <span style="color:#476596">
-            Driftin.io
-          </span>
+          Driftin.io
         </a>
       </div>
       <div id = "authorContainer">
         Game by
-        <a href=https://github.com/Bradzie/DriftoutIO>
-          <span style="color:#476596">
-            Brad Geary
-          </span>
+        <a href=https://www.linkedin.com/in/brad-geary-0225611bb/>
+          Brad Geary
         </a>
       </div>
       <p class = "gameTitle">DRIFTOUT
         <span style="color:#02f6fa">IO</span>
       </p>
+      <div id=classDisplay>
+        Racer
+        <div id="classImage">
+          <img src = "./assets/racer.png">
+          <img src = "./assets/sprinter.png">
+          <img src = "./assets/tank.png">
+          <img src = "./assets/prankster.png">
+          <img src = "./assets/bullet.png">
+          <img src = "./assets/fragile.png">
+          <img src = "./assets/spike.png">
+        </div>
+      </div>
       <div id = "inputContainer">
-        <input id = "nameInput" placeholder = "Name" maxlength="14">
+        <!--
         <div id = "carSelect">
           <input id = "carInputRacer" type = "radio" name = "carRadio">
           <label for = "carInputRacer">Racer</label>
@@ -57,8 +63,13 @@
           <input id = "carInputSpike" type = "radio" name = "carRadio">
           <label for = "carInputSpike">Spike</label>
         </div>
+      -->
+        <button id = "changeClassButton" onClick = "changeClass()" type = "button">
+          Class 🗘
+        </button>
+        <input id = "nameInput" placeholder = "Name" maxlength="14">
         <button id = "enterGameButton" onClick = "enterGame()" type = "button">
-          RACE ᐅ
+          RACE 🚗
         </button>
       </div>
     </div>
@@ -88,37 +99,7 @@
         <div id ="upgradePointDisplay">
           Upgrade Points
         </div>
-        <!--<div id="upgradeItem">
-          Max Health
-          <span style="color:#02f6fa">[1]</span>
-          Lv.1
-        </div>
-        <div id="upgradeItem">
-          Health Regen
-          <span style="color:#02f6fa">[2]</span>
-          Lv.1
-        </div>
-        <div id="upgradeItem">
-          Max Boosts
-          <span style="color:#02f6fa">[3]</span>
-          Lv.1
-        </div>
-        <div id="upgradeItem">
-          Move Speed
-          <span style="color:#02f6fa">[4]</span>
-          Lv.1
-        </div>
-        <div id="upgradeItem">
-          Quick Repair
-          <span style="color:#02f6fa">[5]</span>
-          Lv.1
-        </div>
-        <div id="upgradeItem">
-          Quick Boost
-          <span style="color:#02f6fa">[5]</span>
-          Lv.1
-        </div>
-      </div>-->
+      </div>
     </div>
   </body>
   <script src="js/p5.js"></script>
