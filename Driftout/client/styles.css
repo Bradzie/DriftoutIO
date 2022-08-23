@@ -176,13 +176,65 @@ a:hover{
   color: rgba(255, 255, 255, 0.8);
 }
 
-#linksContainer {
+#metricsButton {
+  color:#476596;
+  border-radius: 0.2em;
+  font-size: 20px;
+  padding-left: 0.8em;
+  padding-right: 0.8em;
+  background-color: transparent;
+  font-family: 'Kdam Thmor Pro';
+  text-align: right;
+  align-self: flex-end;
+  bottom: 1em;
+  border: none;
+}
+
+#metricsButton:hover{
+  color: white;
+}
+
+#metricsContainer {
+  position: absolute;
+  display: flex;
+  top: 15%;
+  left: 15%;
+  height: 70%;
+  width: 70%;
+  text-align: left;
+  color:#476596;
+  background-color: white;
+  border-radius: 0.5em;
+  border: 0.5em solid black;
+  border-top: 2em solid black;
+}
+
+#metricsContainerExitButton{
+  margin-left: auto;
+  height: 2.2em;
+  width: 2.2em;
+  background-color: red;
+  transform: translateY(-2.2em);
+  font-weight: 600;
+  border: none;
+}
+
+#metricsContainerExitButton:hover{
+  background-color:  #ff5733;
+}
+
+#footerContainer {
+  display: flex;
   text-align: center;
   align-self: center;
   font-size: 20px;
   padding: 0em;
   text-decoration: none;
   color: white;
+}
+
+#sourceCodeNav{
+  align-self: center;
 }
 
 #authorContainer {
@@ -269,6 +321,7 @@ a:hover{
   background-color: rgba(230, 230, 230, 0.6);
   border: 0.2em solid #02f6fa;
   padding: 0.3em;
+  border-radius: 0.3em;
 }
 
 #mainCanvas {
