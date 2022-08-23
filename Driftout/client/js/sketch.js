@@ -1,3 +1,5 @@
+// Globals
+
 var playing = false,
   socket,
   mainCanvas = document.getElementById("mainCanvas"),
@@ -26,9 +28,10 @@ var playing = false,
   abilityContainerCooldown = document.getElementById('abilityContainerCooldown'),
   debugContainer = document.getElementById('debugContainer'),
   upgradeContainer = document.getElementById('upgradeContainer'),
-  upgradeItem = document.getElementById('upgradeItem');
+  upgradeItem = document.getElementById('upgradeItem'),
+  metricsData = document.getElementById('metricsData'),
+  metricsContainer = document.getElementById('metricsContainer');
 
-// Constants
 var allCars;
 var allPlayers = [];
 var notifications = [];
@@ -55,13 +58,15 @@ var classAssetPaths = [
   "./assets/spike.png"
 ]
 
-// Load prior to game start / Maybe for larger assets?
+var totalConnections=0;
+var playerNames = [];
+
 function preload(){
 }
 
 // Called when game is started once
 function setup(){
-  // Server setup
+  // Client setup
   allPlayers = [];
   myId = 0;
 
@@ -88,6 +93,7 @@ function setup(){
   });
 
 
+  // initialize client side with server side entries
   socket.on("initPack", function(data) {
       for(var i in data.initPack) {
           var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack[i].car.name)[0][1];
@@ -96,6 +102,7 @@ function setup(){
       }
   });
 
+  // rapid update pack socket
   socket.on("updatePack", function(data) {
       for(var i in data.updatePack) {
           for(var j in allPlayers) {
@@ -118,6 +125,7 @@ function setup(){
       }
   });
 
+  // update socket for entities
   socket.on("syncedData", function(data) {
     if(data.notification.length > 0){
       notifications.push(data.notification);
@@ -157,6 +165,13 @@ function setup(){
       }
   });
 
+  socket.on("returnData", function(data){
+    if(data.name == "metrics"){
+      totalConnections = data.totalConnections;
+      playerNames = data.playerNames;
+    }
+  })
+
   var mainCanvas = createCanvas(windowWidth, windowHeight);
   mainCanvas.parent("mainCanvas");
 }
@@ -166,7 +181,6 @@ function draw() {
   if (playing == true && allPlayers.filter(player => player.id === myId).length == 1){
     background(100, 100, 100); // it gets a hex/rgb color
     sendInputData();
-    //refreshBoostOverlay();
     refreshDisplays();
 
     for(var i in allPlayers) {
@@ -254,6 +268,27 @@ function changeClass(){
     classIndex=0;
   }
   classDisplay.innerHTML = "<div id='classImage'><img src = " + classAssetPaths[classIndex] + "></div>" + classEntries[classIndex];
+}
+
+function toggleMetricsOn(){
+    metricsContainer.style.opacity = "1";
+    metricsContainer.style.visibility = "visible";
+    socket.emit("specifcData", "metrics");
+    if(totalConnections == 0 && playerNames == []){
+      metricsData.innerHTML = "Loading...";
+    }
+    else{
+      var playerNameList = "";
+      for(var i in playerNames){
+        playerNameList+=playerNames[i] + ", ";
+      }
+      metricsData.innerHTML = "Total page vists since restart: " + totalConnections + "</br>All player names: " + playerNameList;
+    }
+}
+
+function toggleMetricsOff(){
+    metricsContainer.style.opacity = "0";
+    metricsContainer.style.visibility = "hidden";
 }
 
 function refreshDisplays(){

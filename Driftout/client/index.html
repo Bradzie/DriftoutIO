@@ -13,10 +13,15 @@
   <body>
     <div id = "mainCanvas"></div>
     <div id = "menuContainer">
-      <div id=linksContainer>
-        <a href=https://github.com/Bradzie/DriftoutIO>
-          Source Code
-        </a>
+      <div id=footerContainer>
+        <div id="sourceCodeNav">
+          <a href=https://github.com/Bradzie/DriftoutIO>
+            Source Code
+          </a>
+        </div>
+        <button id = "metricsButton" onClick = "toggleMetricsOn()" type = "button">
+          Metrics
+        </button>
       </div>
       <div id = "authorContainer">
         Inspired by
@@ -70,6 +75,13 @@
         <input id = "nameInput" placeholder = "Name" maxlength="14">
         <button id = "enterGameButton" onClick = "enterGame()" type = "button">
           RACE 🚗
+        </button>
+      </div>
+      <div id="metricsContainer">
+        <div id="metricsData">
+        </div>
+        <button id="metricsContainerExitButton" onClick = "toggleMetricsOff()" type = "button">
+          X
         </button>
       </div>
     </div>
