@@ -18,6 +18,8 @@ var grip = 0.99;
 var allPlayers = [];
 var notifications = [];
 var currentEntities = [];
+var totalConnections = 0;
+var playerNames = [];
 
 // ---------- ---------- ----------
 
@@ -27,13 +29,14 @@ console.log("Server started on port " + port);
 
 io.on("connection", function(socket){
   console.log("New connection, ID: " + socket.id);
+  totalConnections++;
   var player;
 
   socket.on("ready", (data) => {
       player = new Player(socket.id, data.name, 900, Math.floor((Math.random()-0.5)*200), data.car);
       player.alive = true;
       allPlayers.push(player);
-
+      playerNames.push(player.name);
 
       socket.emit("myID", {id: player.id});
       //console.log(player.id);
@@ -45,6 +48,12 @@ io.on("connection", function(socket){
       }
       socket.emit("initPack", {initPack: initPack});
   });
+
+  socket.on("specifcData", (data) => {
+    if(data == "metrics"){
+      socket.emit("returnData", {name:"metrics", totalConnections:totalConnections, playerNames:playerNames})
+    }
+  })
 
   socket.on("inputData", (data) => {
       for(var i in allPlayers) {

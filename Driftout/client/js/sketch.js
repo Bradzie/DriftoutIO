@@ -29,6 +29,7 @@ var playing = false,
   debugContainer = document.getElementById('debugContainer'),
   upgradeContainer = document.getElementById('upgradeContainer'),
   upgradeItem = document.getElementById('upgradeItem'),
+  metricsData = document.getElementById('metricsData'),
   metricsContainer = document.getElementById('metricsContainer');
 
 var allCars;
@@ -56,6 +57,9 @@ var classAssetPaths = [
   "./assets/fragile.png",
   "./assets/spike.png"
 ]
+
+var totalConnections=0;
+var playerNames = [];
 
 function preload(){
 }
@@ -161,6 +165,13 @@ function setup(){
       }
   });
 
+  socket.on("returnData", function(data){
+    if(data.name == "metrics"){
+      totalConnections = data.totalConnections;
+      playerNames = data.playerNames;
+    }
+  })
+
   var mainCanvas = createCanvas(windowWidth, windowHeight);
   mainCanvas.parent("mainCanvas");
 }
@@ -262,6 +273,17 @@ function changeClass(){
 function toggleMetricsOn(){
     metricsContainer.style.opacity = "1";
     metricsContainer.style.visibility = "visible";
+    socket.emit("specifcData", "metrics");
+    if(totalConnections == 0 && playerNames == []){
+      metricsData.innerHTML = "Loading...";
+    }
+    else{
+      var playerNameList = "";
+      for(var i in playerNames){
+        playerNameList+=playerNames[i] + ", ";
+      }
+      metricsData.innerHTML = "Total page vists since restart: " + totalConnections + "</br>All player names: " + playerNameList;
+    }
 }
 
 function toggleMetricsOff(){
