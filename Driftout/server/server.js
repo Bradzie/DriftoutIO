@@ -15,6 +15,8 @@ app.use(express.static(publicPath));
 // ---------- CONTSTANTS ----------
 
 var grip = 0.99;
+var allTracks;
+var currentTrack;
 var allPlayers = [];
 var notifications = [];
 var currentEntities = [];
@@ -31,6 +33,8 @@ io.on("connection", function(socket){
   console.log("New connection, ID: " + socket.id);
   totalConnections++;
   var player;
+
+  currentTrack = allTracks.Square;
 
   socket.on("ready", (data) => {
       player = new Player(socket.id, data.name, 900, Math.floor((Math.random()-0.5)*200), data.car);
@@ -444,17 +448,22 @@ var Player = function(id, name, x, y, car) {
         }
       }
 
-    // Inside rect
-    this.collision(this.x, this.y, 200, 225, 200, 1600, "x-1", 8, 0.4);
-    this.collision(this.x, this.y, 200, 1600, 200, 225, "y-1", 8, 0.4);
-    this.collision(this.x, this.y, 1575, 1600, 200, 1600, "x+1", 8, 0.4);
-    this.collision(this.x, this.y, 200, 1600, 1575, 1600, "y+1", 8, 0.4);
+    for(var i in currentTrack.walls){
+      this.collision(this.x, this.y, currentTrack.walls[i][0], currentTrack.walls[i][1], currentTrack.walls[i][2], currentTrack.walls[i][3],
+        currentTrack.walls[i][4], currentTrack.walls[i][5], currentTrack.walls[i][6])
+    }
 
-    // Outside rect
-    this.collision(this.x, this.y, 2000, 2025, -225, 2025, "x-1", 8, 0.4);
-    this.collision(this.x, this.y, -225, -200, -225, 2025, "x+1", 8, 0.4);
-    this.collision(this.x, this.y, -200, 2000, 2000, 2025, "y-1", 8, 0.4);
-    this.collision(this.x, this.y, -200, 2000, -225, -200, "y+1", 8, 0.4);
+    // Inside rect
+    // this.collision(this.x, this.y, 200, 225, 200, 1600, "x-1", 8, 0.4);
+    // this.collision(this.x, this.y, 200, 1600, 200, 225, "y-1", 8, 0.4);
+    // this.collision(this.x, this.y, 1575, 1600, 200, 1600, "x+1", 8, 0.4);
+    // this.collision(this.x, this.y, 200, 1600, 1575, 1600, "y+1", 8, 0.4);
+    //
+    // // Outside rect
+    // this.collision(this.x, this.y, 2000, 2025, -225, 2025, "x-1", 8, 0.4);
+    // this.collision(this.x, this.y, -225, -200, -225, 2025, "x+1", 8, 0.4);
+    // this.collision(this.x, this.y, -200, 2000, 2000, 2025, "y-1", 8, 0.4);
+    // this.collision(this.x, this.y, -200, 2000, -225, -200, "y+1", 8, 0.4);
 
     // Check if inside finish line
     if (this.collision(this.x, this.y, finishLine[0], finishLine[1],
@@ -470,12 +479,15 @@ var Player = function(id, name, x, y, car) {
     }
 
     // Check for collision with check points
-    for(var i in checkPoints){
-      if (this.collision(this.x, this.y, checkPoints[i][0], checkPoints[i][1],
-      checkPoints[i][2], checkPoints[i][3], "trigger") == true){
+    for(var i in currentTrack.checkPoints){
+      if (this.collision(this.x, this.y, currentTrack.checkPoints[i][0], currentTrack.checkPoints[i][1],
+      currentTrack.checkPoints[i][2], currentTrack.checkPoints[i][3], "trigger") == true){
         this.checkPointCounter[i] = true;
       }
     }
+
+    console.log(this.checkPointCounter);
+
 
     }
     // The collision function
@@ -605,6 +617,34 @@ var checkPoints = [
 ];
 
 var finishLine = [975, 1025, -200, 200];
+
+// The track object constructor
+var Track = function(walls, checkPoints, spawnRegion){
+  this.walls = walls;
+  this.checkPoints = checkPoints;
+  this.spawnRegion = spawnRegion;
+}
+
+
+allTracks = {
+  Square : new Track(
+    // Walls
+    [[200, 225, 200, 1600, "x-1", 8, 0.4],[200, 1600, 200, 225, "y-1", 8, 0.4],[1575, 1600, 200, 1600, "x+1", 8, 0.4],
+    [200, 1600, 1575, 1600, "y+1", 8, 0.4],[2000, 2025, -225, 2025, "x-1", 8, 0.4],[-225, -200, -225, 2025, "x+1", 8, 0.4],
+    [-200, 2000, 2000, 2025, "y-1", 8, 0.4],[-200, 2000, -225, -200, "y+1", 8, 0.4]],
+    // Checkpoints
+    [[-200, 200, 1600, 2000], [-200, 200, -200, 200], [1600, 2000, -200, 200], [1600, 2000, 1600, 2000]]
+  ),
+
+  DragStrip : new Track(
+    // Walls
+    [[-600, -575, 200, 600, "x-1", 8, 0.4],[-600, 2600, 200, 225, "y-1", 8, 0.4],[2600, 2625, 200, 600, "x+1", 8, 0.4],
+    [-600, 2600, 575, 600, "y+1", 8, 0.4],[3000, 3025, -225, 1025, "x-1", 8, 0.4],[-1025, -1000, -225, 1025, "x+1", 8, 0.4],
+    [-1000, 3000, 1000, 1025, "y-1", 8, 0.4],[-1000, 3000, -225, -200, "y+1", 8, 0.4]],
+    // Checkpoints
+    [[-1000, -600, 2600, 3000], [-1000, -600, -600, -200], [2600, 3000, -600, -200], [2600, 3000, 2600, 3000]]
+  )
+}
 
 // The car object constructor
 var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, size, mass, abilityCooldown, ability, drawCar){
