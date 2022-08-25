@@ -33,6 +33,8 @@ var playing = false,
   metricsContainer = document.getElementById('metricsContainer');
 
 var allCars;
+var allTracks;
+var currentTrack;
 var allPlayers = [];
 var notifications = [];
 var nextNotification = 0;
@@ -69,6 +71,7 @@ function setup(){
   // Client setup
   allPlayers = [];
   myId = 0;
+  currentTrack = allTracks.DragStrip;
 
   nameInput.focus();
   nameInput.select();
@@ -93,12 +96,18 @@ function setup(){
   });
 
 
-  // initialize client side with server side entries
+  // initialize client side with server side entries and current track
   socket.on("initPack", function(data) {
       for(var i in data.initPack) {
           var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack[i].car.name)[0][1];
           var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar);
           allPlayers.push(player);
+      }
+      if(data.currentTrack.name == "Square"){
+        currentTrack = allTracks.Square;
+      }
+      if(data.currentTrack.name == "DragStrip"){
+        currentTrack = allTracks.DragStrip;
       }
   });
 
@@ -172,6 +181,8 @@ function setup(){
     }
   })
 
+  socket.emit("specifcData", "metrics");
+
   var mainCanvas = createCanvas(windowWidth, windowHeight);
   mainCanvas.parent("mainCanvas");
 }
@@ -193,7 +204,7 @@ function draw() {
         }
     }
 
-    drawMap();
+    currentTrack.drawMap();
 
     for(var i in currentEntities){
       if (typeof currentEntities[i].draw != "undefined"){
@@ -211,7 +222,18 @@ function draw() {
     if(allPlayers.filter(player => player.id === myId).length == 0){
       exitGame();
     }
+    //debugDraw();
   }
+}
+
+function debugDraw(){
+  //[[-1000, -200, -600, 3000], [-1000, -600, -600, -200], [2600, 3000, -600, -200], [2600, 3000, 2600, 3000]]
+  push();
+  fill(255);
+  strokeWeight(5);
+  square(-1000,600, 400);
+
+  pop();
 }
 
 function exitGame(){
@@ -414,37 +436,6 @@ function refreshBoostOverlay(){
   }
 }
 
-function drawMap(){
-
-  push();
-  fill(200);
-  strokeWeight(5);
-  beginShape();
-  vertex(-200, -200);
-  vertex(-200, 2000);
-  vertex(2000, 2000);
-  vertex(2000, -200);
-  endShape(CLOSE);
-
-  fill(100);
-  beginShape();
-  vertex(200, 200);
-  vertex(200, 1600);
-  vertex(1600, 1600);
-  vertex(1600, 200);
-  endShape(CLOSE);
-  pop();
-
-  push();
-  mapLine(1020, -200, 1020, 200, [0,0,0], [230, 230, 230], 20);
-  mapLine(1000, -200, 1000, 200, [230,230,230], [0,0,0], 20);
-  mapLine(980, -200, 980, 200, [0,0,0], [230, 230, 230], 20);
-  pop();
-
-  createMapBorders([[-200, -200, 2000, -200], [-200, 2000, -200, -200], [-200, 2000, 2000, 2000], [2000, -200, 2000, 2000], [200, 200, 1600, 200], [200, 1600, 200, 200], [200, 1600, 1600, 1600], [1600, 200, 1600, 1600]]);
-
-}
-
 function createMapBorders(borderArray){
   for(var i in borderArray){
     mapLine(borderArray[i][0], borderArray[i][1], borderArray[i][2], borderArray[i][3], [230, 0, 0]);
@@ -580,6 +571,78 @@ var Player = function(id, name, x, y, car, alive) {
   }
 
 
+// The map object constructor
+var Track = function(name, drawMap){
+  this.name = name;
+  this.drawMap = drawMap;
+}
+
+allTracks = {
+  Square : new Track(
+    "Square",
+    function(){
+      push();
+      fill(200);
+      strokeWeight(5);
+      beginShape();
+      vertex(-200, -200);
+      vertex(-200, 2000);
+      vertex(2000, 2000);
+      vertex(2000, -200);
+      endShape(CLOSE);
+
+      fill(100);
+      beginShape();
+      vertex(200, 200);
+      vertex(200, 1600);
+      vertex(1600, 1600);
+      vertex(1600, 200);
+      endShape(CLOSE);
+      pop();
+
+      push();
+      mapLine(1020, -200, 1020, 200, [0,0,0], [230, 230, 230], 20);
+      mapLine(1000, -200, 1000, 200, [230,230,230], [0,0,0], 20);
+      mapLine(980, -200, 980, 200, [0,0,0], [230, 230, 230], 20);
+      pop();
+
+      createMapBorders([[-200, -200, 2000, -200], [-200, 2000, -200, -200], [-200, 2000, 2000, 2000], [2000, -200, 2000, 2000],
+        [200, 200, 1600, 200], [200, 1600, 200, 200], [200, 1600, 1600, 1600], [1600, 200, 1600, 1600]]);
+    }
+  ),
+  DragStrip : new Track(
+    "DragStrip",
+    function(){
+      push();
+      fill(200);
+      strokeWeight(5);
+      beginShape();
+      vertex(-1000, -200);
+      vertex(-1000, 1000);
+      vertex(3000, 1000);
+      vertex(3000, -200);
+      endShape(CLOSE);
+
+      fill(100);
+      beginShape();
+      vertex(-600, 200);
+      vertex(-600, 600);
+      vertex(2600, 600);
+      vertex(2600, 200);
+      endShape(CLOSE);
+      pop();
+
+      push();
+      mapLine(1020, -200, 1020, 200, [0,0,0], [230, 230, 230], 20);
+      mapLine(1000, -200, 1000, 200, [230,230,230], [0,0,0], 20);
+      mapLine(980, -200, 980, 200, [0,0,0], [230, 230, 230], 20);
+      pop();
+
+      createMapBorders([[-1000, -200, 3000, -200], [-1000, 1000, -1000, -200], [-1000, 1000, 3000, 1000], [3000, -200, 3000, 1000],
+        [-600, 200, 2600, 200], [-600, 600, -600, 200], [-600, 600, 2600, 600], [2600, 200, 2600, 600]]);
+    }
+  )
+}
 
 // The car object constructor
 var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, size, mass, abilityCooldown, ability, drawCar){
