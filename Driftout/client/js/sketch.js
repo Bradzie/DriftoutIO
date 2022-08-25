@@ -96,12 +96,18 @@ function setup(){
   });
 
 
-  // initialize client side with server side entries
+  // initialize client side with server side entries and current track
   socket.on("initPack", function(data) {
       for(var i in data.initPack) {
           var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack[i].car.name)[0][1];
           var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar);
           allPlayers.push(player);
+      }
+      if(data.currentTrack.name == "Square"){
+        currentTrack = allTracks.Square;
+      }
+      if(data.currentTrack.name == "DragStrip"){
+        currentTrack = allTracks.DragStrip;
       }
   });
 
@@ -216,7 +222,18 @@ function draw() {
     if(allPlayers.filter(player => player.id === myId).length == 0){
       exitGame();
     }
+    //debugDraw();
   }
+}
+
+function debugDraw(){
+  //[[-1000, -200, -600, 3000], [-1000, -600, -600, -200], [2600, 3000, -600, -200], [2600, 3000, 2600, 3000]]
+  push();
+  fill(255);
+  strokeWeight(5);
+  square(-1000,600, 400);
+
+  pop();
 }
 
 function exitGame(){
@@ -555,12 +572,14 @@ var Player = function(id, name, x, y, car, alive) {
 
 
 // The map object constructor
-var Track = function(drawMap){
+var Track = function(name, drawMap){
+  this.name = name;
   this.drawMap = drawMap;
 }
 
 allTracks = {
   Square : new Track(
+    "Square",
     function(){
       push();
       fill(200);
@@ -592,6 +611,7 @@ allTracks = {
     }
   ),
   DragStrip : new Track(
+    "DragStrip",
     function(){
       push();
       fill(200);

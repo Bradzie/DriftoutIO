@@ -32,10 +32,19 @@ console.log("Server started on port " + port);
 io.on("connection", function(socket){
   console.log("New connection, ID: " + socket.id);
   totalConnections++;
+
+  var trackChoice = Math.floor(Math.random() * 2);
+  if(trackChoice == 0){
+    currentTrack = allTracks.Square;
+  }
+  if(trackChoice == 1){
+    currentTrack = allTracks.DragStrip;
+  }
+
+  console.log(trackChoice);
+  console.log("Map : " + currentTrack.name);
+
   var player;
-
-  currentTrack = allTracks.Square;
-
   socket.on("ready", (data) => {
       player = new Player(socket.id, data.name, 900, Math.floor((Math.random()-0.5)*200), data.car);
       player.alive = true;
@@ -50,7 +59,12 @@ io.on("connection", function(socket){
       for(var i in allPlayers) {
           initPack.push(allPlayers[i].getInitPack());
       }
-      socket.emit("initPack", {initPack: initPack});
+      socket.emit("initPack", {initPack: initPack, currentTrack:currentTrack});
+
+      io.emit("syncedData", {
+        notification: "Track: " + currentTrack.name,
+        currentEntities: []
+      });
   });
 
   socket.on("specifcData", (data) => {
@@ -486,9 +500,6 @@ var Player = function(id, name, x, y, car) {
       }
     }
 
-    console.log(this.checkPointCounter);
-
-
     }
     // The collision function
     this.collision = function(playerx, playery, x1, x2, y1, y2, effect, damage=0, bounce=0) {
@@ -619,7 +630,8 @@ var checkPoints = [
 var finishLine = [975, 1025, -200, 200];
 
 // The track object constructor
-var Track = function(walls, checkPoints, spawnRegion){
+var Track = function(name, walls, checkPoints, spawnRegion){
+  this.name = name;
   this.walls = walls;
   this.checkPoints = checkPoints;
   this.spawnRegion = spawnRegion;
@@ -628,6 +640,8 @@ var Track = function(walls, checkPoints, spawnRegion){
 
 allTracks = {
   Square : new Track(
+    // Name
+    "Square",
     // Walls
     [[200, 225, 200, 1600, "x-1", 8, 0.4],[200, 1600, 200, 225, "y-1", 8, 0.4],[1575, 1600, 200, 1600, "x+1", 8, 0.4],
     [200, 1600, 1575, 1600, "y+1", 8, 0.4],[2000, 2025, -225, 2025, "x-1", 8, 0.4],[-225, -200, -225, 2025, "x+1", 8, 0.4],
@@ -637,12 +651,14 @@ allTracks = {
   ),
 
   DragStrip : new Track(
+    // Name
+    "DragStrip",
     // Walls
-    [[-600, -575, 200, 600, "x-1", 8, 0.4],[-600, 2600, 200, 225, "y-1", 8, 0.4],[2600, 2625, 200, 600, "x+1", 8, 0.4],
+    [[-600, -575, 200, 600, "x-1", 8, 0.4],[-600, 2600, 200, 225, "y-1", 8, 0.4],[2575, 2600, 200, 600, "x+1", 8, 0.4],
     [-600, 2600, 575, 600, "y+1", 8, 0.4],[3000, 3025, -225, 1025, "x-1", 8, 0.4],[-1025, -1000, -225, 1025, "x+1", 8, 0.4],
     [-1000, 3000, 1000, 1025, "y-1", 8, 0.4],[-1000, 3000, -225, -200, "y+1", 8, 0.4]],
     // Checkpoints
-    [[-1000, -600, 2600, 3000], [-1000, -600, -600, -200], [2600, 3000, -600, -200], [2600, 3000, 2600, 3000]]
+    [[-1000, -600, 200, 600], [-1000, -600, -200, 200], [2600, 3000, 200, 600], [2600, 3000, -200, 200]]
   )
 }
 
