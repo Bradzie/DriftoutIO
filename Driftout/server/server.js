@@ -146,6 +146,9 @@ var Player = function(id, name, x, y, car) {
   this.abilityCooldown = car.abilityCooldown;
   this.canAbility = Date.now();
   this.upgradePoints = 1;
+  this.lapStart = Date.now();
+  this.lapTime = 0;
+  this.topLapTime = 0;
 
   if(this.car.name == "Prankster"){
     this.ability = allCars.Prankster.ability;
@@ -250,6 +253,10 @@ var Player = function(id, name, x, y, car) {
   this.events = function() {
 
     if (this.alive == true){
+
+      // Lap time
+      this.lapTime = Date.now()-this.lapStart;
+      console.log(this.lapTime);
 
       // Check if crashed
       if (this.HP < 0){
@@ -489,6 +496,10 @@ var Player = function(id, name, x, y, car) {
         notifications.push(this.name + " Completed a lap!");
         console.log(this.name + " has now completed " + this.laps + " laps!");
         this.upgradePoints += 1;
+        this.lapStart = Date.now();
+        if (this.lapTime > this.topLapTime){
+          this.topLapTime = this.lapTime;
+        }
       }
     }
 
@@ -562,7 +573,9 @@ var Player = function(id, name, x, y, car) {
       canBoost: this.canBoost,
       abilityCooldown: this.abilityCooldown,
       canAbility: this.canAbility,
-      upgradePoints: this.upgradePoints
+      upgradePoints: this.upgradePoints,
+      lapTime: this.lapTime,
+      topLapTime: this.topLapTime
     }
   }
 

@@ -1,8 +1,12 @@
 PLANNED ADDITIONS:
 
-- Movement towards mouse / boost towards mouse
-- Implementation of a collision function to tidy up code
-- HUD for boost, leaderboard and upgrades/upgrade points
-- Functional start and finish line
+ - Implement all upgrades
+ - Add new racers/tracks (10 racers / 4 tracks desired)
+ - Reduce for loops server side to as few as possible
+ - Skins?
+ - Slow down upgrading with multiple points
+ - Round end and winner display
+ - Lap timer and personal best
+ - Reward upgrade points for causing crashes
 
 BUGS:

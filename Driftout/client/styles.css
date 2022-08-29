@@ -135,6 +135,52 @@ a:hover{
   padding: 0px;
 }
 
+#bestTimeContainer {
+  position: absolute;
+  width: 6em;
+  bottom: 70px;
+  right: 10px;
+  padding: 5px;
+  border-radius: 3px;
+  background-color: rgba(30, 30, 30, 0.6);
+  font-family: 'Kdam Thmor Pro';
+  font-size: 24px;
+  color: white;
+}
+
+#bestTimeContainerInterior {
+  bottom: 70px;
+  left: 10px;
+  padding: 5px;
+  border-radius: 2px;
+  background-color: rgba(30, 30, 30, 0.6);
+  width: 92%;
+  white-space: nowrap;
+}
+
+#timeContainer {
+  position: absolute;
+  width: 6em;
+  bottom: 10px;
+  right: 10px;
+  padding: 5px;
+  border-radius: 3px;
+  background-color: rgba(30, 30, 30, 0.6);
+  font-family: 'Kdam Thmor Pro';
+  font-size: 24px;
+  color: white;
+}
+
+#timeContainerInterior {
+  bottom: 10px;
+  left: 10px;
+  padding: 5px;
+  border-radius: 2px;
+  background-color: rgba(30, 30, 30, 0.6);
+  width: 92%;
+  white-space: nowrap;
+}
+
 #boostContainer {
   position: absolute;
   width: 4em;
@@ -212,7 +258,7 @@ a:hover{
 }
 
 #metricsData {
-  
+
 }
 
 #metricsContainerExitButton{
