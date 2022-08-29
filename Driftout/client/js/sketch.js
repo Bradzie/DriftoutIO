@@ -14,6 +14,7 @@ var playing = false,
   notificationContainer = document.getElementById('notificationContainer'),
   leaderboardContainer = document.getElementById('leaderboardContainer'),
   leaderboardItem = document.getElementById('leaderboardItem'),
+  tabLeaderboard = document.getElementById('tabLeaderboard'),
   boostContainer = document.getElementById('boostContainer'),
   boostContainerCooldown = document.getElementById('boostContainerCooldown'),
   abilityContainer = document.getElementById('abilityContainer'),
@@ -326,8 +327,15 @@ function refreshDisplays(){
     }
   }
 
+  tabLeaderboard.style.visibility = "hidden";
   leaderboardContainer.innerHTML = "Leaderboard";
+  tabLeaderboard.innerHTML = "Leaderboard";
   var text = "";
+  var tabText = "<table width='100%'><tr><th>Name</th><th>Laps</th><th>Best Time</th></tr>";
+
+  if(keyIsDown(81)){
+    tabLeaderboard.style.visibility = "visible";
+  }
 
   for(var i in allPlayers){
 
@@ -348,14 +356,14 @@ function refreshDisplays(){
       }
     }
 
-    // Leaderboard Overlay
+    // Leaderboard and tab leaderboard Overlay
     if(allPlayers[i].alive == true){
       text += "<div class = 'leaderboardItem'>" + allPlayers[i].laps + " " + allPlayers[i].name + "</div>\n";
+      tabText += "<tr style='text-align:center'><td>" + allPlayers[i].name + "</td><td>" + allPlayers[i].laps + "</td><td>" + allPlayers[i].topLapTime/1000 + "</td></tr>";
     }
     else{
       allPlayers.splice(i, 1);
     }
-
 
     // Check array still defined
     if(allPlayers[i]){
@@ -407,6 +415,7 @@ function refreshDisplays(){
   }
 
   leaderboardContainer.innerHTML = "Leaderboard\n" + text;
+  tabLeaderboard.innerHTML = tabText + "</table>";
 }
 
 

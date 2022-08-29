@@ -135,6 +135,24 @@ a:hover{
   padding: 0px;
 }
 
+#tabLeaderboard {
+  color: white;
+  position: absolute;
+  border-radius: 3px;
+  top: 15%;
+  left: 10%;
+  width: 80%;
+  height: 70%;
+  background-color: rgba(30, 30, 30, 0.8);
+  font-size: 1.5em;
+}
+
+#tabLeaderboard td{
+  font-size: 0.8em;
+  border-top: solid white 2px;
+}
+
+
 #bestTimeContainer {
   position: absolute;
   width: 6em;
