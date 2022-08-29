@@ -7,14 +7,6 @@ var playing = false,
   enterGameButton = document.getElementById('enterGameButton'),
   changeClassButton = document.getElementById('changeClassButton')
   menuContainer = document.getElementById("menuContainer"),
-  carInputRacer = document.getElementById('carInputRacer'),
-  carInputTank = document.getElementById('carInputTank'),
-  carInputSprinter = document.getElementById('carInputSprinter'),
-  carInputPrankster = document.getElementById('carInputPrankster'),
-  carInputBullet = document.getElementById('carInputBullet'),
-  carInputFragile = document.getElementById('carInputFragile'),
-  carInputSpike = document.getElementById('carInputSpike'),
-  carRadio = document.getElementById('carRadio'),
   classDisplay = document.getElementById('classDisplay'),
   classImage = document.getElementById('classImage'),
   nameInput = document.getElementById('nameInput'),
@@ -22,10 +14,15 @@ var playing = false,
   notificationContainer = document.getElementById('notificationContainer'),
   leaderboardContainer = document.getElementById('leaderboardContainer'),
   leaderboardItem = document.getElementById('leaderboardItem'),
+  tabLeaderboard = document.getElementById('tabLeaderboard'),
   boostContainer = document.getElementById('boostContainer'),
   boostContainerCooldown = document.getElementById('boostContainerCooldown'),
   abilityContainer = document.getElementById('abilityContainer'),
   abilityContainerCooldown = document.getElementById('abilityContainerCooldown'),
+  timeContainer = document.getElementById('timeContainer'),
+  timeContainerInterior = document.getElementById('timeContainerInterior'),
+  bestTimeContainer = document.getElementById('bestTimeContainer'),
+  bestTimeContainerInterior = document.getElementById('bestTimeContainerInterior'),
   debugContainer = document.getElementById('debugContainer'),
   upgradeContainer = document.getElementById('upgradeContainer'),
   upgradeItem = document.getElementById('upgradeItem'),
@@ -129,6 +126,8 @@ function setup(){
                   allPlayers[j].canAbility = data.updatePack[i].canAbility;
                   allPlayers[j].abilityCooldown = data.updatePack[i].abilityCooldown;
                   allPlayers[j].upgradePoints = data.updatePack[i].upgradePoints;
+                  allPlayers[j].lapTime = data.updatePack[i].lapTime;
+                  allPlayers[j].topLapTime = data.updatePack[i].topLapTime;
               }
           }
       }
@@ -215,6 +214,7 @@ function draw() {
     for(var i in allPlayers) {
       if(allPlayers[i].alive == true){
         allPlayers[i].draw();
+        debugDraw(allPlayers[i].topLapTime);
       }
     }
 
@@ -222,18 +222,16 @@ function draw() {
     if(allPlayers.filter(player => player.id === myId).length == 0){
       exitGame();
     }
-    //debugDraw();
   }
 }
 
-function debugDraw(){
+function debugDraw(debugText){
   //[[-1000, -200, -600, 3000], [-1000, -600, -600, -200], [2600, 3000, -600, -200], [2600, 3000, 2600, 3000]]
-  push();
-  fill(255);
-  strokeWeight(5);
-  square(-1000,600, 400);
-
-  pop();
+  textSize(20);
+  textAlign(CENTER);
+  textStyle(BOLD);
+  fill(0,0,0);
+  text(debugText, windowWidth/2,windowHeight/2);
 }
 
 function exitGame(){
@@ -329,8 +327,15 @@ function refreshDisplays(){
     }
   }
 
+  tabLeaderboard.style.visibility = "hidden";
   leaderboardContainer.innerHTML = "Leaderboard";
+  tabLeaderboard.innerHTML = "Leaderboard";
   var text = "";
+  var tabText = "<table width='100%'><tr><th>Name</th><th>Laps</th><th>Best Time</th></tr>";
+
+  if(keyIsDown(81)){
+    tabLeaderboard.style.visibility = "visible";
+  }
 
   for(var i in allPlayers){
 
@@ -351,14 +356,14 @@ function refreshDisplays(){
       }
     }
 
-    // Leaderboard Overlay
+    // Leaderboard and tab leaderboard Overlay
     if(allPlayers[i].alive == true){
       text += "<div class = 'leaderboardItem'>" + allPlayers[i].laps + " " + allPlayers[i].name + "</div>\n";
+      tabText += "<tr style='text-align:center'><td>" + allPlayers[i].name + "</td><td>" + allPlayers[i].laps + "</td><td>" + allPlayers[i].topLapTime/1000 + "</td></tr>";
     }
     else{
       allPlayers.splice(i, 1);
     }
-
 
     // Check array still defined
     if(allPlayers[i]){
@@ -383,6 +388,10 @@ function refreshDisplays(){
           abilityContainer.style.opacity = "0";
         }
 
+      // Time Overlay
+        timeContainerInterior.innerHTML = "Lap: " +  Math.round(allPlayers[i].lapTime * 100.0 / 1000) / 100;
+        bestTimeContainerInterior.innerHTML = "Best: " + Math.round(allPlayers[i].topLapTime * 100.0 / 1000) / 100;
+
 
       // Boost Overlay
         boostContainerCooldown.innerHTML = "Boost " + allPlayers[i].boosts;
@@ -406,35 +415,9 @@ function refreshDisplays(){
   }
 
   leaderboardContainer.innerHTML = "Leaderboard\n" + text;
+  tabLeaderboard.innerHTML = tabText + "</table>";
 }
 
-
-function refreshBoostOverlay(){
-  for(var i in allPlayers){
-    if(allPlayers[i].id === socket.id){
-
-      // DEBUG CONTAINER UPDATES
-        //debugContainer.innerHTML = allPlayers[i].upgradePoints;
-
-      boostContainerCooldown.innerHTML = "Boost " + allPlayers[i].boosts;
-      if(allPlayers[i].boosts == 0){
-        boostContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)";
-      }
-      else{
-        boostContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)";
-        if(allPlayers[i].canBoost > Date.now()){
-          boostContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)";
-          var firedAt = allPlayers[i].canBoost - allPlayers[i].boostCooldown;
-          boostContainerCooldown.style.width = ((((Date.now() - firedAt) / (allPlayers[i].canBoost - firedAt))*100)-10) + "%";
-        }
-        else{
-          boostContainerCooldown.style.width = "90%"
-          boostContainerCooldown.style.backgroundColor = "rgba(30, 30, 30, 0.6)"
-        }
-      }
-    }
-  }
-}
 
 function createMapBorders(borderArray){
   for(var i in borderArray){
@@ -533,6 +516,8 @@ var Player = function(id, name, x, y, car, alive) {
   this.boostCooldown = 0;
   this.laps = 0;
   this.upgradePoints = 1;
+  this.lapTime = 0;
+  this.topLapTime = 0;
 
   this.draw = function() {
 

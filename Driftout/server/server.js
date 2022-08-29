@@ -146,6 +146,9 @@ var Player = function(id, name, x, y, car) {
   this.abilityCooldown = car.abilityCooldown;
   this.canAbility = Date.now();
   this.upgradePoints = 1;
+  this.lapStart = Date.now();
+  this.lapTime = 0;
+  this.topLapTime = 0;
 
   if(this.car.name == "Prankster"){
     this.ability = allCars.Prankster.ability;
@@ -250,6 +253,10 @@ var Player = function(id, name, x, y, car) {
   this.events = function() {
 
     if (this.alive == true){
+
+      // Lap time
+      this.lapTime = Date.now()-this.lapStart;
+      console.log(this.lapTime);
 
       // Check if crashed
       if (this.HP < 0){
@@ -480,8 +487,8 @@ var Player = function(id, name, x, y, car) {
     // this.collision(this.x, this.y, -200, 2000, -225, -200, "y+1", 8, 0.4);
 
     // Check if inside finish line
-    if (this.collision(this.x, this.y, finishLine[0], finishLine[1],
-    finishLine[2], finishLine[3], "trigger") == true){
+    if (this.collision(this.x, this.y, currentTrack.finishLine[0], currentTrack.finishLine[1],
+    currentTrack.finishLine[2], currentTrack.finishLine[3], "trigger") == true){
       if (this.checkPointCounter.every(point => point == true)){
         this.laps += 1;
         this.boosts = this.maxBoosts;
@@ -489,6 +496,10 @@ var Player = function(id, name, x, y, car) {
         notifications.push(this.name + " Completed a lap!");
         console.log(this.name + " has now completed " + this.laps + " laps!");
         this.upgradePoints += 1;
+        this.lapStart = Date.now();
+        if (this.lapTime < this.topLapTime || this.topLapTime == 0){
+          this.topLapTime = this.lapTime;
+        }
       }
     }
 
@@ -562,7 +573,9 @@ var Player = function(id, name, x, y, car) {
       canBoost: this.canBoost,
       abilityCooldown: this.abilityCooldown,
       canAbility: this.canAbility,
-      upgradePoints: this.upgradePoints
+      upgradePoints: this.upgradePoints,
+      lapTime: this.lapTime,
+      topLapTime: this.topLapTime
     }
   }
 
@@ -630,10 +643,11 @@ var checkPoints = [
 var finishLine = [975, 1025, -200, 200];
 
 // The track object constructor
-var Track = function(name, walls, checkPoints, spawnRegion){
+var Track = function(name, walls, checkPoints, finishLine, spawnRegion){
   this.name = name;
   this.walls = walls;
   this.checkPoints = checkPoints;
+  this.finishLine = finishLine;
   this.spawnRegion = spawnRegion;
 }
 
@@ -647,7 +661,9 @@ allTracks = {
     [200, 1600, 1575, 1600, "y+1", 8, 0.4],[2000, 2025, -225, 2025, "x-1", 8, 0.4],[-225, -200, -225, 2025, "x+1", 8, 0.4],
     [-200, 2000, 2000, 2025, "y-1", 8, 0.4],[-200, 2000, -225, -200, "y+1", 8, 0.4]],
     // Checkpoints
-    [[-200, 200, 1600, 2000], [-200, 200, -200, 200], [1600, 2000, -200, 200], [1600, 2000, 1600, 2000]]
+    [[-200, 200, 1600, 2000], [-200, 200, -200, 200], [1600, 2000, -200, 200], [1600, 2000, 1600, 2000]],
+    // FinishLine
+    [975, 1025, -200, 200]
   ),
 
   DragStrip : new Track(
@@ -658,7 +674,9 @@ allTracks = {
     [-600, 2600, 575, 600, "y+1", 8, 0.4],[3000, 3025, -225, 1025, "x-1", 8, 0.4],[-1025, -1000, -225, 1025, "x+1", 8, 0.4],
     [-1000, 3000, 1000, 1025, "y-1", 8, 0.4],[-1000, 3000, -225, -200, "y+1", 8, 0.4]],
     // Checkpoints
-    [[-1000, -600, 200, 600], [-1000, -600, -200, 200], [2600, 3000, 200, 600], [2600, 3000, -200, 200]]
+    [[-1000, -600, 200, 600], [-1000, -600, -200, 200], [2600, 3000, 200, 600], [2600, 3000, -200, 200]],
+    // FinishLine
+    [975, 1025, -200, 200]
   )
 }
 
