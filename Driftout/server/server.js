@@ -22,6 +22,7 @@ var notifications = [];
 var currentEntities = [];
 var totalConnections = 0;
 var playerNames = [];
+var gameEndPeriod = 0;
 
 // ---------- ---------- ----------
 
@@ -29,9 +30,10 @@ server.listen(port, host);
 
 console.log("Server started on port " + port);
 
-io.on("connection", function(socket){
-  console.log("New connection, ID: " + socket.id);
-  totalConnections++;
+function startGame(){
+  gameEndPeriod = 0;
+  notifications = [];
+  currentEntities = [];
 
   var trackChoice = Math.floor(Math.random() * 2);
   if(trackChoice == 0){
@@ -41,8 +43,14 @@ io.on("connection", function(socket){
     currentTrack = allTracks.DragStrip;
   }
 
-  console.log(trackChoice);
   console.log("Map : " + currentTrack.name);
+}
+
+io.on("connection", function(socket){
+  console.log("New connection, ID: " + socket.id);
+  totalConnections++;
+
+  startGame();
 
   var player;
   socket.on("ready", (data) => {
@@ -132,6 +140,7 @@ var Player = function(id, name, x, y, car) {
   this.boosts = car.maxBoosts;
   this.maxBoosts = car.maxBoosts;
   this.acceleration = car.acceleration;
+  this.brake = false;
   this.alive = true;
   this.drawCar = car.drawCar;
   this.boostPower = car.boostPower;
@@ -357,21 +366,25 @@ var Player = function(id, name, x, y, car) {
 
       // Boosts
 
-      if (this.mouseIsPressed == true && Date.now() > this.canBoost && this.boosts > 0){
-        this.vX += this.vX > this.maxSpeed / 3 || this.vX < -this.maxSpeed / 3 ? Math.cos(this.angle)*this.boostPower : Math.cos(this.angle)*(this.boostPower)*3;
-        this.vY += this.vY > this.maxSpeed / 3 || this.vY < -this.maxSpeed / 3 ? Math.sin(this.angle)*this.boostPower : Math.sin(this.angle)*(this.boostPower)*3;
-        this.canBoost = Date.now() + this.boostCooldown;
-        this.boosts-=1;
-        console.log(this.HP);
-      }
+      if(!this.brake){
 
-      // Movement
+        if (this.mouseIsPressed == true && Date.now() > this.canBoost && this.boosts > 0){
+          this.vX += this.vX > this.maxSpeed / 3 || this.vX < -this.maxSpeed / 3 ? Math.cos(this.angle)*this.boostPower : Math.cos(this.angle)*(this.boostPower)*3;
+          this.vY += this.vY > this.maxSpeed / 3 || this.vY < -this.maxSpeed / 3 ? Math.sin(this.angle)*this.boostPower : Math.sin(this.angle)*(this.boostPower)*3;
+          this.canBoost = Date.now() + this.boostCooldown;
+          this.boosts-=1;
+          console.log(this.HP);
+        }
 
-      if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
-        this.vX += Math.cos(this.angle)*this.acceleration;
-      }
-      if (this.vY < this.maxSpeed && this.vY > -this.maxSpeed){
-        this.vY += Math.sin(this.angle)*this.acceleration;
+        // Movement
+
+        if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
+          this.vX += Math.cos(this.angle)*this.acceleration;
+        }
+        if (this.vY < this.maxSpeed && this.vY > -this.maxSpeed){
+          this.vY += Math.sin(this.angle)*this.acceleration;
+        }
+
       }
 
       // Apply mouse distance
@@ -500,6 +513,13 @@ var Player = function(id, name, x, y, car) {
         if (this.lapTime < this.topLapTime || this.topLapTime == 0){
           this.topLapTime = this.lapTime;
         }
+        if (this.laps >= 20){
+          notifications.push(this.name + " has Won!!!");
+          gameEndPeriod = Date.now()+5000;
+          for(var i in allPlayers){
+            allPlayers[i].brake = true;
+          }
+        }
       }
     }
 
@@ -625,6 +645,12 @@ setInterval(() => {
 
 // loop spped to update player properties
 setInterval(() => {
+  if(Date.now() > gameEndPeriod && gameEndPeriod != 0){
+    for(var i in allPlayers) {
+      allPlayers[i].alive = false;
+    }
+    startGame();
+  }
   var updatePack = [];
   for(var i in allPlayers) {
       updatePack.push(allPlayers[i].getUpdatePack());
