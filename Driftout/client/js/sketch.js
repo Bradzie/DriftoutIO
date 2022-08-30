@@ -165,6 +165,10 @@ function setup(){
     }
   });
 
+  // socket.on("restartGame"){
+  //
+  // }
+
   socket.on("someoneLeft", function(data) {
       for(var i in allPlayers) {
           if(allPlayers[i].id === data.id) {
@@ -235,6 +239,7 @@ function debugDraw(debugText){
 }
 
 function exitGame(){
+  console.log(allPlayers);
   menuContainer.style.visibility = "visible";
   menuContainer.style.opacity = "1";
   gameGuiContainer.style.visibility = "hidden";
@@ -243,7 +248,7 @@ function exitGame(){
   socket.emit("removePlayerServer", myId);
   enterGameButton.setAttribute('onClick', 'enterGame()');
   allPlayers=[];
-  console.log(allPlayers);
+  refreshDisplays();
 }
 
 function enterGame(){
@@ -328,6 +333,7 @@ function refreshDisplays(){
   }
 
   tabLeaderboard.style.visibility = "hidden";
+  tabLeaderboard.style.opacity = "0";
   leaderboardContainer.innerHTML = "Leaderboard";
   tabLeaderboard.innerHTML = "Leaderboard";
   var text = "";
@@ -335,9 +341,16 @@ function refreshDisplays(){
 
   if(keyIsDown(81)){
     tabLeaderboard.style.visibility = "visible";
+    tabLeaderboard.style.opacity = "1";
   }
 
   for(var i in allPlayers){
+
+    // Game End Leaderboard
+    if(allPlayers[i].laps >= 20){
+      tabLeaderboard.style.visibility = "visible";
+      tabLeaderboard.style.opacity = "1";
+    }
 
     // Upgrade Overlay
     if(allPlayers[i].id === socket.id){
