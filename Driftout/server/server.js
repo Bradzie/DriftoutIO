@@ -22,6 +22,7 @@ var currentEntities = [];
 var totalConnections = 0;
 var playerNames = [];
 var gameEndPeriod = 0;
+var invincibilityPeriod = 4000;
 
 // ---------- MODIFIERS ----------
 
@@ -165,6 +166,7 @@ var Player = function(id, name, x, y, car) {
   this.lapStart = Date.now();
   this.lapTime = 0;
   this.topLapTime = 0;
+  this.god = [true, Date.now()+invincibilityPeriod];
 
   if(this.car.name == "Prankster"){
     this.ability = allCars.Prankster.ability;
@@ -254,6 +256,12 @@ var Player = function(id, name, x, y, car) {
   }
 
   this.events = function() {
+
+    if (this.god[0]){
+      if(Date.now()>this.god[1]){
+        this.god[0]=false;
+      }
+    }
 
     if (this.alive == true){
 
@@ -402,70 +410,72 @@ var Player = function(id, name, x, y, car) {
   this.doCollisions = function() {
 
     // Entity Collisions
-    for (var i in currentEntities){
-      if (currentEntities[i].ownerId != this.id){
-        if (Math.sqrt(((this.x-currentEntities[i].x)**2)+((this.y-currentEntities[i].y)**2)) < this.size + currentEntities[i].size){
-          this.vX *= 0.3;
-          this.vY *= 0.3;
-          this.HP -= currentEntities[i].damage;
-          currentEntities.splice(i, 1);
+    if (!this.god[0]){
+      for (var i in currentEntities){
+        if (currentEntities[i].ownerId != this.id){
+          if (Math.sqrt(((this.x-currentEntities[i].x)**2)+((this.y-currentEntities[i].y)**2)) < this.size + currentEntities[i].size){
+            this.vX *= 0.3;
+            this.vY *= 0.3;
+            this.HP -= currentEntities[i].damage;
+            currentEntities.splice(i, 1);
+          }
         }
       }
-    }
 
-    // Player Collisions
-    if (allPlayers.length > 1){
-      for (var i in allPlayers){
-        if (allPlayers[i].id != this.id){
-          if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < this.size + allPlayers[i].size){
+      // Player Collisions
+      if (allPlayers.length > 1){
+        for (var i in allPlayers){
+          if (allPlayers[i].id != this.id){
+            if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < this.size + allPlayers[i].size){
 
-            // Physics Calc
+              // Physics Calc
 
-            var collidedPlayerAngle = Math.atan2(this.y - allPlayers[i].y, this.x - allPlayers[i].x);
+              var collidedPlayerAngle = Math.atan2(this.y - allPlayers[i].y, this.x - allPlayers[i].x);
 
-            var xVDiff = this.vX - allPlayers[i].vX;
-            var yVDiff = this.vY - allPlayers[i].vY;
+              var xVDiff = this.vX - allPlayers[i].vX;
+              var yVDiff = this.vY - allPlayers[i].vY;
 
-            var xDist = allPlayers[i].x - this.x;
-            var yDist = allPlayers[i].y - this.y;
+              var xDist = allPlayers[i].x - this.x;
+              var yDist = allPlayers[i].y - this.y;
 
-            if(xVDiff * xDist + yVDiff * yDist >= 0){
-              var angle = -Math.atan2(allPlayers[i].y - this.y, allPlayers[i].x - this.x);
+              if(xVDiff * xDist + yVDiff * yDist >= 0){
+                var angle = -Math.atan2(allPlayers[i].y - this.y, allPlayers[i].x - this.x);
 
-              var m1 = this.mass;
-              var m2 = allPlayers[i].mass;
+                var m1 = this.mass;
+                var m2 = allPlayers[i].mass;
 
-              const u1 = rotate({x : this.vX, y : this.vY}, angle);
-              const u2 = rotate({x : allPlayers[i].vX, y : allPlayers[i].vY}, angle);
+                const u1 = rotate({x : this.vX, y : this.vY}, angle);
+                const u2 = rotate({x : allPlayers[i].vX, y : allPlayers[i].vY}, angle);
 
-              var v1 = {x: u1.x * (m1 - m2) / (m1 + m2) + u2.x * 2 * m2 / (m1 + m2), y: u1.y};
-              var v2 = {x: u2.x * (m1 - m2) / (m1 + m2) + u1.x * 2 * m2 / (m1 + m2), y: u2.y};
+                var v1 = {x: u1.x * (m1 - m2) / (m1 + m2) + u2.x * 2 * m2 / (m1 + m2), y: u1.y};
+                var v2 = {x: u2.x * (m1 - m2) / (m1 + m2) + u1.x * 2 * m2 / (m1 + m2), y: u2.y};
 
-              var v1Final = rotate(v1, -angle);
-              var v2Final = rotate(v2, -angle);
+                var v1Final = rotate(v1, -angle);
+                var v2Final = rotate(v2, -angle);
 
-              //Damage Calc
+                //Damage Calc
 
-              if (this.resisting == true){
-                this.HP -= Math.abs((this.vX + this.vY)/2) * (allPlayers[i].collisionDamage * this.ability().dashResist);
+                if (this.resisting == true){
+                  this.HP -= Math.abs((this.vX + this.vY)/2) * (allPlayers[i].collisionDamage * this.ability().dashResist);
+                }
+                else{
+                  this.HP -= Math.abs((this.vX + this.vY)/2) * allPlayers[i].collisionDamage;
+                }
+                allPlayers[i].HP -= Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * this.collisionDamage;
+
+                //Apply Movement
+
+                this.vX = v1Final.x;
+                this.vY = v1Final.y;
+
+                allPlayers[i].vX = v2Final.x;
+                allPlayers[i].vY = v2Final.y;
               }
-              else{
-                this.HP -= Math.abs((this.vX + this.vY)/2) * allPlayers[i].collisionDamage;
-              }
-              allPlayers[i].HP -= Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * this.collisionDamage;
-
-              //Apply Movement
-
-              this.vX = v1Final.x;
-              this.vY = v1Final.y;
-
-              allPlayers[i].vX = v2Final.x;
-              allPlayers[i].vY = v2Final.y;
             }
           }
         }
-        }
       }
+    }
 
     for(var i in currentTrack.walls){
       this.collision(this.x, this.y, currentTrack.walls[i][0], currentTrack.walls[i][1], currentTrack.walls[i][2], currentTrack.walls[i][3],
@@ -510,22 +520,22 @@ var Player = function(id, name, x, y, car) {
       if ((playerx > x1 && playerx < x2) && (playery > y1 && playery < y2)){
        if (effect == "x-1"){
          this.x -= 1;
-         this.HP -= (Math.abs(this.vX)*damage) + 2;
+         this.HP -= this.god[0]?0:(Math.abs(this.vX)*damage) + 2;
          this.vX = -this.vX * bounce;
          }
        if (effect == "x+1"){
          this.x += 1;
-         this.HP -= (Math.abs(this.vX)*damage) + 2;
+         this.HP -= this.god[0]?0:(Math.abs(this.vX)*damage) + 2;
          this.vX = Math.abs(this.vX)*bounce;
          }
        if (effect == "y-1"){
          this.y -= 1;
-         this.HP -= (Math.abs(this.vY)*damage) + 2;
+         this.HP -= this.god[0]?0:(Math.abs(this.vY)*damage) + 2;
          this.vY = -this.vY * bounce;
          }
        if (effect == "y+1"){
          this.y += 1;
-         this.HP -= (Math.abs(this.vY)*damage) + 2;
+         this.HP -= this.god[0]?0:(Math.abs(this.vY)*damage) + 2;
          this.vY = Math.abs(this.vY)*bounce;
          }
        if (effect == "trigger"){
@@ -570,6 +580,7 @@ var Player = function(id, name, x, y, car) {
         upgradePoints: this.upgradePoints,
         lapTime: this.lapTime,
         topLapTime: this.topLapTime,
+        god: this.god[0]?true:false,
         trapSize : this.trapSize
       }
     }
@@ -589,7 +600,8 @@ var Player = function(id, name, x, y, car) {
       canAbility: this.canAbility,
       upgradePoints: this.upgradePoints,
       lapTime: this.lapTime,
-      topLapTime: this.topLapTime
+      topLapTime: this.topLapTime,
+      god: this.god[0]?true:false
     }
   }
 

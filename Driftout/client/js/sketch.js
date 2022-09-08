@@ -135,6 +135,7 @@ function setup(){
                   allPlayers[j].upgradePoints = data.updatePack[i].upgradePoints;
                   allPlayers[j].lapTime = data.updatePack[i].lapTime;
                   allPlayers[j].topLapTime = data.updatePack[i].topLapTime;
+                  allPlayers[j].god = data.updatePack[i].god;
                   if (allPlayers[j].car.name == "Prankster"){
                     allPlayers[j].trapSize = data.updatePack[i].trapSize;
                   }
@@ -542,11 +543,18 @@ var Player = function(id, name, x, y, car, alive) {
   this.upgradePoints = 1;
   this.lapTime = 0;
   this.topLapTime = 0;
+  this.god = true;
 
   this.draw = function() {
 
     // Player's car
     this.drawCar(this.x, this.y, this.angle);
+
+    // ForceField
+    if (this.god){
+      fill(255,255,200,100);
+      circle(this.x, this.y, this.car.size*3);
+    }
 
     // Player's name
     textSize(20);
