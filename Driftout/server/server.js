@@ -12,9 +12,8 @@ var server = http.createServer(app);
 var io = socketIO(server);
 app.use(express.static(publicPath));
 
-// ---------- CONTSTANTS ----------
+// ---------- GLOBALS ----------
 
-var grip = 0.99;
 var allTracks;
 var currentTrack;
 var allPlayers = [];
@@ -23,6 +22,11 @@ var currentEntities = [];
 var totalConnections = 0;
 var playerNames = [];
 var gameEndPeriod = 0;
+
+// ---------- MODIFIERS ----------
+
+var grip = 0.99;
+var lapsToWin = 20;
 
 // ---------- ---------- ----------
 
@@ -35,12 +39,15 @@ function startGame(){
   notifications = [];
   currentEntities = [];
 
-  var trackChoice = Math.floor(Math.random() * 2);
+  var trackChoice = Math.floor(Math.random() * 3);
   if(trackChoice == 0){
     currentTrack = allTracks.Square;
   }
   if(trackChoice == 1){
     currentTrack = allTracks.DragStrip;
+  }
+  if(trackChoice == 2){
+    currentTrack = allTracks.LeftRight;
   }
 
   console.log("Map : " + currentTrack.name);
@@ -513,7 +520,7 @@ var Player = function(id, name, x, y, car) {
         if (this.lapTime < this.topLapTime || this.topLapTime == 0){
           this.topLapTime = this.lapTime;
         }
-        if (this.laps >= 20){
+        if (this.laps >= lapsToWin){
           notifications.push(this.name + " has Won!!!");
           gameEndPeriod = Date.now()+5000;
           for(var i in allPlayers){
@@ -701,6 +708,22 @@ allTracks = {
     [-1000, 3000, 1000, 1025, "y-1", 8, 0.4],[-1000, 3000, -225, -200, "y+1", 8, 0.4]],
     // Checkpoints
     [[-1000, -600, 200, 600], [-1000, -600, -200, 200], [2600, 3000, 200, 600], [2600, 3000, -200, 200]],
+    // FinishLine
+    [975, 1025, -200, 200]
+  ),
+
+  LeftRight : new Track(
+    // Name
+    "Left, Right",
+    // Walls
+    [[200, 225, 200, 1600, "x-1", 8, 0.4],[200, 1600, 200, 225, "y-1", 8, 0.4],[1575, 1600, 200, 1600, "x+1", 8, 0.4],
+    [200, 400, 1575, 1600, "y+1", 8, 0.4],[1400, 1600, 1575, 1600, "y+1", 8, 0.4],[2000, 2025, -225, 2025, "x-1", 8, 0.4],
+    [-225, -200, -225, 2025, "x+1", 8, 0.4],[-200, 800, 2000, 2025, "y-1", 8, 0.4],[1000, 2000, 2000, 2025, "y-1", 8, 0.4],
+    [-200, 2000, -225, -200, "y+1", 8, 0.4],[375, 400, 400, 1600, "x+1", 8, 0.4],[1400, 1425, 400, 1600, "x-1", 8, 0.4],
+    [800, 825, 800, 2000, "x-1", 8, 0.4],[975, 1000, 800, 2000, "x+1", 8, 0.4],[400, 1400, 400, 425, "y+1", 8, 0.4],
+    [800, 1000, 800, 775, "y+1", 8, 0.4]],
+    // Checkpoints
+    [[-200, 200, 1600, 2000], [-200, 200, -200, 200], [1600, 2000, -200, 200], [1600, 2000, 1600, 2000]],
     // FinishLine
     [975, 1025, -200, 200]
   )
