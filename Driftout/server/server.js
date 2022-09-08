@@ -272,7 +272,6 @@ var Player = function(id, name, x, y, car) {
 
       // Lap time
       this.lapTime = Date.now()-this.lapStart;
-      console.log(this.lapTime);
 
       // Check if crashed
       if (this.HP < 0){
@@ -334,11 +333,9 @@ var Player = function(id, name, x, y, car) {
             }
           }
           currentEntities.push(this.ability(this.x, this.y, this.angle, this.id));
-          console.log(this.abilityCooldown);
           this.canAbility = Date.now() + this.abilityCooldown;
           this.vX += Math.cos((this.angle) % 360) * 3;
           this.vY += Math.sin((this.angle) % 360) * 3;
-          console.log(currentEntities);
         }
 
         // Bullet Ability
@@ -365,12 +362,6 @@ var Player = function(id, name, x, y, car) {
         }
       }
 
-      // Debug on mouseIsPressed
-
-      if(this.mouseIsPressed == true){
-        console.log(allPlayers.length);
-      }
-
       // Boosts
 
       if(!this.brake){
@@ -380,7 +371,6 @@ var Player = function(id, name, x, y, car) {
           this.vY += this.vY > this.maxSpeed / 3 || this.vY < -this.maxSpeed / 3 ? Math.sin(this.angle)*this.boostPower : Math.sin(this.angle)*(this.boostPower)*3;
           this.canBoost = Date.now() + this.boostCooldown;
           this.boosts-=1;
-          console.log(this.HP);
         }
 
         // Movement
@@ -428,9 +418,7 @@ var Player = function(id, name, x, y, car) {
           this.vX *= 0.3;
           this.vY *= 0.3;
           this.HP -= currentEntities[i].damage;
-          console.log(currentEntities.length);
           currentEntities.splice(i, 1);
-          console.log(currentEntities.length);
         }
       }
     }
@@ -493,18 +481,6 @@ var Player = function(id, name, x, y, car) {
       this.collision(this.x, this.y, currentTrack.walls[i][0], currentTrack.walls[i][1], currentTrack.walls[i][2], currentTrack.walls[i][3],
         currentTrack.walls[i][4], currentTrack.walls[i][5], currentTrack.walls[i][6])
     }
-
-    // Inside rect
-    // this.collision(this.x, this.y, 200, 225, 200, 1600, "x-1", 8, 0.4);
-    // this.collision(this.x, this.y, 200, 1600, 200, 225, "y-1", 8, 0.4);
-    // this.collision(this.x, this.y, 1575, 1600, 200, 1600, "x+1", 8, 0.4);
-    // this.collision(this.x, this.y, 200, 1600, 1575, 1600, "y+1", 8, 0.4);
-    //
-    // // Outside rect
-    // this.collision(this.x, this.y, 2000, 2025, -225, 2025, "x-1", 8, 0.4);
-    // this.collision(this.x, this.y, -225, -200, -225, 2025, "x+1", 8, 0.4);
-    // this.collision(this.x, this.y, -200, 2000, 2000, 2025, "y-1", 8, 0.4);
-    // this.collision(this.x, this.y, -200, 2000, -225, -200, "y+1", 8, 0.4);
 
     // Check if inside finish line
     if (this.collision(this.x, this.y, currentTrack.finishLine[0], currentTrack.finishLine[1],
@@ -642,6 +618,15 @@ setInterval(() => {
         currentEntities[i].vY *= 0.95;
         currentEntities[i].x += currentEntities[i].vX;
         currentEntities[i].y += currentEntities[i].vY;
+        
+        for(var j in currentTrack.walls){
+          if ((currentEntities[i].x > currentTrack.walls[j][0] && currentEntities[i].x < currentTrack.walls[j][1]) &&
+          (currentEntities[i].y > currentTrack.walls[j][2] && currentEntities[i].y < currentTrack.walls[j][3])){
+            currentEntities[i].vX = 0;
+            currentEntities[i].vY = 0;
+            console.log(currentEntities[i].vX);
+          }
+        }
         // if (currentEntities[i].createdAt + 10000 > Date.now()){
         //   currentEntities.splice(i, i+1);
         // }
