@@ -1,8 +1,8 @@
-// Globals
+// ---------- GLOBALS ----------
 
-var playing = false,
-  socket,
-  mainCanvas = document.getElementById("mainCanvas"),
+// HTML Access
+
+var mainCanvas = document.getElementById("mainCanvas"),
   gameTitle = document.getElementById("gameTitle"),
   enterGameButton = document.getElementById('enterGameButton'),
   changeClassButton = document.getElementById('changeClassButton')
@@ -29,6 +29,10 @@ var playing = false,
   metricsData = document.getElementById('metricsData'),
   metricsContainer = document.getElementById('metricsContainer');
 
+// Global Vars
+
+var socket;
+var playing = false;
 var allCars;
 var allTracks;
 var currentTrack;
@@ -105,6 +109,9 @@ function setup(){
       }
       if(data.currentTrack.name == "DragStrip"){
         currentTrack = allTracks.DragStrip;
+      }
+      if(data.currentTrack.name == "Left, Right"){
+        currentTrack = allTracks.LeftRight;
       }
   });
 
@@ -218,7 +225,7 @@ function draw() {
     for(var i in allPlayers) {
       if(allPlayers[i].alive == true){
         allPlayers[i].draw();
-        debugDraw(allPlayers[i].topLapTime);
+        //debugDraw(allPlayers[i].topLapTime);
       }
     }
 
@@ -288,6 +295,7 @@ function enterGame(){
 }
 
 function changeClass(){
+  allCars.Racer.drawCar(50,50,0);
   classIndex++;
   if(classIndex >= Object.keys(allCars).length){
     classIndex=0;
@@ -638,6 +646,58 @@ allTracks = {
 
       createMapBorders([[-1000, -200, 3000, -200], [-1000, 1000, -1000, -200], [-1000, 1000, 3000, 1000], [3000, -200, 3000, 1000],
         [-600, 200, 2600, 200], [-600, 600, -600, 200], [-600, 600, 2600, 600], [2600, 200, 2600, 600]]);
+    }
+  ),
+  LeftRight : new Track(
+    "Left, Right",
+    function(){
+      push();
+      fill(200);
+      strokeWeight(0);
+      beginShape();
+      vertex(-200, -200);
+      vertex(-200, 2000);
+      vertex(2000, 2000);
+      vertex(2000, -200);
+      endShape(CLOSE);
+
+      fill(100);
+      beginShape();
+      vertex(200, 200);
+      vertex(200, 1600);
+      vertex(1600, 1600);
+      vertex(1600, 200);
+      endShape(CLOSE);
+
+      fill(200);
+      strokeWeight(0);
+      beginShape();
+      vertex(400, 400);
+      vertex(1400, 400);
+      vertex(1400, 2000);
+      vertex(400, 2000);
+      endShape(CLOSE);
+
+      fill(100);
+      strokeWeight(0);
+      beginShape();
+      vertex(800, 800);
+      vertex(1000, 800);
+      vertex(1000, 2000);
+      vertex(800, 2000);
+      endShape(CLOSE);
+      pop();
+
+      push();
+      mapLine(1020, -200, 1020, 200, [0,0,0], [230, 230, 230], 20);
+      mapLine(1000, -200, 1000, 200, [230,230,230], [0,0,0], 20);
+      mapLine(980, -200, 980, 200, [0,0,0], [230, 230, 230], 20);
+      pop();
+
+      createMapBorders([[-200, -200, 2000, -200], [-200, 2000, -200, -200], [-200, 2000, 800, 2000], [1000, 2000, 2000, 2000],
+        [2000, -200, 2000, 2000], [200, 200, 1600, 200], [200, 1600, 200, 200], [200, 1600, 400, 1600], [200, 1600, 400, 1600],
+        [1600, 200, 1600, 1600], [1000, 800, 1000, 2000], [800, 800, 800, 2000], [400, 400, 400, 1600], [1400, 400, 1400, 1600],
+        [1400, 1600, 1600, 1600], [800, 800, 1000, 800], [400, 400, 1400, 400]]);
     }
   )
 }
