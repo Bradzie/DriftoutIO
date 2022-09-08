@@ -22,6 +22,7 @@ var currentEntities = [];
 var totalConnections = 0;
 var playerNames = [];
 var gameEndPeriod = 0;
+var invincibilityPeriod = 4000;
 
 // ---------- MODIFIERS ----------
 
@@ -165,9 +166,12 @@ var Player = function(id, name, x, y, car) {
   this.lapStart = Date.now();
   this.lapTime = 0;
   this.topLapTime = 0;
+  this.god = [true, Date.now()+invincibilityPeriod];
 
   if(this.car.name == "Prankster"){
     this.ability = allCars.Prankster.ability;
+    this.trapSize = 20;
+    this.trapDamage = 40;
   }
   if(this.car.name == "Bullet"){
     this.ability = allCars.Bullet.ability;
@@ -212,31 +216,16 @@ var Player = function(id, name, x, y, car) {
       this.vY += Math.sin(this.angle)*value;
     }
     if(upgradeName == "TrapDamage"){
-      console.log("To be made");
-      // this.car.ability = function(x, y, angle, ownerId){
-      //   return {
-      //     name : "Trap",
-      //     x : x,
-      //     y : y,
-      //     vX : Math.cos((angle + 135) % 360) * 14,
-      //     vY : Math.sin((angle + 135) % 360) * 14,
-      //     size : 20,
-      //     damage : 40,
-      //     cooldown : 1000,
-      //     ownerId: ownerId,
-      //     newEntity : true,
-      //     createdAt : 0
-      //   };
-      // }
+      this.trapDamage += value;
     }
     if(upgradeName == "TrapCooldown"){
-      this.abilityCooldown -= 250;
+      this.abilityCooldown -= value;
     }
     if(upgradeName == "TrapSize"){
-      console.log("To be made");
+      this.trapSize += value;
     }
     if(upgradeName == "GiftCooldown"){
-      this.abilityCooldown -= 500;
+      this.abilityCooldown -= value;
     }
     if(upgradeName == "DashPower"){
       var newStats = [this.ability().dashResist, this.ability().dashPower + 10]
@@ -268,11 +257,16 @@ var Player = function(id, name, x, y, car) {
 
   this.events = function() {
 
+    if (this.god[0]){
+      if(Date.now()>this.god[1]){
+        this.god[0]=false;
+      }
+    }
+
     if (this.alive == true){
 
       // Lap time
       this.lapTime = Date.now()-this.lapStart;
-      console.log(this.lapTime);
 
       // Check if crashed
       if (this.HP < 0){
@@ -333,12 +327,13 @@ var Player = function(id, name, x, y, car) {
               }
             }
           }
-          currentEntities.push(this.ability(this.x, this.y, this.angle, this.id));
-          console.log(this.abilityCooldown);
+          var newEntity = this.ability(this.x, this.y, this.angle, this.id);
+          newEntity.size = this.trapSize;
+          newEntity.damage = this.trapDamage;
+          currentEntities.push(newEntity);
           this.canAbility = Date.now() + this.abilityCooldown;
           this.vX += Math.cos((this.angle) % 360) * 3;
           this.vY += Math.sin((this.angle) % 360) * 3;
-          console.log(currentEntities);
         }
 
         // Bullet Ability
@@ -365,12 +360,6 @@ var Player = function(id, name, x, y, car) {
         }
       }
 
-      // Debug on mouseIsPressed
-
-      if(this.mouseIsPressed == true){
-        console.log(allPlayers.length);
-      }
-
       // Boosts
 
       if(!this.brake){
@@ -380,7 +369,6 @@ var Player = function(id, name, x, y, car) {
           this.vY += this.vY > this.maxSpeed / 3 || this.vY < -this.maxSpeed / 3 ? Math.sin(this.angle)*this.boostPower : Math.sin(this.angle)*(this.boostPower)*3;
           this.canBoost = Date.now() + this.boostCooldown;
           this.boosts-=1;
-          console.log(this.HP);
         }
 
         // Movement
@@ -422,89 +410,77 @@ var Player = function(id, name, x, y, car) {
   this.doCollisions = function() {
 
     // Entity Collisions
-    for (var i in currentEntities){
-      if (currentEntities[i].ownerId != this.id){
-        if (Math.sqrt(((this.x-currentEntities[i].x)**2)+((this.y-currentEntities[i].y)**2)) < this.size + currentEntities[i].size){
-          this.vX *= 0.3;
-          this.vY *= 0.3;
-          this.HP -= currentEntities[i].damage;
-          console.log(currentEntities.length);
-          currentEntities.splice(i, 1);
-          console.log(currentEntities.length);
+    if (!this.god[0]){
+      for (var i in currentEntities){
+        if (currentEntities[i].ownerId != this.id){
+          if (Math.sqrt(((this.x-currentEntities[i].x)**2)+((this.y-currentEntities[i].y)**2)) < this.size + currentEntities[i].size){
+            this.vX *= 0.3;
+            this.vY *= 0.3;
+            this.HP -= currentEntities[i].damage;
+            currentEntities.splice(i, 1);
+          }
         }
       }
-    }
 
-    // Player Collisions
-    if (allPlayers.length > 1){
-      for (var i in allPlayers){
-        if (allPlayers[i].id != this.id){
-          if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < this.size + allPlayers[i].size){
+      // Player Collisions
+      if (allPlayers.length > 1){
+        for (var i in allPlayers){
+          if (allPlayers[i].id != this.id){
+            if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < this.size + allPlayers[i].size){
 
-            // Physics Calc
+              // Physics Calc
 
-            var collidedPlayerAngle = Math.atan2(this.y - allPlayers[i].y, this.x - allPlayers[i].x);
+              var collidedPlayerAngle = Math.atan2(this.y - allPlayers[i].y, this.x - allPlayers[i].x);
 
-            var xVDiff = this.vX - allPlayers[i].vX;
-            var yVDiff = this.vY - allPlayers[i].vY;
+              var xVDiff = this.vX - allPlayers[i].vX;
+              var yVDiff = this.vY - allPlayers[i].vY;
 
-            var xDist = allPlayers[i].x - this.x;
-            var yDist = allPlayers[i].y - this.y;
+              var xDist = allPlayers[i].x - this.x;
+              var yDist = allPlayers[i].y - this.y;
 
-            if(xVDiff * xDist + yVDiff * yDist >= 0){
-              var angle = -Math.atan2(allPlayers[i].y - this.y, allPlayers[i].x - this.x);
+              if(xVDiff * xDist + yVDiff * yDist >= 0){
+                var angle = -Math.atan2(allPlayers[i].y - this.y, allPlayers[i].x - this.x);
 
-              var m1 = this.mass;
-              var m2 = allPlayers[i].mass;
+                var m1 = this.mass;
+                var m2 = allPlayers[i].mass;
 
-              const u1 = rotate({x : this.vX, y : this.vY}, angle);
-              const u2 = rotate({x : allPlayers[i].vX, y : allPlayers[i].vY}, angle);
+                const u1 = rotate({x : this.vX, y : this.vY}, angle);
+                const u2 = rotate({x : allPlayers[i].vX, y : allPlayers[i].vY}, angle);
 
-              var v1 = {x: u1.x * (m1 - m2) / (m1 + m2) + u2.x * 2 * m2 / (m1 + m2), y: u1.y};
-              var v2 = {x: u2.x * (m1 - m2) / (m1 + m2) + u1.x * 2 * m2 / (m1 + m2), y: u2.y};
+                var v1 = {x: u1.x * (m1 - m2) / (m1 + m2) + u2.x * 2 * m2 / (m1 + m2), y: u1.y};
+                var v2 = {x: u2.x * (m1 - m2) / (m1 + m2) + u1.x * 2 * m2 / (m1 + m2), y: u2.y};
 
-              var v1Final = rotate(v1, -angle);
-              var v2Final = rotate(v2, -angle);
+                var v1Final = rotate(v1, -angle);
+                var v2Final = rotate(v2, -angle);
 
-              //Damage Calc
+                //Damage Calc
 
-              if (this.resisting == true){
-                this.HP -= Math.abs((this.vX + this.vY)/2) * (allPlayers[i].collisionDamage * this.ability().dashResist);
+                if (this.resisting == true){
+                  this.HP -= Math.abs((this.vX + this.vY)/2) * (allPlayers[i].collisionDamage * this.ability().dashResist);
+                }
+                else{
+                  this.HP -= Math.abs((this.vX + this.vY)/2) * allPlayers[i].collisionDamage;
+                }
+                allPlayers[i].HP -= Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * this.collisionDamage;
+
+                //Apply Movement
+
+                this.vX = v1Final.x;
+                this.vY = v1Final.y;
+
+                allPlayers[i].vX = v2Final.x;
+                allPlayers[i].vY = v2Final.y;
               }
-              else{
-                this.HP -= Math.abs((this.vX + this.vY)/2) * allPlayers[i].collisionDamage;
-              }
-              allPlayers[i].HP -= Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * this.collisionDamage;
-
-              //Apply Movement
-
-              this.vX = v1Final.x;
-              this.vY = v1Final.y;
-
-              allPlayers[i].vX = v2Final.x;
-              allPlayers[i].vY = v2Final.y;
             }
           }
         }
-        }
       }
+    }
 
     for(var i in currentTrack.walls){
       this.collision(this.x, this.y, currentTrack.walls[i][0], currentTrack.walls[i][1], currentTrack.walls[i][2], currentTrack.walls[i][3],
         currentTrack.walls[i][4], currentTrack.walls[i][5], currentTrack.walls[i][6])
     }
-
-    // Inside rect
-    // this.collision(this.x, this.y, 200, 225, 200, 1600, "x-1", 8, 0.4);
-    // this.collision(this.x, this.y, 200, 1600, 200, 225, "y-1", 8, 0.4);
-    // this.collision(this.x, this.y, 1575, 1600, 200, 1600, "x+1", 8, 0.4);
-    // this.collision(this.x, this.y, 200, 1600, 1575, 1600, "y+1", 8, 0.4);
-    //
-    // // Outside rect
-    // this.collision(this.x, this.y, 2000, 2025, -225, 2025, "x-1", 8, 0.4);
-    // this.collision(this.x, this.y, -225, -200, -225, 2025, "x+1", 8, 0.4);
-    // this.collision(this.x, this.y, -200, 2000, 2000, 2025, "y-1", 8, 0.4);
-    // this.collision(this.x, this.y, -200, 2000, -225, -200, "y+1", 8, 0.4);
 
     // Check if inside finish line
     if (this.collision(this.x, this.y, currentTrack.finishLine[0], currentTrack.finishLine[1],
@@ -544,22 +520,22 @@ var Player = function(id, name, x, y, car) {
       if ((playerx > x1 && playerx < x2) && (playery > y1 && playery < y2)){
        if (effect == "x-1"){
          this.x -= 1;
-         this.HP -= (Math.abs(this.vX)*damage) + 2;
+         this.HP -= this.god[0]?0:(Math.abs(this.vX)*damage) + 2;
          this.vX = -this.vX * bounce;
          }
        if (effect == "x+1"){
          this.x += 1;
-         this.HP -= (Math.abs(this.vX)*damage) + 2;
+         this.HP -= this.god[0]?0:(Math.abs(this.vX)*damage) + 2;
          this.vX = Math.abs(this.vX)*bounce;
          }
        if (effect == "y-1"){
          this.y -= 1;
-         this.HP -= (Math.abs(this.vY)*damage) + 2;
+         this.HP -= this.god[0]?0:(Math.abs(this.vY)*damage) + 2;
          this.vY = -this.vY * bounce;
          }
        if (effect == "y+1"){
          this.y += 1;
-         this.HP -= (Math.abs(this.vY)*damage) + 2;
+         this.HP -= this.god[0]?0:(Math.abs(this.vY)*damage) + 2;
          this.vY = Math.abs(this.vY)*bounce;
          }
        if (effect == "trigger"){
@@ -586,6 +562,28 @@ var Player = function(id, name, x, y, car) {
 
   // Important player information to be transferred server/client
   this.getUpdatePack = function () {
+    if(this.car.name == "Prankster"){
+      return {
+        id: this.id,
+        x: this.x,
+        y: this.y,
+        angle: this.angle,
+        HP: this.HP,
+        maxHP : this.maxHP,
+        alive: this.alive,
+        laps: this.laps,
+        boosts: this.boosts,
+        boostCooldown: this.boostCooldown,
+        canBoost: this.canBoost,
+        abilityCooldown: this.abilityCooldown,
+        canAbility: this.canAbility,
+        upgradePoints: this.upgradePoints,
+        lapTime: this.lapTime,
+        topLapTime: this.topLapTime,
+        god: this.god[0]?true:false,
+        trapSize : this.trapSize
+      }
+    }
     return {
       id: this.id,
       x: this.x,
@@ -602,7 +600,8 @@ var Player = function(id, name, x, y, car) {
       canAbility: this.canAbility,
       upgradePoints: this.upgradePoints,
       lapTime: this.lapTime,
-      topLapTime: this.topLapTime
+      topLapTime: this.topLapTime,
+      god: this.god[0]?true:false
     }
   }
 
@@ -642,6 +641,14 @@ setInterval(() => {
         currentEntities[i].vY *= 0.95;
         currentEntities[i].x += currentEntities[i].vX;
         currentEntities[i].y += currentEntities[i].vY;
+
+        for(var j in currentTrack.walls){
+          if ((currentEntities[i].x > currentTrack.walls[j][0] && currentEntities[i].x < currentTrack.walls[j][1]) &&
+          (currentEntities[i].y > currentTrack.walls[j][2] && currentEntities[i].y < currentTrack.walls[j][3])){
+            currentEntities[i].vX = 0;
+            currentEntities[i].vY = 0;
+          }
+        }
         // if (currentEntities[i].createdAt + 10000 > Date.now()){
         //   currentEntities.splice(i, i+1);
         // }
@@ -760,8 +767,8 @@ allCars = {
     MaxHP : 10,
     RegenHP : 2,
     TrapDamage: 8,
-    TrapCooldown : 0.6,
-    TrapSize : 3,
+    TrapCooldown : 250,
+    TrapSize : 4,
     SingleHeal : 0.4
   }, 0.1, 2, 20, 4, 4000, function(x, y, angle, ownerId){
     return {
@@ -824,7 +831,7 @@ allCars = {
     RegenHP : 3,
     MaxBoosts: 2,
     MoveSpeed : [0.015, 0.6],
-    GiftCooldown : 0.8,
+    GiftCooldown : 500,
     SingleBoost : 7.5
   }, 0.1, 2.5, 25, 1, 26000, function(){
     return {
