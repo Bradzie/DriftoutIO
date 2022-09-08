@@ -2,17 +2,17 @@
 
 ## A fast-paced royle/racing game inspired by driftin.io built with socket.io, p5js and node.js
 
-I'm currently hosting this on heroku, here: https://driftout.herokuapp.com/
+The game finally has independent hosting and a custom domain!
 
-I'm planning to move to more independant hosting soon, but development is still early on.
+! https://driftout.io !
 
 ## Battle other racers to be the first to complete 20 laps! 🚗
 
-Select from 7 different car classes each with different attributes and some with abilities ⚔️
+> Select from 7 different car classes each with different attributes and some with abilities ⚔️
 
-Complete laps to upgrade your car and survive longer ⬆️
+> Complete laps to upgrade your car and survive longer ⬆️
 
-Play solo to attempt for a personal best time 💨
+> Play solo to attempt for a personal best time 💨
 
 ## How to run locally:
 
