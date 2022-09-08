@@ -168,6 +168,7 @@ var Player = function(id, name, x, y, car) {
 
   if(this.car.name == "Prankster"){
     this.ability = allCars.Prankster.ability;
+    this.trapSize = 20;
   }
   if(this.car.name == "Bullet"){
     this.ability = allCars.Bullet.ability;
@@ -233,7 +234,7 @@ var Player = function(id, name, x, y, car) {
       this.abilityCooldown -= 250;
     }
     if(upgradeName == "TrapSize"){
-      console.log("To be made");
+      this.trapSize += value;
     }
     if(upgradeName == "GiftCooldown"){
       this.abilityCooldown -= 500;
@@ -332,7 +333,9 @@ var Player = function(id, name, x, y, car) {
               }
             }
           }
-          currentEntities.push(this.ability(this.x, this.y, this.angle, this.id));
+          var newEntity = this.ability(this.x, this.y, this.angle, this.id);
+          newEntity.size = this.trapSize;
+          currentEntities.push(newEntity);
           this.canAbility = Date.now() + this.abilityCooldown;
           this.vX += Math.cos((this.angle) % 360) * 3;
           this.vY += Math.sin((this.angle) % 360) * 3;
@@ -562,6 +565,27 @@ var Player = function(id, name, x, y, car) {
 
   // Important player information to be transferred server/client
   this.getUpdatePack = function () {
+    if(this.car.name == "Prankster"){
+      return {
+        id: this.id,
+        x: this.x,
+        y: this.y,
+        angle: this.angle,
+        HP: this.HP,
+        maxHP : this.maxHP,
+        alive: this.alive,
+        laps: this.laps,
+        boosts: this.boosts,
+        boostCooldown: this.boostCooldown,
+        canBoost: this.canBoost,
+        abilityCooldown: this.abilityCooldown,
+        canAbility: this.canAbility,
+        upgradePoints: this.upgradePoints,
+        lapTime: this.lapTime,
+        topLapTime: this.topLapTime,
+        trapSize : this.trapSize
+      }
+    }
     return {
       id: this.id,
       x: this.x,
@@ -618,13 +642,12 @@ setInterval(() => {
         currentEntities[i].vY *= 0.95;
         currentEntities[i].x += currentEntities[i].vX;
         currentEntities[i].y += currentEntities[i].vY;
-        
+
         for(var j in currentTrack.walls){
           if ((currentEntities[i].x > currentTrack.walls[j][0] && currentEntities[i].x < currentTrack.walls[j][1]) &&
           (currentEntities[i].y > currentTrack.walls[j][2] && currentEntities[i].y < currentTrack.walls[j][3])){
             currentEntities[i].vX = 0;
             currentEntities[i].vY = 0;
-            console.log(currentEntities[i].vX);
           }
         }
         // if (currentEntities[i].createdAt + 10000 > Date.now()){
@@ -746,7 +769,7 @@ allCars = {
     RegenHP : 2,
     TrapDamage: 8,
     TrapCooldown : 0.6,
-    TrapSize : 3,
+    TrapSize : 4,
     SingleHeal : 0.4
   }, 0.1, 2, 20, 4, 4000, function(x, y, angle, ownerId){
     return {

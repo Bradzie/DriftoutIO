@@ -135,6 +135,9 @@ function setup(){
                   allPlayers[j].upgradePoints = data.updatePack[i].upgradePoints;
                   allPlayers[j].lapTime = data.updatePack[i].lapTime;
                   allPlayers[j].topLapTime = data.updatePack[i].topLapTime;
+                  if (allPlayers[j].car.name == "Prankster"){
+                    allPlayers[j].trapSize = data.updatePack[i].trapSize;
+                  }
               }
           }
       }
@@ -217,8 +220,8 @@ function draw() {
     currentTrack.drawMap();
 
     for(var i in currentEntities){
-      if (typeof currentEntities[i].draw != "undefined"){
-        currentEntities[i].draw(currentEntities[i].x, currentEntities[i].y);
+      if (typeof currentEntities[i].draw != "undefined" && allPlayers[j].id == myId){
+        currentEntities[i].draw(currentEntities[i].x, currentEntities[i].y, currentEntities[i].size/20);
       }
     }
 
@@ -761,9 +764,10 @@ allCars = {
       ownerId : "",
       newEntity : true,
       createdAt : 0,
-      draw : function(x, y){
+      draw : function(x, y, size){
         push();
         translate(x, y);
+        scale(size);
         strokeWeight(5);
         fill(50,255,150);
         stroke(0,150,50);
