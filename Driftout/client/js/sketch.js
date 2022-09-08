@@ -220,7 +220,7 @@ function draw() {
     currentTrack.drawMap();
 
     for(var i in currentEntities){
-      if (typeof currentEntities[i].draw != "undefined" && allPlayers[j].id == myId){
+      if (typeof currentEntities[i].draw != "undefined"){
         currentEntities[i].draw(currentEntities[i].x, currentEntities[i].y, currentEntities[i].size/20);
       }
     }

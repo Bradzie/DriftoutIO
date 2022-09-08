@@ -169,6 +169,7 @@ var Player = function(id, name, x, y, car) {
   if(this.car.name == "Prankster"){
     this.ability = allCars.Prankster.ability;
     this.trapSize = 20;
+    this.trapDamage = 40;
   }
   if(this.car.name == "Bullet"){
     this.ability = allCars.Bullet.ability;
@@ -213,31 +214,16 @@ var Player = function(id, name, x, y, car) {
       this.vY += Math.sin(this.angle)*value;
     }
     if(upgradeName == "TrapDamage"){
-      console.log("To be made");
-      // this.car.ability = function(x, y, angle, ownerId){
-      //   return {
-      //     name : "Trap",
-      //     x : x,
-      //     y : y,
-      //     vX : Math.cos((angle + 135) % 360) * 14,
-      //     vY : Math.sin((angle + 135) % 360) * 14,
-      //     size : 20,
-      //     damage : 40,
-      //     cooldown : 1000,
-      //     ownerId: ownerId,
-      //     newEntity : true,
-      //     createdAt : 0
-      //   };
-      // }
+      this.trapDamage += value;
     }
     if(upgradeName == "TrapCooldown"){
-      this.abilityCooldown -= 250;
+      this.abilityCooldown -= value;
     }
     if(upgradeName == "TrapSize"){
       this.trapSize += value;
     }
     if(upgradeName == "GiftCooldown"){
-      this.abilityCooldown -= 500;
+      this.abilityCooldown -= value;
     }
     if(upgradeName == "DashPower"){
       var newStats = [this.ability().dashResist, this.ability().dashPower + 10]
@@ -335,6 +321,7 @@ var Player = function(id, name, x, y, car) {
           }
           var newEntity = this.ability(this.x, this.y, this.angle, this.id);
           newEntity.size = this.trapSize;
+          newEntity.damage = this.trapDamage;
           currentEntities.push(newEntity);
           this.canAbility = Date.now() + this.abilityCooldown;
           this.vX += Math.cos((this.angle) % 360) * 3;
@@ -768,7 +755,7 @@ allCars = {
     MaxHP : 10,
     RegenHP : 2,
     TrapDamage: 8,
-    TrapCooldown : 0.6,
+    TrapCooldown : 250,
     TrapSize : 4,
     SingleHeal : 0.4
   }, 0.1, 2, 20, 4, 4000, function(x, y, angle, ownerId){
@@ -832,7 +819,7 @@ allCars = {
     RegenHP : 3,
     MaxBoosts: 2,
     MoveSpeed : [0.015, 0.6],
-    GiftCooldown : 0.8,
+    GiftCooldown : 500,
     SingleBoost : 7.5
   }, 0.1, 2.5, 25, 1, 26000, function(){
     return {
