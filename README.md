@@ -27,11 +27,13 @@ The game finally has independent hosting and a custom domain!
 
 I'm slowly approaching the planned criteria I had imagined months ago when I had just started development. Version numbers allow me to reflect how close I am to what I feel is the a release.
 
-V0.6 All upgrades functional   <--- We are here :)
-V0.7 Optimise GUI
-v0.8 Mobile integration
-v0.9 10 Classes, 4 Maps
-V1.0 Round modifiers
+We are currently at: V0.6
+
+- V0.6 All upgrades functional
+- V0.7 Optimise GUI
+- v0.8 Mobile integration
+- v0.9 10 Classes, 4 Maps
+- V1.0 Round modifiers
 
 
 ## Bugs:
@@ -42,5 +44,4 @@ There are currently multiple bugs on list to be corrected one by one - I will up
 2. Completely unplayable on mobile
 3. Sometimes, but rarely, lap checkpoints can be completely missed (likely due to the size of checkpoint triggers)
 4. Upgrade selections rapidly select with more than one point
-5. 
 
