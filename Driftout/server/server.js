@@ -185,6 +185,12 @@ var Player = function(id, name, x, y, car) {
     this.ability = allCars.Sprinter.ability;
     this.abilityDuration = Date.now();
   }
+  if(this.car.name == "Tank"){
+    this.bounceModifier = 1;
+  }
+  if(this.car.name == "Spike"){
+    this.bodySize = 1;
+  }
 
   this.doUpgrade = function(upgradeName, value=0){
     if(upgradeName == "MaxHP"){
@@ -248,10 +254,17 @@ var Player = function(id, name, x, y, car) {
       };
     }
     if(upgradeName == "CollisionDamage"){
-      this.collisionDamage += 5;
+      this.collisionDamage += value;
     }
     if(upgradeName == "BoostPower"){
-      this.boostPower += newStats[0]
+      this.boostPower += value;
+    }
+    if(upgradeName == "BouncePower"){
+      this.bounceModifier += value;
+    }
+    if(upgradeName == "BodySize"){
+      this.bodySize += value;
+      this.size += 3;
     }
   }
 
@@ -468,8 +481,14 @@ var Player = function(id, name, x, y, car) {
                 this.vX = v1Final.x;
                 this.vY = v1Final.y;
 
-                allPlayers[i].vX = v2Final.x;
-                allPlayers[i].vY = v2Final.y;
+                if(this.bounceModifier){
+                  allPlayers[i].vX = v2Final.x*this.bounceModifier;
+                  allPlayers[i].vY = v2Final.y*this.bounceModifier;
+                }
+                else{
+                  allPlayers[i].vX = v2Final.x;
+                  allPlayers[i].vY = v2Final.y;
+                }
               }
             }
           }
@@ -582,6 +601,28 @@ var Player = function(id, name, x, y, car) {
         topLapTime: this.topLapTime,
         god: this.god[0]?true:false,
         trapSize : this.trapSize
+      }
+    }
+    if(this.car.name == "Spike"){
+      return {
+        id: this.id,
+        x: this.x,
+        y: this.y,
+        angle: this.angle,
+        HP: this.HP,
+        maxHP : this.maxHP,
+        alive: this.alive,
+        laps: this.laps,
+        boosts: this.boosts,
+        boostCooldown: this.boostCooldown,
+        canBoost: this.canBoost,
+        abilityCooldown: this.abilityCooldown,
+        canAbility: this.canAbility,
+        upgradePoints: this.upgradePoints,
+        lapTime: this.lapTime,
+        topLapTime: this.topLapTime,
+        god: this.god[0]?true:false,
+        bodySize : this.bodySize
       }
     }
     return {
@@ -844,8 +885,8 @@ allCars = {
     RegenHP : 2,
     MaxBoosts: 1,
     MoveSpeed : [0.01, 0.4],
-    CollisionDamage : 15,
-    BodySize : 8
+    CollisionDamage : 5,
+    BodySize : 1
   }, 0.12, 3, 30, 8, null, function(){
     return null
   }, null)
