@@ -139,6 +139,9 @@ function setup(){
                   if (allPlayers[j].car.name == "Prankster"){
                     allPlayers[j].trapSize = data.updatePack[i].trapSize;
                   }
+                  if (allPlayers[j].car.name == "Spike"){
+                    allPlayers[j].bodySize = data.updatePack[i].bodySize;
+                  }
               }
           }
       }
@@ -229,6 +232,10 @@ function draw() {
     for(var i in allPlayers) {
       if(allPlayers[i].alive == true){
         allPlayers[i].draw();
+        smooth(4);
+        if(allPlayers[i].bodySize){
+          scale(allPlayers[i].bodySize);
+        }
         //debugDraw(allPlayers[i].topLapTime);
       }
     }
@@ -548,11 +555,21 @@ var Player = function(id, name, x, y, car, alive) {
   this.draw = function() {
 
     // Player's car
-    this.drawCar(this.x, this.y, this.angle);
+    if(this.bodySize){
+      this.drawCar(this.x, this.y, this.angle, this.bodySize);
+    }
+    else{
+      this.drawCar(this.x, this.y, this.angle);
+    }
 
     // ForceField
     if (this.god){
-      fill(255,255,200,100);
+      if (Date.now()%2==0){
+        fill(255,255,200,100);
+      }
+      else{
+        fill(255,255,230,100);
+      }
       circle(this.x, this.y, this.car.size*3);
     }
 
@@ -737,7 +754,7 @@ allCars = {
     MoveSpeed : [0.01, 0.5],
     SingleHeal : 0.4,
     SingleBoost : 7.5
-  }, 0.11, 2.5, 25, 5, null, null, function(x, y, angle){
+  }, 0.11, 2.5, 25, 5, null, null, function(x, y, angle, size=1){
     push();
     fill(20,20,200);
     translate(x, y);
@@ -749,8 +766,9 @@ allCars = {
     vertex(-25, 20);
     vertex(-25, -20);
     endShape(CLOSE);
-    smooth();
+    smooth(4);
     pop();
+    scale(size);
   }),
   Prankster : new Car('Prankster', 120, 6, 5, {
     MaxHP : 10,
@@ -793,7 +811,7 @@ allCars = {
         pop();
       }
     };
-  }, function(x, y, angle){
+  }, function(x, y, angle, size=1){
     push();
     translate(x, y);
     rotate(angle);
@@ -816,6 +834,7 @@ allCars = {
     endShape(CLOSE);
     smooth();
     pop();
+    scale(size);
   }),
   Bullet : new Car('Bullet', 100, 12, 5, {
     MaxHP : 10,
@@ -830,7 +849,7 @@ allCars = {
     dashResist : 30,
     dashPower : 10
   }
-  }, function(x, y, angle){
+}, function(x, y, angle, size=1){
     push();
     translate(x, y);
     rotate(angle);
@@ -847,6 +866,7 @@ allCars = {
     endShape(CLOSE);
     smooth();
     pop();
+    scale(size);
   }),
   Tank : new Car('Tank', 200, 4, 5, {
     MaxHP : 14,
@@ -855,7 +875,7 @@ allCars = {
     BoostPower : 0.4,
     BouncePower : 0.1,
     SingleHeal : 0.25
-  }, 0.08, 3, 35, 10, null, null, function(x, y, angle){
+  }, 0.08, 3, 35, 10, null, null, function(x, y, angle, size=1){
     push();
     translate(x, y);
     rotate(angle);
@@ -865,6 +885,7 @@ allCars = {
     circle(0,0,70);
     smooth();
     pop();
+    scale(size);
   }),
   Sprinter : new Car('Sprinter', 80, 12, 10, {
     MaxHP : 8,
@@ -878,7 +899,7 @@ allCars = {
       name : "Steady",
       handling : 2
     }
-  }, function(x, y, angle){
+  }, function(x, y, angle, size=1){
     push();
     translate(x, y);
     rotate(angle);
@@ -892,6 +913,7 @@ allCars = {
     endShape(CLOSE);
     smooth();
     pop();
+    scale(size);
   }),
   Fragile : new Car('Fragile', 70, 6, 5, {
     MaxHP : 20,
@@ -904,7 +926,7 @@ allCars = {
     return {
     name : "Gift"
     }
-  }, function(x, y, angle){
+  }, function(x, y, angle, size=1){
     push();
     translate(x, y);
     rotate(angle);
@@ -919,6 +941,7 @@ allCars = {
     endShape(CLOSE);
     smooth();
     pop();
+    scale(size);
   }),
   Spike : new Car('Spike', 150, 5, 3, {
     MaxHP : 12,
@@ -926,10 +949,11 @@ allCars = {
     MaxBoosts: 1,
     MoveSpeed : [0.01, 0.4],
     CollisionDamage : 15,
-    BodySize : 8
-  }, 0.12, 3, 30, 8, null, null, function(x, y, angle){
+    BodySize : 0.1
+  }, 0.12, 3, 30, 8, null, null, function(x, y, angle, size=2){
     push();
     translate(x, y);
+    scale(size);
     rotate(angle);
     strokeWeight(3);
     fill(150, 150, 150);
