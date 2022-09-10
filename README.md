@@ -23,11 +23,24 @@ The game finally has independent hosting and a custom domain!
 5. Open a localhost tab on port 80 in your preferred web browser ("localhost:80" as the address)
 6. *Optional* You can also open a tab with your current network's ip followed by :80 (e.g. 1.1.1.1:80) to access the website from different machines
 
+## Version info:
+
+I'm slowly approaching the planned criteria I had imagined months ago when I had just started development. Version numbers allow me to reflect how close I am to what I feel is the a release.
+
+V0.6 All upgrades functional   <--- We are here :)
+V0.7 Optimise GUI
+v0.8 Mobile integration
+v0.9 10 Classes, 4 Maps
+V1.0 Round modifiers
+
+
 ## Bugs:
 
 There are currently multiple bugs on list to be corrected one by one - I will update this list as often as I can so it stays relevant.
 
 1. Rapid refresh of the page causes issues new players to be created with null x and y values
-2. CSS Main menu container and title scrambles on smaller screens
-3. Sometimes, but rarely, lap checkpoints can be completely missed
+2. Completely unplayable on mobile
+3. Sometimes, but rarely, lap checkpoints can be completely missed (likely due to the size of checkpoint triggers)
+4. Upgrade selections rapidly select with more than one point
+5. 
 
