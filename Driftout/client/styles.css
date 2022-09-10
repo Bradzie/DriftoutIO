@@ -314,6 +314,14 @@ a:hover{
   transform: translateY(1em);
 }
 
+#versionContainer {
+  position: absolute;
+  top: 90%;
+  font-size: 24px;
+  font-weight: 600;
+  right: 1%;
+}
+
 #carSelect {
   align-items: center;
   text-align: center;
