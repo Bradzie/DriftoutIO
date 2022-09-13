@@ -466,6 +466,10 @@ var Player = function(id, name, x, y, car) {
 
                 //Damage Calc
 
+                if(allPlayers[i].god[0]){
+                  continue;
+                }
+
                 if (this.resisting == true){
                   this.HP -= Math.abs((this.vX + this.vY)/2) * (allPlayers[i].collisionDamage * this.ability().dashResist);
                 }
