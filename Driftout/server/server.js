@@ -58,8 +58,6 @@ io.on("connection", function(socket){
   console.log("New connection, ID: " + socket.id);
   totalConnections++;
 
-  startGame();
-
   var player;
   socket.on("ready", (data) => {
       player = new Player(socket.id, data.name, 900, Math.floor((Math.random()-0.5)*200), data.car);
@@ -891,3 +889,5 @@ allCars = {
     return null
   }, null)
 };
+
+startGame();
