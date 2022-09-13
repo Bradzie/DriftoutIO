@@ -27,10 +27,12 @@ The game finally has independent hosting and a custom domain!
 
 I'm slowly approaching the planned criteria I had imagined months ago when I had just started development. Version numbers allow me to reflect how close I am to what I feel is the a release.
 
-We are currently at: V0.6
+We are currently at: V0.6.2
 
 - V0.6 All upgrades functional
-- V0.7 Optimise GUI
+- V0.6.1 (Bug fix) Maps rotating inbetween games
+- V0.6.2 (Bug fix) Players without godmode could damage those with godmode
+- V0.7 Optimise GUI and reward upgrade points upon kill
 - v0.8 Mobile integration
 - v0.9 10 Classes, 4 Maps
 - V1.0 Round modifiers
@@ -38,10 +40,12 @@ We are currently at: V0.6
 
 ## Bugs:
 
-There are currently multiple bugs on list to be corrected one by one - I will update this list as often as I can so it stays relevant.
+There are currently multiple bugs on list to be corrected one by one - I will update this list as often as I can so it stays relevant. As of 11/9/22 I advertised this game on the IOgames sub-reddit and wow, there was alot of bugs. Was really fun playing with everyone :)
 
 1. Rapid refresh of the page causes issues new players to be created with null x and y values
-2. Completely unplayable on mobile
+2. Upgrades don't work on mobile
 3. Sometimes, but rarely, lap checkpoints can be completely missed (likely due to the size of checkpoint triggers)
 4. Upgrade selections rapidly select with more than one point
+5. Leaderboard does not sort by highest laps
+6. Leaderboard still duplicates some player names
 
