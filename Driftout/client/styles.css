@@ -316,7 +316,7 @@ a:hover{
 
 #versionContainer {
   position: absolute;
-  top: 90%;
+  bottom: 5px;
   font-size: 24px;
   font-weight: 600;
   right: 1%;
@@ -391,7 +391,8 @@ a:hover{
 }
 
 #classDisplay{
-  width: 20%;
+  max-width: 250px;
+  min-width: 250px;
   align-self: center;
   display: flex;
   transform: translateY(2em);
