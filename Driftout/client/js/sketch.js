@@ -445,7 +445,6 @@ function refreshDisplays(){
       }
     }
   }
-
   leaderboardContainer.innerHTML = "Leaderboard\n" + text;
   tabLeaderboard.innerHTML = tabText + "</table>";
 }

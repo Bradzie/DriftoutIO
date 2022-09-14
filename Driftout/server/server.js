@@ -165,6 +165,7 @@ var Player = function(id, name, x, y, car) {
   this.lapTime = 0;
   this.topLapTime = 0;
   this.god = [true, Date.now()+invincibilityPeriod];
+  this.upgradeLock = 0;
 
   if(this.car.name == "Prankster"){
     this.ability = allCars.Prankster.ability;
@@ -288,8 +289,8 @@ var Player = function(id, name, x, y, car) {
 
       // Upgrades
       if (this.upgradePoints > 0 && this.numPressed != null){
-        if (!this.numLock){
-          this.numLock = true;
+        if (this.upgradeLock < Date.now()){
+          this.upgradeLock = Date.now()+200;
           for(var i in Object.entries(this.car.upgrades)){
             if(this.numPressed-1 == i){
               this.doUpgrade(Object.keys(this.car.upgrades)[i], Object.values(this.car.upgrades)[i]);
@@ -297,9 +298,6 @@ var Player = function(id, name, x, y, car) {
             }
           }
         }
-      }
-      else{
-        this.numLock = false;
       }
       this.numPressed = null;
 
