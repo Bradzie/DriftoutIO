@@ -234,7 +234,7 @@ var Player = function(id, name, x, y, car) {
       this.abilityCooldown -= value;
     }
     if(upgradeName == "DashPower"){
-      var newStats = [this.ability().dashResist, this.ability().dashPower + 10]
+      var newStats = [this.ability().dashResist, this.ability().dashPower + 4]
       this.ability = function(){
         return {
           name : "Dash",
@@ -847,7 +847,7 @@ allCars = {
 
   Bullet : new Car('Bullet', 100, 12, 5, {
     MaxHP : 10,
-    RegenHP : 3,
+    RegenHP : 2,
     MaxBoosts: 1,
     MoveSpeed : [0.005, 0.8],
     DashResist : 0.05,
@@ -856,7 +856,7 @@ allCars = {
     return {
     name : "Dash",
     dashResist : 0.2,
-    dashPower : 10
+    dashPower : 4
   }
 }, null),
 
