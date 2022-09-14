@@ -27,12 +27,15 @@ The game finally has independent hosting and a custom domain!
 
 I'm slowly approaching the planned criteria I had imagined months ago when I had just started development. Version numbers allow me to reflect how close I am to what I feel is the a release.
 
-We are currently at: V0.6.2
+We are currently at: V0.6.6
 
 - V0.6 All upgrades functional
 - V0.6.1 (Bug fix) Maps rotating inbetween games
 - V0.6.2 (Bug fix) Players without godmode could damage those with godmode
 - V0.6.3 (Bug fix) Upgrading rapidly upon button press
+- V0.6.4 (Bug fix) Fixed thickness of collision walls to prevent out-of-bounds
+- V0.6.5 Notifications are now blue when they involve you
+- V0.6.6 Kills are now visible on the leaderboard (press 'q')
 - V0.7 Optimise GUI and reward upgrade points upon kill
 - v0.8 Mobile integration
 - v0.9 10 Classes, 4 Maps
