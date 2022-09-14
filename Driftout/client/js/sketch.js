@@ -31,6 +31,7 @@ var mainCanvas = document.getElementById("mainCanvas"),
 
 // Global Vars
 
+var dev = false;
 var socket;
 var playing = false;
 var allCars;
@@ -101,7 +102,7 @@ function setup(){
   socket.on("initPack", function(data) {
       for(var i in data.initPack) {
           var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack[i].car.name)[0][1];
-          var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar);
+          var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar, dev);
           allPlayers.push(player);
       }
       if(data.currentTrack.name == "Square"){
@@ -295,7 +296,7 @@ function enterGame(){
     carChoice = allCars.Spike;
   }
 
-  socket.emit("ready", {name: nameInput.value, car: carChoice});
+  socket.emit("ready", {name: nameInput.value, car: carChoice, dev: dev});
 
   notifications = [];
   enterGameButton.setAttribute('onClick', '');
@@ -528,9 +529,10 @@ function sendInputData() {
 // ----------- OBJECTS ---------------------------------------------------
 
 // The player object constructor
-var Player = function(id, name, x, y, car, alive) {
+var Player = function(id, name, x, y, car, dev) {
   this.id = id;
   this.name = name;
+  this.dev = dev;
   this.x = x;
   this.y = y;
   this.vX = 0;
@@ -558,7 +560,6 @@ var Player = function(id, name, x, y, car, alive) {
   this.god = true;
 
   this.draw = function() {
-
     // Player's car
     if(this.bodySize){
       this.drawCar(this.x, this.y, this.angle, this.bodySize);
@@ -579,11 +580,19 @@ var Player = function(id, name, x, y, car, alive) {
     }
 
     // Player's name
-    textSize(20);
     textAlign(CENTER);
-    textStyle(BOLD);
-    fill(0,0,0);
-    text(this.name, this.x, this.y + 60);
+    if(this.dev){
+      textSize(22);
+      fill(100,0,0);
+      textStyle(BOLDITALIC);
+      text("Dev | " + this.name, this.x, this.y + 60);
+    }
+    else{
+      textSize(20);
+      fill(0,0,0)
+      textStyle(BOLD);
+      text(this.name, this.x, this.y + 60);
+    }
 
     // Player's health
     if (this.HP < this.maxHP && this.HP > 0){

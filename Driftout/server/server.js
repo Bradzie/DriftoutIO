@@ -60,7 +60,10 @@ io.on("connection", function(socket){
 
   var player;
   socket.on("ready", (data) => {
-      player = new Player(socket.id, data.name, 900, Math.floor((Math.random()-0.5)*200), data.car);
+      player = new Player(socket.id, data.name, 900, Math.floor((Math.random()-0.5)*200), data.car, data.dev);
+      if(player.name == ""){
+        player.name = "Unnamed " + player.car.name;
+      }
       player.alive = true;
       allPlayers.push(player);
       playerNames.push(player.name);
@@ -125,9 +128,10 @@ io.on("connection", function(socket){
 });
 
 // The player object constructor
-var Player = function(id, name, x, y, car) {
+var Player = function(id, name, x, y, car, dev) {
   this.id = id;
   this.name = name;
+  this.dev = dev;
   this.x = x;
   this.y = y;
   this.vX = 0;
@@ -590,7 +594,8 @@ var Player = function(id, name, x, y, car) {
       name: this.name,
       x: this.x,
       y: this.y,
-      car: this.car
+      car: this.car,
+      dev: this.dev
     }
   }
 
