@@ -166,6 +166,7 @@ var Player = function(id, name, x, y, car) {
   this.topLapTime = 0;
   this.god = [true, Date.now()+invincibilityPeriod];
   this.upgradeLock = 0;
+  this.kills = 0;
 
   if(this.car.name == "Prankster"){
     this.ability = allCars.Prankster.ability;
@@ -428,6 +429,7 @@ var Player = function(id, name, x, y, car) {
             this.HP -= currentEntities[i].damage;
             if(this.HP < 0){
               allPlayers.filter(player => player.id == currentEntities[i].ownerId)[0].upgradePoints++;
+              allPlayers.filter(player => player.id == currentEntities[i].ownerId)[0].kills++;
               console.log(allPlayers.filter(player => player.id == currentEntities[i].ownerId)[0]);
               notifications.push(allPlayers.filter(player => player.id == currentEntities[i].ownerId)[0].name + " crashed " + this.name + "!");
               this.alive = false;
@@ -484,6 +486,7 @@ var Player = function(id, name, x, y, car) {
 
                 if(allPlayers[i].HP < 0){
                   this.upgradePoints++;
+                  this.kills++;
                   notifications.push(this.name + " crashed " + allPlayers[i].name + "!");
                   allPlayers[i].alive = false;
                 }
@@ -612,6 +615,7 @@ var Player = function(id, name, x, y, car) {
         lapTime: this.lapTime,
         topLapTime: this.topLapTime,
         god: this.god[0]?true:false,
+        kills: this.kills,
         trapSize : this.trapSize
       }
     }
@@ -634,6 +638,7 @@ var Player = function(id, name, x, y, car) {
         lapTime: this.lapTime,
         topLapTime: this.topLapTime,
         god: this.god[0]?true:false,
+        kills: this.kills,
         bodySize : this.bodySize
       }
     }
@@ -654,6 +659,7 @@ var Player = function(id, name, x, y, car) {
       upgradePoints: this.upgradePoints,
       lapTime: this.lapTime,
       topLapTime: this.topLapTime,
+      kills: this.kills,
       god: this.god[0]?true:false
     }
   }
