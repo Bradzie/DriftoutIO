@@ -32,6 +32,7 @@ We are currently at: V0.6.2
 - V0.6 All upgrades functional
 - V0.6.1 (Bug fix) Maps rotating inbetween games
 - V0.6.2 (Bug fix) Players without godmode could damage those with godmode
+- V0.6.3 (Bug fix) Upgrading rapidly upon button press
 - V0.7 Optimise GUI and reward upgrade points upon kill
 - v0.8 Mobile integration
 - v0.9 10 Classes, 4 Maps
