@@ -426,6 +426,12 @@ var Player = function(id, name, x, y, car) {
             this.vX *= 0.3;
             this.vY *= 0.3;
             this.HP -= currentEntities[i].damage;
+            if(this.HP < 0){
+              allPlayers.filter(player => player.id == currentEntities[i].ownerId)[0].upgradePoints++;
+              console.log(allPlayers.filter(player => player.id == currentEntities[i].ownerId)[0]);
+              notifications.push(allPlayers.filter(player => player.id == currentEntities[i].ownerId)[0].name + " crashed " + this.name + "!");
+              this.alive = false;
+            }
             currentEntities.splice(i, 1);
           }
         }
@@ -475,6 +481,12 @@ var Player = function(id, name, x, y, car) {
                   this.HP -= Math.abs((this.vX + this.vY)/2) * allPlayers[i].collisionDamage;
                 }
                 allPlayers[i].HP -= Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * this.collisionDamage;
+
+                if(allPlayers[i].HP < 0){
+                  this.upgradePoints++;
+                  notifications.push(this.name + " crashed " + allPlayers[i].name + "!");
+                  allPlayers[i].alive = false;
+                }
 
                 //Apply Movement
 

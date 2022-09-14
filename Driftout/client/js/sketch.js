@@ -340,7 +340,12 @@ function refreshDisplays(){
   if (notifications.length > 0){
     if (millis() > nextNotification){
       notificationContainer.style.opacity = "1";
-      notificationContainer.innerHTML = notifications[0];
+      if(notifications[0].includes(allPlayers.filter(player=>player.id==myId)[0].name)){
+        notificationContainer.innerHTML = "<span style='color:#02f6fa'>" + notifications[0] + "</span>";
+      }
+      else{
+        notificationContainer.innerHTML = notifications[0];
+      }
       nextNotification = millis() + 2000;
       notifications.shift();
     }
