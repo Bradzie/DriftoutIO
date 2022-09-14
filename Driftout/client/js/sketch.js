@@ -136,6 +136,7 @@ function setup(){
                   allPlayers[j].lapTime = data.updatePack[i].lapTime;
                   allPlayers[j].topLapTime = data.updatePack[i].topLapTime;
                   allPlayers[j].god = data.updatePack[i].god;
+                  allPlayers[j].kills = data.updatePack[i].kills;
                   if (allPlayers[j].car.name == "Prankster"){
                     allPlayers[j].trapSize = data.updatePack[i].trapSize;
                   }
@@ -340,7 +341,12 @@ function refreshDisplays(){
   if (notifications.length > 0){
     if (millis() > nextNotification){
       notificationContainer.style.opacity = "1";
-      notificationContainer.innerHTML = notifications[0];
+      if(notifications[0].includes(allPlayers.filter(player=>player.id==myId)[0].name)){
+        notificationContainer.innerHTML = "<span style='color:#02f6fa'>" + notifications[0] + "</span>";
+      }
+      else{
+        notificationContainer.innerHTML = notifications[0];
+      }
       nextNotification = millis() + 2000;
       notifications.shift();
     }
@@ -356,7 +362,7 @@ function refreshDisplays(){
   leaderboardContainer.innerHTML = "Leaderboard";
   tabLeaderboard.innerHTML = "Leaderboard";
   var text = "";
-  var tabText = "<table width='100%'><tr><th>Name</th><th>Laps</th><th>Best Time</th></tr>";
+  var tabText = "<table width='100%'><tr><th>Name</th><th>Laps</th><th>Best Time</th><th>Kills</th></tr>";
 
   if(keyIsDown(81)){
     tabLeaderboard.style.visibility = "visible";
@@ -391,7 +397,7 @@ function refreshDisplays(){
     // Leaderboard and tab leaderboard Overlay
     if(allPlayers[i].alive == true){
       text += "<div class = 'leaderboardItem'>" + allPlayers[i].laps + " " + allPlayers[i].name + "</div>\n";
-      tabText += "<tr style='text-align:center'><td>" + allPlayers[i].name + "</td><td>" + allPlayers[i].laps + "</td><td>" + allPlayers[i].topLapTime/1000 + "</td></tr>";
+      tabText += "<tr style='text-align:center'><td>" + allPlayers[i].name + "</td><td>" + allPlayers[i].laps + "</td><td>" + allPlayers[i].topLapTime/1000 + "</td><td>" + allPlayers[i].kills + "</td></tr>";
     }
     else{
       allPlayers.splice(i, 1);
