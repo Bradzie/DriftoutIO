@@ -14,11 +14,13 @@ app.use(express.static(publicPath));
 
 // ---------- GLOBALS ----------
 
+var rooms = [[]];
 var allTracks;
 var currentTrack;
 var allPlayers = [];
 var notifications = [];
 var currentEntities = [];
+var currentConnections = [];
 var totalConnections = 0;
 var playerNames = [];
 var gameEndPeriod = 0;
@@ -51,18 +53,32 @@ function startGame(){
     currentTrack = allTracks.LeftRight;
   }
 
+  currentTrack = allTracks.LeftRight;
+
   console.log("Map : " + currentTrack.name);
 }
 
 io.on("connection", function(socket){
   console.log("New connection, ID: " + socket.id);
   totalConnections++;
+  currentConnections.push(socket.id);
+
+  var roomCount = rooms.length;
+
+  for(var i in rooms){
+    if(rooms[i].length<10){
+      rooms[i] += socket.id;
+    }
+    else{
+      rooms.push([socket.id]);
+    }
+  }
 
   var player;
   socket.on("ready", (data) => {
       player = new Player(socket.id, data.name, 900, Math.floor((Math.random()-0.5)*200), data.car, data.dev);
       if(player.name == ""){
-        player.name = "Unnamed " + player.car.name;
+        player.name = player.car.name;
       }
       player.alive = true;
       allPlayers.push(player);
@@ -110,6 +126,14 @@ io.on("connection", function(socket){
 
   socket.on("disconnect", () => {
       io.emit('someoneLeft', {id: socket.id});
+      //currentConnections.filter(connection => connection != socket.id);
+      var newConnections = [];
+      for(var i in currentConnections){
+        if (currentConnections[i]!=socket.id){
+          newConnections.push(currentConnections[i]);
+        }
+      }
+      currentConnections = newConnections;
       for(var i in allPlayers) {
           if(allPlayers[i].id === socket.id) {
               allPlayers.splice(i, 1);
@@ -734,6 +758,14 @@ setInterval(() => {
       updatePack.push(allPlayers[i].getUpdatePack());
       allPlayers[i].events();
   }
+  console.log(rooms);
+  var updateRooms = [];
+  for(var i in rooms){
+    if (rooms[i].length > 0){
+      updateRooms += rooms[i];
+    }
+  }
+  rooms = updateRooms;
   io.emit("updatePack", {updatePack});
 }, 1000/75)
 
@@ -789,10 +821,10 @@ allTracks = {
     // Walls
     [[200, 225, 200, 1600, "x-1", 8, 0.4],[200, 1600, 200, 225, "y-1", 8, 0.4],[1575, 1600, 200, 1600, "x+1", 8, 0.4],
     [200, 400, 1575, 1600, "y+1", 8, 0.4],[1400, 1600, 1575, 1600, "y+1", 8, 0.4],[2000, 2100, -225, 2100, "x-1", 8, 0.4],
-    [-225, -200, -225, 2025, "x+1", 8, 0.4],[-200, 800, 2000, 2100, "y-1", 8, 0.4],[1000, 2000, 2000, 2100, "y-1", 8, 0.4],
+    [-225, -200, -225, 2025, "x+1", 8, 0.4],[-200, 800, 2000, 2100, "y-1", 8, 0.4],[-200, 2000, 2000, 2100, "y-1", 8, 0.4],
     [-200, 2000, -225, -200, "y+1", 8, 0.4],[375, 400, 400, 1600, "x+1", 8, 0.4],[1400, 1425, 400, 1600, "x-1", 8, 0.4],
     [800, 825, 800, 2000, "x-1", 8, 0.4],[975, 1000, 800, 2000, "x+1", 8, 0.4],[400, 1400, 400, 425, "y+1", 8, 0.4],
-    [800, 1000, 800, 775, "y+1", 8, 0.4]],
+    [800, 1000, 800, 825, "y-1", 8, 0.4]],
     // Checkpoints
     [[-200, 200, 1600, 2000], [-200, 200, -200, 200], [1600, 2000, -200, 200], [1600, 2000, 1600, 2000]],
     // FinishLine
