@@ -14,22 +14,19 @@ app.use(express.static(publicPath));
 
 // ---------- GLOBALS ----------
 
-var rooms = [[]];
+var rooms = [];
 var allTracks;
 var currentTrack;
-var allPlayers = [];
-var notifications = [];
-var currentEntities = [];
 var currentConnections = [];
 var totalConnections = 0;
 var playerNames = [];
-var gameEndPeriod = 0;
-var invincibilityPeriod = 4000;
 
 // ---------- MODIFIERS ----------
 
 var grip = 0.99;
 var lapsToWin = 20;
+var maxRoomSize = 2;
+var invincibilityPeriod = 4000;
 
 // ---------- ---------- ----------
 
@@ -42,37 +39,12 @@ function startGame(){
   notifications = [];
   currentEntities = [];
 
-  var trackChoice = Math.floor(Math.random() * 3);
-  if(trackChoice == 0){
-    currentTrack = allTracks.Square;
-  }
-  if(trackChoice == 1){
-    currentTrack = allTracks.DragStrip;
-  }
-  if(trackChoice == 2){
-    currentTrack = allTracks.LeftRight;
-  }
-
-  currentTrack = allTracks.LeftRight;
-
-  console.log("Map : " + currentTrack.name);
 }
 
 io.on("connection", function(socket){
   console.log("New connection, ID: " + socket.id);
   totalConnections++;
   currentConnections.push(socket.id);
-
-  var roomCount = rooms.length;
-
-  for(var i in rooms){
-    if(rooms[i].length<10){
-      rooms[i] += socket.id;
-    }
-    else{
-      rooms.push([socket.id]);
-    }
-  }
 
   var player;
   socket.on("ready", (data) => {
@@ -81,21 +53,44 @@ io.on("connection", function(socket){
         player.name = player.car.name;
       }
       player.alive = true;
-      allPlayers.push(player);
       playerNames.push(player.name);
 
       socket.emit("myID", {id: player.id});
-      //console.log(player.id);
-      socket.broadcast.emit('newPlayer', player.getInitPack());
 
-      var initPack = [];
-      for(var i in allPlayers) {
-          initPack.push(allPlayers[i].getInitPack());
+      if(rooms.length==0){
+        rooms.push(new Room());
+        rooms[0].startGame();
       }
-      socket.emit("initPack", {initPack: initPack, currentTrack:currentTrack});
+
+      var allocated = false;
+
+      for(var i in rooms){
+        if(rooms[i].allPlayers.length < maxRoomSize){
+          player.myRoom = i;
+          rooms[i].allPlayers.push(player);
+          allocated = true;
+          break;
+        }
+      }
+
+      if(allocated == false){
+        rooms.push(new Room());
+        player.myRoom = rooms.length-1;
+        rooms[rooms.length-1].allPlayers.push(player);
+        rooms[rooms.length-1].startGame();
+      }
+
+      console.log("newPlayer", rooms);
+      io.emit("roomUpdate", {rooms:rooms, roomIndex:player.myRoom});
+      //console.log(player.id);
+
+      socket.emit("initPack", {initPack: rooms[player.myRoom].initPlayer(), currentTrack:rooms[player.myRoom].currentTrack, room:player.myRoom});
+      socket.broadcast.emit("initPlayer", {initPack: player.getInitPack(), room:player.myRoom});
+
+
 
       io.emit("syncedData", {
-        notification: "Track: " + currentTrack.name,
+        notification: "Track: " + rooms[player.myRoom].currentTrack.name,
         currentEntities: []
       });
   });
@@ -107,19 +102,21 @@ io.on("connection", function(socket){
   })
 
   socket.on("inputData", (data) => {
-      for(var i in allPlayers) {
-          if(allPlayers[i].id === socket.id) {
-              allPlayers[i].mouseX = data.mouseX;
-              allPlayers[i].mouseY = data.mouseY;
-              allPlayers[i].angle = data.clientPlayerAngle;
-              allPlayers[i].windowWidth = data.windowWidth;
-              allPlayers[i].windowHeight = data.windowHeight;
-              allPlayers[i].mouseDistanceToCar = data.mouseDistanceToCar;
-              allPlayers[i].mouseIsPressed = data.mouseClick;
-              allPlayers[i].spacePressed = data.spacePressed;
-              allPlayers[i].numPressed = data.numPressed;
+    for(var i in rooms){
+      for(var j in rooms[i].allPlayers) {
+          if(rooms[i].allPlayers[j].id === socket.id) {
+              rooms[i].allPlayers[j].mouseX = data.mouseX;
+              rooms[i].allPlayers[j].mouseY = data.mouseY;
+              rooms[i].allPlayers[j].angle = data.clientPlayerAngle;
+              rooms[i].allPlayers[j].windowWidth = data.windowWidth;
+              rooms[i].allPlayers[j].windowHeight = data.windowHeight;
+              rooms[i].allPlayers[j].mouseDistanceToCar = data.mouseDistanceToCar;
+              rooms[i].allPlayers[j].mouseIsPressed = data.mouseClick;
+              rooms[i].allPlayers[j].spacePressed = data.spacePressed;
+              rooms[i].allPlayers[j].numPressed = data.numPressed;
               break;
           }
+        }
       }
       //console.log(mouseIsPressed);
   })
@@ -133,26 +130,46 @@ io.on("connection", function(socket){
           newConnections.push(currentConnections[i]);
         }
       }
+      // for(var i in rooms){
+      //   for(var j in rooms[i].allPlayers){
+      //     console.log("Checking Player" +  rooms[i].allPlayers[j].id + " : Alive = " + rooms[i].allPlayers[j].alive);
+      //     if(rooms[i].allPlayers[j].alive == false){
+      //       rooms[i].allPlayers.splice(j,1);
+      //     }
+      //     // rooms[i].allPlayers = rooms[i].allPlayers.filter(player => player.alive != false);
+      //   }
+      // }
+
       currentConnections = newConnections;
-      for(var i in allPlayers) {
-          if(allPlayers[i].id === socket.id) {
-              allPlayers.splice(i, 1);
+      for(var i in rooms){
+        for(var j in rooms[i].allPlayers) {
+          if(rooms[i].allPlayers[j].id === socket.id) {
+              rooms[i].allPlayers.splice(j, 1);
           }
+        }
       }
   });
 
-  socket.on("removePlayerServer", (playerID) => {
-    socket.emit("removePlayerClient", playerID);
-    for(var i in allPlayers) {
-        if(allPlayers[i].id === playerID) {
-            allPlayers.splice(i, 1);
-        }
-    }
+  socket.on("removePlayerServer", (data) => {
+    socket.emit("removePlayerClient", data.id);
+    console.log(rooms[data.index].allPlayers.length);
+    removePlayer(data.index, data.id);
+    socket.emit("roomUpdate", {rooms:rooms, roomIndex:data.index});
   });
 });
 
+function removePlayer (roomIndex, removeId){
+  for(var i in rooms[roomIndex].allPlayers){
+    if(rooms[roomIndex].allPlayers[i].id == removeId){
+      rooms[roomIndex].allPlayers.splice(i,1);
+    }
+  }
+  console.log(rooms[roomIndex].allPlayers.length);
+}
+
 // The player object constructor
 var Player = function(id, name, x, y, car, dev) {
+  this.myRoom;
   this.id = id;
   this.name = name;
   this.dev = dev;
@@ -237,7 +254,6 @@ var Player = function(id, name, x, y, car, dev) {
       this.maxSpeed += value[1];
     }
     if(upgradeName == "SingleHeal"){
-      console.log("single heal");
       if(this.HP + (this.maxHP * value) > this.maxHP){
         this.HP = this.maxHP;
       }
@@ -312,7 +328,9 @@ var Player = function(id, name, x, y, car, dev) {
       // Check if crashed
       if (this.HP < 0){
         this.alive = false;
-        notifications.push(this.name + " Crashed!");
+        //removePlayer(this.myRoom, this.id);
+        rooms[this.myRoom].notifications.push(this.name + " Crashed!");
+        console.log(rooms[this.myRoom].allPlayers[0].alive);
         //socket.emit("removePlayerClient", this.id);
       }
 
@@ -351,16 +369,13 @@ var Player = function(id, name, x, y, car, dev) {
 
       if (this.spacePressed == true && Date.now() > this.canAbility){
 
-        // console.log("?");
-        // console.log(this.car.name);
-        // console.log(this.ability);
 
         // Prankster Ability
         if (this.ability != null && this.car.name == "Prankster"){
-          if (currentEntities.filter(entity => entity.ownerId == this.id).length >= 5){
-            for (i in currentEntities){
-              if (currentEntities[i].ownerId == this.id){
-                currentEntities.splice(i, 1);
+          if (rooms[this.myRoom].currentEntities.filter(entity => entity.ownerId == this.id).length >= 5){
+            for (i in rooms[this.myRoom].currentEntities){
+              if (rooms[this.myRoom].currentEntities[i].ownerId == this.id){
+                rooms[this.myRoom].currentEntities.splice(i, 1);
                 break;
               }
             }
@@ -368,7 +383,7 @@ var Player = function(id, name, x, y, car, dev) {
           var newEntity = this.ability(this.x, this.y, this.angle, this.id);
           newEntity.size = this.trapSize;
           newEntity.damage = this.trapDamage;
-          currentEntities.push(newEntity);
+          rooms[this.myRoom].currentEntities.push(newEntity);
           this.canAbility = Date.now() + this.abilityCooldown;
           this.vX += Math.cos((this.angle) % 360) * 3;
           this.vY += Math.sin((this.angle) % 360) * 3;
@@ -449,48 +464,48 @@ var Player = function(id, name, x, y, car, dev) {
 
     // Entity Collisions
     if (!this.god[0]){
-      for (var i in currentEntities){
-        if (currentEntities[i].ownerId != this.id){
-          if (Math.sqrt(((this.x-currentEntities[i].x)**2)+((this.y-currentEntities[i].y)**2)) < this.size + currentEntities[i].size){
+      for (var i in rooms[this.myRoom].currentEntities){
+        if (rooms[this.myRoom].currentEntities[i].ownerId != this.id){
+          if (Math.sqrt(((this.x-rooms[this.myRoom].currentEntities[i].x)**2)+((this.y-rooms[this.myRoom].currentEntities[i].y)**2)) < this.size + rooms[this.myRoom].currentEntities[i].size){
             this.vX *= 0.3;
             this.vY *= 0.3;
-            this.HP -= currentEntities[i].damage;
+            this.HP -= rooms[this.myRoom].currentEntities[i].damage;
             if(this.HP < 0){
-              allPlayers.filter(player => player.id == currentEntities[i].ownerId)[0].upgradePoints++;
-              allPlayers.filter(player => player.id == currentEntities[i].ownerId)[0].kills++;
-              console.log(allPlayers.filter(player => player.id == currentEntities[i].ownerId)[0]);
-              notifications.push(allPlayers.filter(player => player.id == currentEntities[i].ownerId)[0].name + " crashed " + this.name + "!");
+              allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].upgradePoints++;
+              allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].kills++;
+              console.log(allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0]);
+              rooms[this.myRoom].notifications.push(allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].name + " crashed " + this.name + "!");
               this.alive = false;
             }
-            currentEntities.splice(i, 1);
+            rooms[this.myRoom].currentEntities.splice(i, 1);
           }
         }
       }
 
       // Player Collisions
-      if (allPlayers.length > 1){
-        for (var i in allPlayers){
-          if (allPlayers[i].id != this.id){
-            if (Math.sqrt(((this.x-allPlayers[i].x)**2)+((this.y-allPlayers[i].y)**2)) < this.size + allPlayers[i].size){
+      if (rooms[this.myRoom].allPlayers.length > 1){
+        for (var i in rooms[this.myRoom].allPlayers){
+          if (rooms[this.myRoom].allPlayers[i].id != this.id){
+            if (Math.sqrt(((this.x-rooms[this.myRoom].allPlayers[i].x)**2)+((this.y-rooms[this.myRoom].allPlayers[i].y)**2)) < this.size + rooms[this.myRoom].allPlayers[i].size){
 
               // Physics Calc
 
-              var collidedPlayerAngle = Math.atan2(this.y - allPlayers[i].y, this.x - allPlayers[i].x);
+              var collidedPlayerAngle = Math.atan2(this.y - rooms[this.myRoom].allPlayers[i].y, this.x - rooms[this.myRoom].allPlayers[i].x);
 
-              var xVDiff = this.vX - allPlayers[i].vX;
-              var yVDiff = this.vY - allPlayers[i].vY;
+              var xVDiff = this.vX - rooms[this.myRoom].allPlayers[i].vX;
+              var yVDiff = this.vY - rooms[this.myRoom].allPlayers[i].vY;
 
-              var xDist = allPlayers[i].x - this.x;
-              var yDist = allPlayers[i].y - this.y;
+              var xDist = rooms[this.myRoom].allPlayers[i].x - this.x;
+              var yDist = rooms[this.myRoom].allPlayers[i].y - this.y;
 
               if(xVDiff * xDist + yVDiff * yDist >= 0){
-                var angle = -Math.atan2(allPlayers[i].y - this.y, allPlayers[i].x - this.x);
+                var angle = -Math.atan2(rooms[this.myRoom].allPlayers[i].y - this.y, rooms[this.myRoom].allPlayers[i].x - this.x);
 
                 var m1 = this.mass;
-                var m2 = allPlayers[i].mass;
+                var m2 = rooms[this.myRoom].allPlayers[i].mass;
 
                 const u1 = rotate({x : this.vX, y : this.vY}, angle);
-                const u2 = rotate({x : allPlayers[i].vX, y : allPlayers[i].vY}, angle);
+                const u2 = rotate({x : rooms[this.myRoom].allPlayers[i].vX, y : rooms[this.myRoom].allPlayers[i].vY}, angle);
 
                 var v1 = {x: u1.x * (m1 - m2) / (m1 + m2) + u2.x * 2 * m2 / (m1 + m2), y: u1.y};
                 var v2 = {x: u2.x * (m1 - m2) / (m1 + m2) + u1.x * 2 * m2 / (m1 + m2), y: u2.y};
@@ -500,23 +515,23 @@ var Player = function(id, name, x, y, car, dev) {
 
                 //Damage Calc
 
-                if(allPlayers[i].god[0]){
+                if(rooms[this.myRoom].allPlayers[i].god[0]){
                   continue;
                 }
 
                 if (this.resisting == true){
-                  this.HP -= Math.abs((this.vX + this.vY)/2) * (allPlayers[i].collisionDamage * this.ability().dashResist);
+                  this.HP -= Math.abs((this.vX + this.vY)/2) * (rooms[this.myRoom].allPlayers[i].collisionDamage * this.ability().dashResist);
                 }
                 else{
-                  this.HP -= Math.abs((this.vX + this.vY)/2) * allPlayers[i].collisionDamage;
+                  this.HP -= Math.abs((this.vX + this.vY)/2) * rooms[this.myRoom].allPlayers[i].collisionDamage;
                 }
-                allPlayers[i].HP -= Math.abs((allPlayers[i].vX + allPlayers[i].vY)/2) * this.collisionDamage;
+                rooms[this.myRoom].allPlayers[i].HP -= Math.abs((rooms[this.myRoom].allPlayers[i].vX + rooms[this.myRoom].allPlayers[i].vY)/2) * this.collisionDamage;
 
-                if(allPlayers[i].HP < 0){
+                if(rooms[this.myRoom].allPlayers[i].HP < 0){
                   this.upgradePoints++;
                   this.kills++;
-                  notifications.push(this.name + " crashed " + allPlayers[i].name + "!");
-                  allPlayers[i].alive = false;
+                  rooms[this.myRoom].notifications.push(this.name + " crashed " + rooms[this.myRoom].allPlayers[i].name + "!");
+                  rooms[this.myRoom].allPlayers[i].alive = false;
                 }
 
                 //Apply Movement
@@ -525,12 +540,12 @@ var Player = function(id, name, x, y, car, dev) {
                 this.vY = v1Final.y;
 
                 if(this.bounceModifier){
-                  allPlayers[i].vX = v2Final.x*this.bounceModifier;
-                  allPlayers[i].vY = v2Final.y*this.bounceModifier;
+                  rooms[this.myRoom].allPlayers[i].vX = v2Final.x*this.bounceModifier;
+                  rooms[this.myRoom].allPlayers[i].vY = v2Final.y*this.bounceModifier;
                 }
                 else{
-                  allPlayers[i].vX = v2Final.x;
-                  allPlayers[i].vY = v2Final.y;
+                  rooms[this.myRoom].allPlayers[i].vX = v2Final.x;
+                  rooms[this.myRoom].allPlayers[i].vY = v2Final.y;
                 }
               }
             }
@@ -539,39 +554,42 @@ var Player = function(id, name, x, y, car, dev) {
       }
     }
 
-    for(var i in currentTrack.walls){
-      this.collision(this.x, this.y, currentTrack.walls[i][0], currentTrack.walls[i][1], currentTrack.walls[i][2], currentTrack.walls[i][3],
-        currentTrack.walls[i][4], currentTrack.walls[i][5], currentTrack.walls[i][6])
+    for(var i in rooms[this.myRoom].currentTrack.walls){
+      this.collision(this.x, this.y, rooms[this.myRoom].currentTrack.walls[i][0], rooms[this.myRoom].currentTrack.walls[i][1],
+        rooms[this.myRoom].currentTrack.walls[i][2], rooms[this.myRoom].currentTrack.walls[i][3],
+        rooms[this.myRoom].currentTrack.walls[i][4], rooms[this.myRoom].currentTrack.walls[i][5],
+        rooms[this.myRoom].currentTrack.walls[i][6])
     }
 
     // Check if inside finish line
-    if (this.collision(this.x, this.y, currentTrack.finishLine[0], currentTrack.finishLine[1],
-    currentTrack.finishLine[2], currentTrack.finishLine[3], "trigger") == true){
+    if (this.collision(this.x, this.y, rooms[this.myRoom].currentTrack.finishLine[0], rooms[this.myRoom].currentTrack.finishLine[1],
+    rooms[this.myRoom].currentTrack.finishLine[2], rooms[this.myRoom].currentTrack.finishLine[3], "trigger") == true){
       if (this.checkPointCounter.every(point => point == true)){
         this.laps += 1;
         this.boosts = this.maxBoosts;
         this.checkPointCounter = [false, false, false, false];
-        notifications.push(this.name + " Completed a lap!");
-        console.log(this.name + " has now completed " + this.laps + " laps!");
+        rooms[this.myRoom].notifications.push(this.name + " Completed a lap!");
         this.upgradePoints += 1;
         this.lapStart = Date.now();
         if (this.lapTime < this.topLapTime || this.topLapTime == 0){
           this.topLapTime = this.lapTime;
         }
         if (this.laps >= lapsToWin){
-          notifications.push(this.name + " has Won!!!");
-          gameEndPeriod = Date.now()+5000;
-          for(var i in allPlayers){
-            allPlayers[i].brake = true;
+          rooms[this.myRoom].notifications.push(this.name + " has Won!!!");
+          rooms[this.myRoom].gameEndPeriod = Date.now()+5000;
+          for(var i in rooms[this.myRoom].allPlayers){
+            rooms[this.myRoom].allPlayers[i].brake = true;
+            rooms[this.myRoom].allPlayers[i].god[1] = Date.now() + 5000;
+            rooms[this.myRoom].allPlayers[i].god[0] = true;
           }
         }
       }
     }
 
     // Check for collision with check points
-    for(var i in currentTrack.checkPoints){
-      if (this.collision(this.x, this.y, currentTrack.checkPoints[i][0], currentTrack.checkPoints[i][1],
-      currentTrack.checkPoints[i][2], currentTrack.checkPoints[i][3], "trigger") == true){
+    for(var i in rooms[this.myRoom].currentTrack.checkPoints){
+      if (this.collision(this.x, this.y, rooms[this.myRoom].currentTrack.checkPoints[i][0], rooms[this.myRoom].currentTrack.checkPoints[i][1],
+      rooms[this.myRoom].currentTrack.checkPoints[i][2], rooms[this.myRoom].currentTrack.checkPoints[i][3], "trigger") == true){
         this.checkPointCounter[i] = true;
       }
     }
@@ -707,39 +725,43 @@ function rotate(velocity, angle) {
 
 // Loop speed to update entities
 setInterval(() => {
-    if (notifications.length > 0){
-      io.emit("syncedData", {
-        notification: notifications[0],
-        currentEntities: []
-      });
-      notifications = notifications.slice(1);
+    for(var i in rooms){
+      if (rooms[i].notifications.length > 0){
+        io.emit("syncedData", {
+          notification: [i, rooms[i].notifications[0]],
+          currentEntities: []
+        });
+        rooms[i].notifications = rooms[i].notifications.slice(1);
+      }
+        io.emit("syncedData", {
+          notification: [],
+          currentEntities: [i, rooms[i].currentEntities]
+        });
     }
-      io.emit("syncedData", {
-        notification: [],
-        currentEntities: currentEntities
-      });
 
-    if (currentEntities.length > 0){
-      for (var i in currentEntities){
-        if (currentEntities[i].newEntity == true){
-          currentEntities[i].newEntity = false;
-          currentEntities[i].createdAt = Date.now();
-        }
-        currentEntities[i].vX *= 0.95;
-        currentEntities[i].vY *= 0.95;
-        currentEntities[i].x += currentEntities[i].vX;
-        currentEntities[i].y += currentEntities[i].vY;
-
-        for(var j in currentTrack.walls){
-          if ((currentEntities[i].x > currentTrack.walls[j][0] && currentEntities[i].x < currentTrack.walls[j][1]) &&
-          (currentEntities[i].y > currentTrack.walls[j][2] && currentEntities[i].y < currentTrack.walls[j][3])){
-            currentEntities[i].vX = 0;
-            currentEntities[i].vY = 0;
+    for(var i in rooms){
+      if (rooms[i].currentEntities.length > 0){
+        for (var j in rooms[i].currentEntities){
+          if (rooms[i].currentEntities[j].newEntity == true){
+            rooms[i].currentEntities[j].newEntity = false;
+            rooms[i].currentEntities[j].createdAt = Date.now();
           }
+          rooms[i].currentEntities[j].vX *= 0.95;
+          rooms[i].currentEntities[j].vY *= 0.95;
+          rooms[i].currentEntities[j].x += rooms[i].currentEntities[j].vX;
+          rooms[i].currentEntities[j].y += rooms[i].currentEntities[j].vY;
+
+          for(var k in rooms[i].currentTrack.walls){
+            if ((rooms[i].currentEntities[j].x > rooms[i].currentTrack.walls[k][0] && rooms[i].currentEntities[j].x < rooms[i].currentTrack.walls[k][1]) &&
+            (rooms[i].currentEntities[j].y > rooms[i].currentTrack.walls[k][2] && rooms[i].currentEntities[j].y < rooms[i].currentTrack.walls[k][3])){
+              rooms[i].currentEntities[j].vX = 0;
+              rooms[i].currentEntities[j].vY = 0;
+            }
+          }
+          // if (currentEntities[i].createdAt + 10000 > Date.now()){
+          //   currentEntities.splice(i, i+1);
+          // }
         }
-        // if (currentEntities[i].createdAt + 10000 > Date.now()){
-        //   currentEntities.splice(i, i+1);
-        // }
       }
     }
 }, 1000/75)
@@ -747,26 +769,20 @@ setInterval(() => {
 
 // loop spped to update player properties
 setInterval(() => {
-  if(Date.now() > gameEndPeriod && gameEndPeriod != 0){
-    for(var i in allPlayers) {
-      allPlayers[i].alive = false;
-    }
-    startGame();
-  }
-  var updatePack = [];
-  for(var i in allPlayers) {
-      updatePack.push(allPlayers[i].getUpdatePack());
-      allPlayers[i].events();
-  }
-  console.log(rooms);
-  var updateRooms = [];
   for(var i in rooms){
-    if (rooms[i].length > 0){
-      updateRooms += rooms[i];
+    if(Date.now() > rooms[i].gameEndPeriod && rooms[i].gameEndPeriod != 0){
+      for(var j in rooms[i].allPlayers) {
+        rooms[i].allPlayers[j].alive = false;
+      }
+      rooms[i].startGame();
     }
+  var updatePack = [];
+    for(var j in rooms[i].allPlayers) {
+        updatePack.push(rooms[i].allPlayers[j].getUpdatePack());
+        rooms[i].allPlayers[j].events();
+    }
+    io.emit("updatePack", {updatePack:updatePack, i:i});
   }
-  rooms = updateRooms;
-  io.emit("updatePack", {updatePack});
 }, 1000/75)
 
 var checkPoints = [
@@ -830,6 +846,45 @@ allTracks = {
     // FinishLine
     [975, 1025, -200, 200]
   )
+}
+
+// The room object constructor
+var Room = function(){
+  this.roomIndex = rooms.length;
+  this.allPlayers = [];
+  this.notifications = [];
+  this.currentEntities = [];
+  this.gameEndPeriod = 0;
+  this.lapsToWin = lapsToWin;
+
+  this.startGame = function(){
+    this.gameEndPeriod = 0;
+    this.notifications = [];
+    this.currentEntities = [];
+
+    var trackChoice = Math.floor(Math.random() * 3);
+    if(trackChoice == 0){
+      this.currentTrack = allTracks.Square;
+    }
+    if(trackChoice == 1){
+      this.currentTrack = allTracks.DragStrip;
+    }
+    if(trackChoice == 2){
+      this.currentTrack = allTracks.LeftRight;
+    }
+
+    console.log("Map : " + this.currentTrack.name);
+
+    this.initPlayer();
+  }
+
+  this.initPlayer = function(){
+    this.initPack = [];
+    for(var i in this.allPlayers) {
+        this.initPack.push(this.allPlayers[i].getInitPack());
+    }
+    return this.initPack;
+  }
 }
 
 // The car object constructor

@@ -64,6 +64,7 @@ var classAssetPaths = [
 
 var totalConnections=0;
 var playerNames = [];
+var currentRoom = null;
 
 function preload(){
 }
@@ -91,84 +92,119 @@ function setup(){
       myId = data.id;
   });
 
+
   socket.on("newPlayer", function(data) {
       var newCar = Object.entries(allCars).filter(car => car[0] == data.car.name)[0][1];
       var player = new Player(data.id, data.name, data.x, data.y, newCar);
       allPlayers.push(player);
   });
 
+  socket.on("roomUpdate", function(data){
+    if(playing){
+      if(currentRoom == null){
+        currentRoom = data.rooms[data.roomIndex];
+      }
+      if(data.roomIndex == currentRoom.roomIndex){
+        currentRoom = data.rooms[data.roomIndex];
+      }
+    }
+  })
+
+  socket.on("initPlayer", function(data){
+    if(playing){
+      if(data.room == currentRoom.roomIndex){
+          var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack.car.name)[0][1];
+          var player = new Player(data.initPack.id, data.initPack.name, data.initPack.x, data.initPack.y, newCar, dev);
+          allPlayers.push(player);
+      }
+    }
+  });
+
 
   // initialize client side with server side entries and current track
   socket.on("initPack", function(data) {
-      for(var i in data.initPack) {
-          var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack[i].car.name)[0][1];
-          var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar, dev);
-          allPlayers.push(player);
-      }
-      if(data.currentTrack.name == "Square"){
-        currentTrack = allTracks.Square;
-      }
-      if(data.currentTrack.name == "DragStrip"){
-        currentTrack = allTracks.DragStrip;
-      }
-      if(data.currentTrack.name == "Left, Right"){
-        currentTrack = allTracks.LeftRight;
+    if(data.room == currentRoom.roomIndex){
+        for(var i in data.initPack) {
+            var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack[i].car.name)[0][1];
+            var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar, dev);
+            allPlayers.push(player);
+            dupeCheck();
+        }
+        if(data.currentTrack.name == "Square"){
+          currentTrack = allTracks.Square;
+        }
+        if(data.currentTrack.name == "DragStrip"){
+          currentTrack = allTracks.DragStrip;
+        }
+        if(data.currentTrack.name == "Left, Right"){
+          currentTrack = allTracks.LeftRight;
+        }
       }
   });
 
   // rapid update pack socket
   socket.on("updatePack", function(data) {
-      for(var i in data.updatePack) {
-          for(var j in allPlayers) {
-              if(allPlayers[j].id === data.updatePack[i].id) {
-                  allPlayers[j].x = data.updatePack[i].x;
-                  allPlayers[j].y = data.updatePack[i].y;
-                  allPlayers[j].angle = data.updatePack[i].angle;
-                  allPlayers[j].HP = data.updatePack[i].HP;
-                  allPlayers[j].maxHP = data.updatePack[i].maxHP;
-                  allPlayers[j].alive = data.updatePack[i].alive;
-                  allPlayers[j].laps = data.updatePack[i].laps;
-                  allPlayers[j].boosts = data.updatePack[i].boosts;
-                  allPlayers[j].canBoost = data.updatePack[i].canBoost;
-                  allPlayers[j].boostCooldown = data.updatePack[i].boostCooldown;
-                  allPlayers[j].canAbility = data.updatePack[i].canAbility;
-                  allPlayers[j].abilityCooldown = data.updatePack[i].abilityCooldown;
-                  allPlayers[j].upgradePoints = data.updatePack[i].upgradePoints;
-                  allPlayers[j].lapTime = data.updatePack[i].lapTime;
-                  allPlayers[j].topLapTime = data.updatePack[i].topLapTime;
-                  allPlayers[j].god = data.updatePack[i].god;
-                  allPlayers[j].kills = data.updatePack[i].kills;
-                  if (allPlayers[j].car.name == "Prankster"){
-                    allPlayers[j].trapSize = data.updatePack[i].trapSize;
-                  }
-                  if (allPlayers[j].car.name == "Spike"){
-                    allPlayers[j].bodySize = data.updatePack[i].bodySize;
-                  }
-              }
-          }
+    if(currentRoom != null){
+      if(data.i == currentRoom.roomIndex){
+        for(var i in data.updatePack) {
+            for(var j in allPlayers) {
+                if(allPlayers[j].id === data.updatePack[i].id) {
+                    allPlayers[j].x = data.updatePack[i].x;
+                    allPlayers[j].y = data.updatePack[i].y;
+                    allPlayers[j].angle = data.updatePack[i].angle;
+                    allPlayers[j].HP = data.updatePack[i].HP;
+                    allPlayers[j].maxHP = data.updatePack[i].maxHP;
+                    allPlayers[j].alive = data.updatePack[i].alive;
+                    allPlayers[j].laps = data.updatePack[i].laps;
+                    allPlayers[j].boosts = data.updatePack[i].boosts;
+                    allPlayers[j].canBoost = data.updatePack[i].canBoost;
+                    allPlayers[j].boostCooldown = data.updatePack[i].boostCooldown;
+                    allPlayers[j].canAbility = data.updatePack[i].canAbility;
+                    allPlayers[j].abilityCooldown = data.updatePack[i].abilityCooldown;
+                    allPlayers[j].upgradePoints = data.updatePack[i].upgradePoints;
+                    allPlayers[j].lapTime = data.updatePack[i].lapTime;
+                    allPlayers[j].topLapTime = data.updatePack[i].topLapTime;
+                    allPlayers[j].god = data.updatePack[i].god;
+                    allPlayers[j].kills = data.updatePack[i].kills;
+                    if (allPlayers[j].car.name == "Prankster"){
+                      allPlayers[j].trapSize = data.updatePack[i].trapSize;
+                    }
+                    if (allPlayers[j].car.name == "Spike"){
+                      allPlayers[j].bodySize = data.updatePack[i].bodySize;
+                    }
+                }
+            }
+        }
       }
+    }
   });
 
   // update socket for entities
   socket.on("syncedData", function(data) {
-    if(data.notification.length > 0){
-      notifications.push(data.notification);
-    }
-    if(playing == true){
-      currentEntities = data.currentEntities;
-      if (currentEntities.length == 0 && data.currentEntities.length > 0){
-        data.currentEntities.map(entity => entity.newEntity = true);
+    if(data.notification.length > 0 && currentRoom != null){
+      if(data.notification[0] == currentRoom.roomIndex){
+        notifications.push(data.notification[1]);
       }
-      for (var i in data.currentEntities){
-        if (data.currentEntities[i].newEntity == true){
-          currentEntities.push(data.currentEntities[i]);
+    }
+    if(playing == true && currentRoom != null){
+      //console.log(data.currentEntities, currentRoom);
+      //console.log(currentRoom);
+      if(data.currentEntities[0] == currentRoom.roomIndex){
+        currentEntities = data.currentEntities[1];
+        if (currentEntities.length == 0 && data.currentEntities[1].length > 0){
+          data.currentEntities.map(entity => entity.newEntity = true);
         }
-        else{
-          if(currentEntities.length > 0){
-            currentEntities[i].x = data.currentEntities[i].x;
-            currentEntities[i].y = data.currentEntities[i].y;
-            currentEntities[i].vX = data.currentEntities[i].vX;
-            currentEntities[i].vY = data.currentEntities[i].vY;
+        for (var i in data.currentEntities[1]){
+          if (data.currentEntities[1][i].newEntity == true){
+            currentEntities.push(data.currentEntities[1][i]);
+          }
+          else{
+            if(currentEntities.length > 0){
+              currentEntities[i].x = data.currentEntities[1][i].x;
+              currentEntities[i].y = data.currentEntities[1][i].y;
+              currentEntities[i].vX = data.currentEntities[1][i].vX;
+              currentEntities[i].vY = data.currentEntities[1][i].vY;
+            }
           }
         }
       }
@@ -258,17 +294,29 @@ function debugDraw(debugText){
   text(debugText, windowWidth/2,windowHeight/2);
 }
 
+function dupeCheck(){
+  var dupeCheck = [];
+  for(var i in allPlayers){
+    if(!dupeCheck.includes(allPlayers[i].id)){
+      dupeCheck.push(allPlayers[i].id);
+    }
+    else{
+      allPlayers.splice(i,1);
+    }
+  }
+}
+
 function exitGame(){
-  console.log(allPlayers);
   menuContainer.style.visibility = "visible";
   menuContainer.style.opacity = "1";
   gameGuiContainer.style.visibility = "hidden";
   gameGuiContainer.style.opacity = "0";
   playing = false;
-  socket.emit("removePlayerServer", myId);
+  socket.emit("removePlayerServer", {id:myId, index:currentRoom.roomIndex});
   enterGameButton.setAttribute('onClick', 'enterGame()');
   allPlayers=[];
   refreshDisplays();
+  currentRoom = null;
 }
 
 function enterGame(){
@@ -373,7 +421,7 @@ function refreshDisplays(){
   for(var i in allPlayers){
 
     // Game End Leaderboard
-    if(allPlayers[i].laps >= 20){
+    if(allPlayers[i].laps >= currentRoom.lapsToWin){
       tabLeaderboard.style.visibility = "visible";
       tabLeaderboard.style.opacity = "1";
     }
