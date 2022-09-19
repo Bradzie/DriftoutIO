@@ -25,7 +25,7 @@ var playerNames = [];
 
 var grip = 0.99;
 var lapsToWin = 20;
-var maxRoomSize = 2;
+var maxRoomSize = 8;
 var invincibilityPeriod = 4000;
 
 // ---------- ---------- ----------
@@ -80,7 +80,6 @@ io.on("connection", function(socket){
         rooms[rooms.length-1].startGame();
       }
 
-      console.log("newPlayer", rooms);
       io.emit("roomUpdate", {rooms:rooms, roomIndex:player.myRoom});
       //console.log(player.id);
 
@@ -152,7 +151,6 @@ io.on("connection", function(socket){
 
   socket.on("removePlayerServer", (data) => {
     socket.emit("removePlayerClient", data.id);
-    console.log(rooms[data.index].allPlayers.length);
     removePlayer(data.index, data.id);
     socket.emit("roomUpdate", {rooms:rooms, roomIndex:data.index});
   });
@@ -164,7 +162,6 @@ function removePlayer (roomIndex, removeId){
       rooms[roomIndex].allPlayers.splice(i,1);
     }
   }
-  console.log(rooms[roomIndex].allPlayers.length);
 }
 
 // The player object constructor
@@ -330,7 +327,6 @@ var Player = function(id, name, x, y, car, dev) {
         this.alive = false;
         //removePlayer(this.myRoom, this.id);
         rooms[this.myRoom].notifications.push(this.name + " Crashed!");
-        console.log(rooms[this.myRoom].allPlayers[0].alive);
         //socket.emit("removePlayerClient", this.id);
       }
 
@@ -473,7 +469,6 @@ var Player = function(id, name, x, y, car, dev) {
             if(this.HP < 0){
               allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].upgradePoints++;
               allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].kills++;
-              console.log(allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0]);
               rooms[this.myRoom].notifications.push(allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].name + " crashed " + this.name + "!");
               this.alive = false;
             }

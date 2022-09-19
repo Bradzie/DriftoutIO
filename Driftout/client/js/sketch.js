@@ -410,7 +410,7 @@ function refreshDisplays(){
   tabLeaderboard.style.opacity = "0";
   leaderboardContainer.innerHTML = "Leaderboard";
   tabLeaderboard.innerHTML = "Leaderboard";
-  var text = "";
+  var text = "<table width='100%'><tr><th>Leaderboard</th></tr>";
   var tabText = "<table width='100%'><tr><th>Name</th><th>Laps</th><th>Best Time</th><th>Kills</th></tr>";
 
   if(keyIsDown(81)){
@@ -418,7 +418,10 @@ function refreshDisplays(){
     tabLeaderboard.style.opacity = "1";
   }
 
+  var order = 0;
+  allPlayers.sort(function(a, b){return b.laps - a.laps});
   for(var i in allPlayers){
+    order++;
 
     // Game End Leaderboard
     if(allPlayers[i].laps >= currentRoom.lapsToWin){
@@ -445,7 +448,7 @@ function refreshDisplays(){
 
     // Leaderboard and tab leaderboard Overlay
     if(allPlayers[i].alive == true){
-      text += "<div class = 'leaderboardItem'>" + allPlayers[i].laps + " " + allPlayers[i].name + "</div>\n";
+      text += "<tr><td>" + order + ". " + allPlayers[i].name + "</td><td>" + allPlayers[i].laps + "</td></tr>";
       tabText += "<tr style='text-align:center'><td>" + allPlayers[i].name + "</td><td>" + allPlayers[i].laps + "</td><td>" + allPlayers[i].topLapTime/1000 + "</td><td>" + allPlayers[i].kills + "</td></tr>";
     }
     else{
@@ -500,7 +503,7 @@ function refreshDisplays(){
       }
     }
   }
-  leaderboardContainer.innerHTML = "Leaderboard\n" + text;
+  leaderboardContainer.innerHTML = text + "</table>";
   tabLeaderboard.innerHTML = tabText + "</table>";
 }
 
