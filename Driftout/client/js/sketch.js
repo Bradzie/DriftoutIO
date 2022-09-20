@@ -26,6 +26,9 @@ var mainCanvas = document.getElementById("mainCanvas"),
   debugContainer = document.getElementById('debugContainer'),
   upgradeContainer = document.getElementById('upgradeContainer'),
   upgradeItem = document.getElementById('upgradeItem'),
+  upgradePointsTitle = document.getElementById('upgradePointsTitle'),
+  currentLaps = document.getElementById('currentLaps'),
+  currentLapsInterior = document.getElementById('currentLapsInterior'),
   metricsData = document.getElementById('metricsData'),
   metricsContainer = document.getElementById('metricsContainer');
 
@@ -429,20 +432,29 @@ function refreshDisplays(){
       tabLeaderboard.style.opacity = "1";
     }
 
+    // Laps Overlay
+    if(allPlayers[i].id === socket.id){
+        currentLaps.innerHTML = "<div id='currentLapsInterior'>" + allPlayers[i].laps + "/20</div>";
+    }
+
     // Upgrade Overlay
     if(allPlayers[i].id === socket.id){
       var upgradeBlocks = "";
       var displayNum = 0;
       for(var j in Object.entries(allPlayers[i].car.upgrades)){
         displayNum++;
-        upgradeBlocks += "<div id='upgradeItem'>" + Object.keys(allPlayers[i].car.upgrades)[j] + "<span style='color:#02f6fa'>[" + displayNum + "]</span></div>";
+        var blockWidth = (100/(Object.entries(allPlayers[i].car.upgrades).length))*10;
+        upgradeBlocks += "<div id='upgradeItem' style='width:fit-content'>" + "<span style='color:#02f6fa'>[" + displayNum + "]</span>" + Object.keys(allPlayers[i].car.upgrades)[j] + "</div>";
       }
-      upgradeContainer.innerHTML = "<span style='color:#02f6fa'>" + allPlayers[i].upgradePoints + "</span>" + " Upgrade Points" + upgradeBlocks;
+      upgradePointsTitle.innerHTML = "<span style='color:#02f6fa'>" + allPlayers[i].upgradePoints + "</span>" + (allPlayers[i].upgradePoints > 1 ? " Upgrade Points" : " Upgrade Point");
+      upgradeContainer.innerHTML = upgradeBlocks;
       if(allPlayers[i].upgradePoints > 0){
         upgradeContainer.style.opacity = "1";
+        upgradePointsTitle.style.opacity = "1";
       }
       else{
         upgradeContainer.style.opacity = "0";
+        upgradePointsTitle.style.opacity = "0";
       }
     }
 
