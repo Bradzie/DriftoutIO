@@ -25,20 +25,20 @@ The game finally has independent hosting and a custom domain!
 
 ## Version info:
 
-I'm slowly approaching the planned criteria I had imagined months ago when I had just started development. Version numbers allow me to reflect how close I am to what I feel is the a release.
+I'm slowly approaching the planned criteria I had imagined months ago when I had just started development. Version numbers allow me to reflect how close I am to what I feel is the full release.
 
-We are currently at: V0.6.8
+We are currently at: V0.7
 
 - V0.6 All upgrades functional
 - V0.6.1 (Bug fix) Maps rotating inbetween games
 - V0.6.2 (Bug fix) Players without godmode could damage those with godmode
-- V0.6.3 (Bug fix) Upgrading rapidly upon button press
+- V0.6.3 (Bug fix) Upgrading was rapid upon button press
 - V0.6.4 (Bug fix) Fixed thickness of collision walls to prevent out-of-bounds
 - V0.6.5 Notifications are now blue when they involve you
 - V0.6.6 Kills are now visible on the leaderboard (press 'q')
 - V0.6.7 Buffed bullet resistance, Nerfed bullet dash upgrade / health regen + UI Changes
-- (Here) V0.6.8 Players are now distributed betweens rooms of 8, Improved GUI
-- V0.7 Optimise GUI and reward upgrade points upon kill
+- V0.6.8 Players are now distributed between rooms of 8, Improved GUI
+- (Here) V0.7 Optimise GUI and reward upgrade points upon kill
 - v0.8 Mobile integration
 - v0.9 10 Classes, 4 Maps
 - V1.0 Round modifiers
@@ -48,10 +48,7 @@ We are currently at: V0.6.8
 
 There are currently multiple bugs on list to be corrected one by one - I will update this list as often as I can so it stays relevant. As of 11/9/22 I advertised this game on the IOgames sub-reddit and wow, there was alot of bugs. Was really fun playing with everyone :)
 
-1. Rapid refresh of the page causes issues new players to be created with null x and y values
-2. Upgrades don't work on mobile
-3. Sometimes, but rarely, lap checkpoints can be completely missed (likely due to the size of checkpoint triggers)
-4. Upgrade selections rapidly select with more than one point
-5. Leaderboard does not sort by highest laps
-6. Leaderboard still duplicates some player names
+1. Upgrades don't work on mobile
+2. Sometimes, but rarely, lap checkpoints can be completely missed (likely due to the size of checkpoint triggers)
+
 
