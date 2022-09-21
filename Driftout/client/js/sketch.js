@@ -838,6 +838,7 @@ allCars = {
     rotate(angle);
     stroke(100,100,255);
     strokeWeight(5);
+    strokeJoin(ROUND);
     beginShape();
     vertex(25, 0);
     vertex(-25, 20);
@@ -893,6 +894,7 @@ allCars = {
     translate(x, y);
     rotate(angle);
     strokeWeight(5);
+    strokeJoin(ROUND);
     fill(50,255,150);
     stroke(0,150,50);
     beginShape();
@@ -931,6 +933,7 @@ allCars = {
     translate(x, y);
     rotate(angle);
     strokeWeight(5);
+    strokeJoin(ROUND);
     fill(230,230,10);
     stroke(125,125,0);
     beginShape();
@@ -957,6 +960,7 @@ allCars = {
     translate(x, y);
     rotate(angle);
     strokeWeight(5);
+    strokeJoin(ROUND);
     fill(50,255,150);
     stroke(0,150,50);
     circle(0,0,70);
@@ -981,6 +985,7 @@ allCars = {
     translate(x, y);
     rotate(angle);
     strokeWeight(5);
+    strokeJoin(ROUND);
     fill(255,0,0);
     stroke(125,0,0);
     beginShape();
@@ -1008,6 +1013,7 @@ allCars = {
     translate(x, y);
     rotate(angle);
     strokeWeight(5);
+    strokeJoin(ROUND);
     fill(255, 210, 120);
     stroke(100, 100, 100);
     beginShape();
@@ -1033,6 +1039,7 @@ allCars = {
     scale(size);
     rotate(angle);
     strokeWeight(3);
+    strokeJoin(ROUND);
     fill(150, 150, 150);
     stroke(50, 50, 50);
     beginShape();
