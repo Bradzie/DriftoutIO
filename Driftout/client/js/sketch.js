@@ -75,6 +75,7 @@ var playerNames = [];
 var currentRoom = null;
 var myName;
 var isMobile;
+var mobileCoords;
 
 function preload(){
 }
@@ -315,6 +316,12 @@ function drawMobileControls(){
         circle(allPlayers[i].x + (windowWidth*0.3),  allPlayers[i].y + (windowHeight*0.3), 150);
         fill(200);
         circle(allPlayers[i].x + (windowWidth*0.3),  allPlayers[i].y + (windowHeight*0.3), 50);
+        fill(100);
+        rect(allPlayers[i].x - (windowWidth*0.5),  allPlayers[i].y + (windowHeight*0.3), 200, 100);
+        fill(200);
+        textSize(50);
+        textStyle(BOLDITALIC);
+        text("Boost", allPlayers[i].x - (windowWidth*0.5) + 100,  allPlayers[i].y + (windowHeight*0.3) + 65);
       }
   }
 }
@@ -621,15 +628,26 @@ function mapLine(x1, y1, x2, y2, colour1 = [0,0,0], colour2 = [220,220,220], thi
 }
 
 function sendInputData() {
+    var mouseClick = false;
+    var spacePressed = false;
+    var numPressed = null;
     if(isMobile == true){
       clientPlayerAngle = atan2(mouseY - windowHeight*0.8, mouseX - windowWidth*0.8)
+      if(mouseIsPressed === true){
+        for(var i in allPlayers) {
+          if(allPlayers[i].id == myId) {
+            //allPlayers[i].x - (windowWidth*0.5),  allPlayers[i].y + (windowHeight*0.3), 200, 100
+            if((mouseX > allPlayers[i].x - (windowWidth*0.5) && mouseX < allPlayers[i].x - (windowWidth*0.5) + 200) &&
+          (mouseY > allPlayers[i].y - (windowHeight*0.5) && mouseY < allPlayers[i].y - (windowHeight*0.5) + 100)){
+              mouseClick = true;
+            }
+          }
+        }
+      }
     }
     else{
       clientPlayerAngle = atan2(mouseY - windowHeight/2, mouseX - windowWidth/2);
     }
-    var mouseClick = false;
-    var spacePressed = false;
-    var numPressed = null;
     if (mouseIsPressed === true && isMobile == false){
       mouseClick = true;
     }
