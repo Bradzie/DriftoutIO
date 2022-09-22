@@ -6,9 +6,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kdam+Thmor+Pro&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans" rel="stylesheet">
+    <link href="./fonts/Quicksilver.ttf" rel="stylesheet">
     <link rel="icon" href="./assets/icon.png">
     <meta charset="utf-8">
-    <title>Driftout.IO</title>
+    <title>Driftout IO | Racing Royale</title>
   </head>
   <body>
     <div id = "mainCanvas"></div>
@@ -24,9 +25,9 @@
         </button>
       </div>
       <div id= "versionContainer">
-        Alpha V0.6.8
+        Alpha V0.7.2
       </div>
-      <div id = "authorContainer">
+      <div id = "inspirationContainer">
         Inspired by
         <a href=http://driftin.io/>
           Driftin.io
@@ -39,7 +40,7 @@
         </a>
       </div>
       <p class = "gameTitle">DRIFTOUT
-        <span style="color:#02f6fa">IO</span>
+        <span style="color:#2596be">IO</span>
       </p>
       <div id=classDisplay>
         Racer
@@ -54,24 +55,6 @@
         </div>
       </div>
       <div id = "inputContainer">
-        <!--
-        <div id = "carSelect">
-          <input id = "carInputRacer" type = "radio" name = "carRadio">
-          <label for = "carInputRacer">Racer</label>
-          <input id = "carInputSprinter" type = "radio" name = "carRadio">
-          <label for = "carInputSprinter">Sprinter</label>
-          <input id = "carInputTank" type = "radio" name = "carRadio">
-          <label for = "carInputTank">Tank</label>
-          <input id = "carInputPrankster" type = "radio" name = "carRadio">
-          <label for = "carInputPrankster">Prankster</label>
-          <input id = "carInputBullet" type = "radio" name = "carRadio">
-          <label for = "carInputBullet">Bullet</label>
-          <input id = "carInputFragile" type = "radio" name = "carRadio">
-          <label for = "carInputFragile">Fragile</label>
-          <input id = "carInputSpike" type = "radio" name = "carRadio">
-          <label for = "carInputSpike">Spike</label>
-        </div>
-      -->
         <button id = "changeClassButton" onClick = "changeClass()" type = "button">
           Class 🗘
         </button>
@@ -89,6 +72,14 @@
       </div>
     </div>
     <div id = "gameGuiContainer">
+      <div id="chatDisplay">
+        <input id = "chatInput" placeholder = "Write a message..." maxlength="30">
+        <div id="chatContent">
+        </div>
+      </div>
+      <button id = "chatToggle" onClick = "toggleChat()" type = "button">
+        💬
+      </button>
       <div id = "debugContainer">
       </div>
       <div id = "leaderboardContainer">
