@@ -29,7 +29,7 @@ I'm slowly approaching the planned criteria I had imagined months ago when I had
 
 We are currently at: V0.7
 
--- V0.6 All upgrades functional
+- V0.6 All upgrades functional
 - V0.6.1 (Bug fix) Maps rotating inbetween games
 - V0.6.2 (Bug fix) Players without godmode could damage those with godmode
 - V0.6.3 (Bug fix) Upgrading was rapid upon button press
@@ -38,12 +38,16 @@ We are currently at: V0.7
 - V0.6.6 Kills are now visible on the leaderboard (press 'q')
 - V0.6.7 Buffed bullet resistance, Nerfed bullet dash upgrade / health regen + UI Changes
 - V0.6.8 Players are now distributed between rooms of 8, Improved GUI
--- V0.7 Optimise GUI and reward upgrade points upon kill
+
+- V0.7 Optimise GUI and reward upgrade points upon kill
 - V0.7.1 Further improved GUI, smoothing on car classes
 - (Here) V0.7.2 Added css formatting and temporary mobile controls
--- v0.8 Mobile integration
--- v0.9 10 Classes, 4 Maps
--- V1.0 Round modifiers
+
+- v0.8 Mobile integration
+
+- v0.9 10 Classes, 4 Maps
+
+- V1.0 Round modifiers
 
 
 ## Bugs:
