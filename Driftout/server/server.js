@@ -90,7 +90,8 @@ io.on("connection", function(socket){
 
       io.emit("syncedData", {
         notification: "Track: " + rooms[player.myRoom].currentTrack.name,
-        currentEntities: []
+        currentEntities: [],
+        message: []
       });
   });
 
@@ -147,6 +148,12 @@ io.on("connection", function(socket){
           }
         }
       }
+  });
+
+  socket.on("recieveMessage", (data) => {
+    console.log("message recieved");
+    rooms[data.roomIndex].messages.push(data.author + ": " + data.message);
+    console.log(rooms[data.roomIndex].messages);
   });
 
   socket.on("removePlayerServer", (data) => {
@@ -724,14 +731,26 @@ setInterval(() => {
       if (rooms[i].notifications.length > 0){
         io.emit("syncedData", {
           notification: [i, rooms[i].notifications[0]],
-          currentEntities: []
+          currentEntities: [],
+          message: []
         });
         rooms[i].notifications = rooms[i].notifications.slice(1);
       }
+
+      if(rooms[i].messages.length > 0){
         io.emit("syncedData", {
           notification: [],
-          currentEntities: [i, rooms[i].currentEntities]
+          currentEntities: [],
+          message: [i, rooms[i].messages[0]]
         });
+        rooms[i].messages = rooms[i].messages.slice(1);
+      }
+
+      io.emit("syncedData", {
+        notification: [],
+        currentEntities: [i, rooms[i].currentEntities],
+        message: []
+      });
     }
 
     for(var i in rooms){
@@ -848,6 +867,7 @@ var Room = function(){
   this.roomIndex = rooms.length;
   this.allPlayers = [];
   this.notifications = [];
+  this.messages = [];
   this.currentEntities = [];
   this.gameEndPeriod = 0;
   this.lapsToWin = lapsToWin;

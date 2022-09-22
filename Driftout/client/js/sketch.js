@@ -29,6 +29,10 @@ var mainCanvas = document.getElementById("mainCanvas"),
   upgradePointsTitle = document.getElementById('upgradePointsTitle'),
   currentLaps = document.getElementById('currentLaps'),
   currentLapsInterior = document.getElementById('currentLapsInterior'),
+  chatToggle = document.getElementById('chatToggle'),
+  chatDisplay = document.getElementById('chatDisplay'),
+  chatInput = document.getElementById('chatInput'),
+  chatContent = document.getElementById('chatContent'),
   metricsData = document.getElementById('metricsData'),
   metricsContainer = document.getElementById('metricsContainer');
 
@@ -42,6 +46,7 @@ var allTracks;
 var currentTrack;
 var allPlayers = [];
 var notifications = [];
+var messages = [];
 var nextNotification = 0;
 var currentEntities = [];
 var clientPlayerAngle = 0;
@@ -68,6 +73,7 @@ var classAssetPaths = [
 var totalConnections=0;
 var playerNames = [];
 var currentRoom = null;
+var myName;
 
 function preload(){
 }
@@ -93,13 +99,6 @@ function setup(){
 
   socket.on("myID", function(data) {
       myId = data.id;
-  });
-
-
-  socket.on("newPlayer", function(data) {
-      var newCar = Object.entries(allCars).filter(car => car[0] == data.car.name)[0][1];
-      var player = new Player(data.id, data.name, data.x, data.y, newCar);
-      allPlayers.push(player);
   });
 
   socket.on("roomUpdate", function(data){
@@ -187,6 +186,11 @@ function setup(){
     if(data.notification.length > 0 && currentRoom != null){
       if(data.notification[0] == currentRoom.roomIndex){
         notifications.push(data.notification[1]);
+      }
+    }
+    if(data.message.length > 0 && currentRoom != null){
+      if(data.message[0] == currentRoom.roomIndex){
+        messages.push(data.message[1]);
       }
     }
     if(playing == true && currentRoom != null){
@@ -358,6 +362,14 @@ function enterGame(){
   upgradeContainer.innerHTML = "";
 }
 
+function setName(){
+  for(var i in currentRoom.allPlayers){
+    if (currentRoom.allPlayers[i].id == myId){
+      myName = currentRoom.allPlayers[i].name;
+    }
+  }
+}
+
 function changeClass(){
   allCars.Racer.drawCar(50,50,0);
   classIndex++;
@@ -365,6 +377,14 @@ function changeClass(){
     classIndex=0;
   }
   classDisplay.innerHTML = "<div id='classImage'><img src = " + classAssetPaths[classIndex] + "></div>" + classEntries[classIndex];
+}
+
+function toggleChat(){
+  if (chatDisplay.style.display === "none") {
+    chatDisplay.style.display = "block";
+  } else {
+    chatDisplay.style.display = "none";
+  }
 }
 
 function toggleMetricsOn(){
@@ -419,6 +439,25 @@ function refreshDisplays(){
   if(keyIsDown(81)){
     tabLeaderboard.style.visibility = "visible";
     tabLeaderboard.style.opacity = "1";
+  }
+
+  if(keyIsDown(13) && chatInput.value != ""){
+    for(var i in currentRoom.allPlayers){
+      if (currentRoom.allPlayers[i].id == myId){
+        myName = currentRoom.allPlayers[i].name;
+      }
+    }
+    socket.emit("recieveMessage", {roomIndex:currentRoom.roomIndex, author:myName, message:chatInput.value});
+    chatInput.value = "";
+  }
+
+  if(messages.length > 0){
+      var chatText = "";
+      for(var i in messages){
+        chatText += messages[i] + "<br>"
+      }
+      //chatText += "</table>";
+      chatContent.innerHTML = chatText;
   }
 
   var order = 0;
