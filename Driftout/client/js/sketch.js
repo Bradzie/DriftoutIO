@@ -1,6 +1,6 @@
 // ---------- GLOBALS ----------
 
-// HTML Access
+// Bulk HTML Access
 
 var mainCanvas = document.getElementById("mainCanvas"),
   gameTitle = document.getElementById("gameTitle"),
@@ -19,6 +19,7 @@ var mainCanvas = document.getElementById("mainCanvas"),
   boostContainerCooldown = document.getElementById('boostContainerCooldown'),
   abilityContainer = document.getElementById('abilityContainer'),
   abilityContainerCooldown = document.getElementById('abilityContainerCooldown'),
+  abilityHint = document.getElementById('abilityHint'),
   timeContainer = document.getElementById('timeContainer'),
   timeContainerInterior = document.getElementById('timeContainerInterior'),
   bestTimeContainer = document.getElementById('bestTimeContainer'),
@@ -60,16 +61,9 @@ var classEntries = [
   "Fragile<br>■□□ Speed<br>■□□ Handling<br>■□□ Durability<br>Ability: Gift",
   "Spike<br>■□□ Speed<br>■■■ Handling<br>■■□ Durability"
 ]
-var classAssetPaths = [
-  "./assets/racer.png",
-  "./assets/sprinter.png",
-  "./assets/tank.png",
-  "./assets/prankster.png",
-  "./assets/bullet.png",
-  "./assets/fragile.png",
-  "./assets/spike.png"
-]
+var classDisplayAngle = 0;
 
+var numPressed = null;
 var totalConnections=0;
 var playerNames = [];
 var currentRoom = null;
@@ -95,7 +89,7 @@ function setup(){
   menuContainer.style.visibility = "visible";
   menuContainer.style.opacity = "1";
 
-  classDisplay.innerHTML = "<div id='classImage'><img src = " + classAssetPaths[classIndex] + "></div>" + classEntries[classIndex];
+  classDisplay.innerHTML = "<div id='classImageBlock'></div>" + classEntries[classIndex];
 
   console.log(isMobile);
 
@@ -119,9 +113,9 @@ function setup(){
   socket.on("initPlayer", function(data){
     if(playing){
       if(data.room == currentRoom.roomIndex){
-          var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack.car.name)[0][1];
-          var player = new Player(data.initPack.id, data.initPack.name, data.initPack.x, data.initPack.y, newCar, dev);
-          allPlayers.push(player);
+        var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack.car.name)[0][1];
+        var player = new Player(data.initPack.id, data.initPack.name, data.initPack.x, data.initPack.y, newCar, dev);
+        allPlayers.push(player);
       }
     }
   });
@@ -253,12 +247,19 @@ function setup(){
   mainCanvas.parent("mainCanvas");
 }
 
+// Check if device is mobile (p5js setup function cannot call global functions on startup)
+var isMobile = mobileCheck()? true : false;
+if(isMobile){
+  var mouseWithinJoystickRadius = false;
+  abilityHint.innerHTML = "";
+}
+
 function draw() {
   resizeCanvas(windowWidth, windowHeight);
   if (playing == true && allPlayers.filter(player => player.id === myId).length == 1){
     background(37, 150, 190); // it gets a hex/rgb color
-    sendInputData();
     refreshDisplays();
+    sendInputData();
 
     for(var i in allPlayers) {
         if(allPlayers[i].id == myId) {
@@ -298,6 +299,35 @@ function draw() {
     }
   }
   else{
+    var carChoice = '';
+    if(classIndex == 0){
+      carChoice = allCars.Racer;
+    }
+    if(classIndex == 1){
+      carChoice = allCars.Sprinter;
+    }
+    if(classIndex == 2){
+      carChoice = allCars.Tank;
+    }
+    if(classIndex == 3){
+      carChoice = allCars.Prankster;
+    }
+    if(classIndex == 4){
+      carChoice = allCars.Bullet;
+    }
+    if(classIndex == 5){
+      carChoice = allCars.Fragile;
+    }
+    if(classIndex == 6){
+      carChoice = allCars.Spike;
+    }
+    if(windowWidth < 1024){
+      carChoice.drawCar(windowWidth/2.65, windowHeight/1.7, classDisplayAngle, 3);
+    }
+    else{
+      carChoice.drawCar(windowWidth/2 - 70, windowHeight - 175, classDisplayAngle);
+    }
+    classDisplayAngle+=0.04;
   }
 }
 
@@ -307,23 +337,37 @@ function mobileCheck(){
   return check;
 };
 
-var isMobile = mobileCheck()? true : false;
-
 function drawMobileControls(){
   for(var i in allPlayers) {
       if(allPlayers[i].id == myId) {
+        strokeWeight(5);
         fill(100);
-        circle(allPlayers[i].x + (windowWidth*0.3),  allPlayers[i].y + (windowHeight*0.3), 150);
-        fill(200);
-        circle(allPlayers[i].x + (windowWidth*0.3),  allPlayers[i].y + (windowHeight*0.3), 50);
+        circle(allPlayers[i].x + (windowWidth*0.3),  allPlayers[i].y + (windowHeight*0.3), 100);
+        fill(50);
+        if(mouseWithinJoystickRadius){
+          line(allPlayers[i].x + (windowWidth*0.3), allPlayers[i].y + (windowHeight*0.3), allPlayers[i].x + mouseX - (windowWidth/2),allPlayers[i].y + mouseY - (windowHeight/2))
+          circle(allPlayers[i].x + mouseX - (windowWidth/2),  allPlayers[i].y + mouseY - (windowHeight/2), 65);
+        }
+        else{
+          circle(allPlayers[i].x + (windowWidth*0.3),  allPlayers[i].y + (windowHeight*0.3), 65);
+        }
         fill(100);
-        rect(allPlayers[i].x - (windowWidth*0.5),  allPlayers[i].y + (windowHeight*0.3), 200, 100);
+        rect(allPlayers[i].x - (windowWidth*0.5),  allPlayers[i].y + (windowHeight*0.2), 200, 100);
         fill(200);
         textSize(50);
         textStyle(BOLDITALIC);
-        text("Boost", allPlayers[i].x - (windowWidth*0.5) + 100,  allPlayers[i].y + (windowHeight*0.3) + 65);
+        text("Boost", allPlayers[i].x - (windowWidth*0.5) + 100,  allPlayers[i].y + (windowHeight*0.2) + 65);
+        if(allPlayers[i].car.ability != null){
+          strokeWeight(5);
+          fill(100);
+          rect(allPlayers[i].x - (windowWidth*0.5),  allPlayers[i].y + (windowHeight*0.2) + 150, 200, 100);
+          fill(200);
+          text("Ability", allPlayers[i].x - (windowWidth*0.5) + 100,  allPlayers[i].y + (windowHeight*0.2) + 215);
+        }
+        strokeWeight(0);
       }
   }
+  mouseWithinJoystickRadius = false;
 }
 
 function debugDraw(debugText){
@@ -360,6 +404,8 @@ function exitGame(){
   currentRoom = null;
 }
 
+// Executed on main menu 'race' button,
+
 function enterGame(){
   var carChoice = '';
   playing = true;
@@ -393,7 +439,18 @@ function enterGame(){
   menuContainer.style.opacity = "0";
   gameGuiContainer.style.visibility = "visible";
   gameGuiContainer.style.opacity = "1";
-  upgradeContainer.innerHTML = "";
+  var upgradeBlocks = "";
+  var displayNum = 0;
+  for(var j in Object.entries(carChoice.upgrades)){
+    displayNum++;
+    if(isMobile){
+      upgradeBlocks += "<button id='upgradeItem' style='width:fit-content' onClick = numPress(" + displayNum + ") type = 'button'>" + Object.keys(carChoice.upgrades)[j] + "</div>";
+    }
+    else{
+      upgradeBlocks += "<div id='upgradeItem'>" + "<span style='color:#02f6fa'>[" + displayNum + "]</span><br>" + Object.keys(carChoice.upgrades)[j] + "</div>";
+    }
+  }
+  upgradeContainer.innerHTML = upgradeBlocks;
 }
 
 function setName(){
@@ -405,12 +462,11 @@ function setName(){
 }
 
 function changeClass(){
-  allCars.Racer.drawCar(50,50,0);
   classIndex++;
   if(classIndex >= Object.keys(allCars).length){
     classIndex=0;
   }
-  classDisplay.innerHTML = "<div id='classImage'><img src = " + classAssetPaths[classIndex] + "></div>" + classEntries[classIndex];
+  classDisplay.innerHTML = "<div id='classImageBlock'></div>" + classEntries[classIndex];
 }
 
 function toggleChat(){
@@ -440,6 +496,10 @@ function toggleMetricsOn(){
 function toggleMetricsOff(){
     metricsContainer.style.opacity = "0";
     metricsContainer.style.visibility = "hidden";
+}
+
+function numPress(num){
+  numPressed = num;
 }
 
 function refreshDisplays(){
@@ -512,15 +572,8 @@ function refreshDisplays(){
 
     // Upgrade Overlay
     if(allPlayers[i].id === socket.id){
-      var upgradeBlocks = "";
-      var displayNum = 0;
-      for(var j in Object.entries(allPlayers[i].car.upgrades)){
-        displayNum++;
-        var blockWidth = (100/(Object.entries(allPlayers[i].car.upgrades).length))*10;
-        upgradeBlocks += "<div id='upgradeItem' style='width:fit-content'>" + "<span style='color:#02f6fa'>[" + displayNum + "]</span>" + Object.keys(allPlayers[i].car.upgrades)[j] + "</div>";
-      }
+
       upgradePointsTitle.innerHTML = "<span style='color:#02f6fa'>" + allPlayers[i].upgradePoints + "</span>" + (allPlayers[i].upgradePoints > 1 ? " Upgrade Points" : " Upgrade Point");
-      upgradeContainer.innerHTML = upgradeBlocks;
       if(allPlayers[i].upgradePoints > 0){
         upgradeContainer.style.opacity = "1";
         upgradePointsTitle.style.opacity = "1";
@@ -630,51 +683,62 @@ function mapLine(x1, y1, x2, y2, colour1 = [0,0,0], colour2 = [220,220,220], thi
 function sendInputData() {
     var mouseClick = false;
     var spacePressed = false;
-    var numPressed = null;
     if(isMobile == true){
-      clientPlayerAngle = atan2(mouseY - windowHeight*0.8, mouseX - windowWidth*0.8)
+
+      // Check tap location is within button radius
       if(mouseIsPressed === true){
         for(var i in allPlayers) {
           if(allPlayers[i].id == myId) {
             //allPlayers[i].x - (windowWidth*0.5),  allPlayers[i].y + (windowHeight*0.3), 200, 100
-            if((mouseX > allPlayers[i].x - (windowWidth*0.5) && mouseX < allPlayers[i].x - (windowWidth*0.5) + 200) &&
-          (mouseY > allPlayers[i].y - (windowHeight*0.5) && mouseY < allPlayers[i].y - (windowHeight*0.5) + 100)){
+            //if((mouseX > allPlayers[i].x - (windowWidth*0.5) && mouseX < allPlayers[i].x - (windowWidth*0.5) + 200) &&
+          //(mouseY > allPlayers[i].y - (windowHeight*0.5) && mouseY < allPlayers[i].y - (windowHeight*0.5) + 100)){
+            if(mouseX < 200 && mouseY > windowHeight * 0.7 && mouseY < (windowHeight * 0.7) + 100){
               mouseClick = true;
+            }
+            if(allPlayers[i].ability != null && mouseX < 200 && mouseY > (windowHeight * 0.7) + 150 && mouseY < (windowHeight * 0.7) + 250){
+              spacePressed = true;
             }
           }
         }
       }
+
+      // Check tap location is within joystick radius
+      if(mouseX > windowWidth * 0.4 && mouseY > windowHeight * 0.6 && mouseY < windowHeight * 0.95){
+        clientPlayerAngle = atan2(mouseY - windowHeight*0.8, mouseX - windowWidth*0.8)
+        mouseWithinJoystickRadius = true;
+      }
     }
     else{
       clientPlayerAngle = atan2(mouseY - windowHeight/2, mouseX - windowWidth/2);
-    }
-    if (mouseIsPressed === true && isMobile == false){
-      mouseClick = true;
-    }
-    if (keyIsDown(49)){
-      numPressed = 1;
-    }
-    if (keyIsDown(50)){
-      numPressed = 2;
-    }
-    if (keyIsDown(51)){
-      numPressed = 3;
-    }
-    if (keyIsDown(52)){
-      numPressed = 4;
-    }
-    if (keyIsDown(53)){
-      numPressed = 5;
-    }
-    if (keyIsDown(54)){
-      numPressed = 6;
-    }
-    if (keyIsDown(32)){
-      spacePressed = true;
+      if (mouseIsPressed === true){
+        mouseClick = true;
+      }
+      if (keyIsDown(49)){
+        numPressed = 1;
+      }
+      if (keyIsDown(50)){
+        numPressed = 2;
+      }
+      if (keyIsDown(51)){
+        numPressed = 3;
+      }
+      if (keyIsDown(52)){
+        numPressed = 4;
+      }
+      if (keyIsDown(53)){
+        numPressed = 5;
+      }
+      if (keyIsDown(54)){
+        numPressed = 6;
+      }
+      if (keyIsDown(32)){
+        spacePressed = true;
+      }
     }
     //var mouseDistanceToCar = Math.abs(Math.sqrt((windowHeight/2 - mouseY)**2+(windowHeight/2 - mouseY)**2));
     var mouseDistanceToCar = Math.abs((windowHeight/2 + windowWidth/2) - (mouseX+mouseY));
     socket.emit("inputData", {mouseX, mouseY, clientPlayerAngle, windowWidth, windowHeight, mouseClick, mouseDistanceToCar, spacePressed, numPressed});
+    numPressed = null;
 }
 
 
@@ -924,6 +988,7 @@ allCars = {
     push();
     fill(20,20,200);
     translate(x, y);
+    scale(size);
     rotate(angle);
     stroke(100,100,255);
     strokeWeight(5);
@@ -935,7 +1000,6 @@ allCars = {
     endShape(CLOSE);
     smooth(4);
     pop();
-    scale(size);
   }),
   Prankster : new Car('Prankster', 120, 6, 5, {
     MaxHP : 10,
@@ -981,6 +1045,7 @@ allCars = {
   }, function(x, y, angle, size=1){
     push();
     translate(x, y);
+    scale(size);
     rotate(angle);
     strokeWeight(5);
     strokeJoin(ROUND);
@@ -1002,7 +1067,6 @@ allCars = {
     endShape(CLOSE);
     smooth();
     pop();
-    scale(size);
   }),
   Bullet : new Car('Bullet', 100, 12, 5, {
     MaxHP : 10,
@@ -1020,6 +1084,7 @@ allCars = {
 }, function(x, y, angle, size=1){
     push();
     translate(x, y);
+    scale(size);
     rotate(angle);
     strokeWeight(5);
     strokeJoin(ROUND);
@@ -1035,7 +1100,6 @@ allCars = {
     endShape(CLOSE);
     smooth();
     pop();
-    scale(size);
   }),
   Tank : new Car('Tank', 200, 4, 5, {
     MaxHP : 14,
@@ -1047,6 +1111,7 @@ allCars = {
   }, 0.08, 3, 35, 10, null, null, function(x, y, angle, size=1){
     push();
     translate(x, y);
+    scale(size);
     rotate(angle);
     strokeWeight(5);
     strokeJoin(ROUND);
@@ -1055,7 +1120,6 @@ allCars = {
     circle(0,0,70);
     smooth();
     pop();
-    scale(size);
   }),
   Sprinter : new Car('Sprinter', 80, 12, 10, {
     MaxHP : 8,
@@ -1072,6 +1136,7 @@ allCars = {
   }, function(x, y, angle, size=1){
     push();
     translate(x, y);
+    scale(size);
     rotate(angle);
     strokeWeight(5);
     strokeJoin(ROUND);
@@ -1084,7 +1149,6 @@ allCars = {
     endShape(CLOSE);
     smooth();
     pop();
-    scale(size);
   }),
   Fragile : new Car('Fragile', 70, 6, 5, {
     MaxHP : 20,
@@ -1100,6 +1164,7 @@ allCars = {
   }, function(x, y, angle, size=1){
     push();
     translate(x, y);
+    scale(size);
     rotate(angle);
     strokeWeight(5);
     strokeJoin(ROUND);
@@ -1113,7 +1178,6 @@ allCars = {
     endShape(CLOSE);
     smooth();
     pop();
-    scale(size);
   }),
   Spike : new Car('Spike', 150, 5, 3, {
     MaxHP : 12,
@@ -1122,7 +1186,7 @@ allCars = {
     MoveSpeed : [0.01, 0.4],
     CollisionDamage : 15,
     BodySize : 0.1
-  }, 0.12, 3, 30, 8, null, null, function(x, y, angle, size=2){
+  }, 0.12, 3, 30, 8, null, null, function(x, y, angle, size=1){
     push();
     translate(x, y);
     scale(size);
