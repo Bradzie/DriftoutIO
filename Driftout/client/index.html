@@ -12,7 +12,6 @@
     <title>Driftout IO | Racing Royale</title>
   </head>
   <body>
-    <div id = "mainCanvas"></div>
     <div id = "menuContainer">
       <div id=footerContainer>
         <div id="sourceCodeNav">
@@ -25,7 +24,7 @@
         </button>
       </div>
       <div id= "versionContainer">
-        Alpha V0.7.2
+        Alpha V0.7.4
       </div>
       <div id = "inspirationContainer">
         Inspired by
@@ -44,14 +43,7 @@
       </p>
       <div id=classDisplay>
         Racer
-        <div id="classImage">
-          <img src = "./assets/racer.png">
-          <img src = "./assets/sprinter.png">
-          <img src = "./assets/tank.png">
-          <img src = "./assets/prankster.png">
-          <img src = "./assets/bullet.png">
-          <img src = "./assets/fragile.png">
-          <img src = "./assets/spike.png">
+        <div id="classImageBlock">
         </div>
       </div>
       <div id = "inputContainer">
@@ -60,7 +52,7 @@
         </button>
         <input id = "nameInput" placeholder = "Name" maxlength="14">
         <button id = "enterGameButton" onClick = "enterGame()" type = "button">
-          RACE ➤
+          Race ➤
         </button>
       </div>
       <div id="metricsContainer">
@@ -71,6 +63,7 @@
         </button>
       </div>
     </div>
+    <div id = "mainCanvas"></div>
     <div id = "gameGuiContainer">
       <div id="chatDisplay">
         <input id = "chatInput" placeholder = "Write a message..." maxlength="30">
@@ -91,9 +84,9 @@
         </div>
       </div>
       <div id="abilityContainer">
-        <p class = "abilityHint">
+        <div id = "abilityHint">
           Space Bar
-        </p>
+        </div>
         <div id="abilityContainerCooldown">
           Ability
         </div>

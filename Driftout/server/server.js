@@ -473,9 +473,9 @@ var Player = function(id, name, x, y, car, dev) {
             this.vX *= 0.3;
             this.vY *= 0.3;
             this.HP -= rooms[this.myRoom].currentEntities[i].damage;
-            if(this.HP < 0){
-              allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].upgradePoints++;
-              allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].kills++;
+            if(this.HP < 0 && rooms[this.myRoom].allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId).length > 0){
+              rooms[this.myRoom].allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].upgradePoints++;
+              rooms[this.myRoom].allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].kills++;
               rooms[this.myRoom].notifications.push(allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].name + " crashed " + this.name + "!");
               this.alive = false;
             }
