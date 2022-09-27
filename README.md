@@ -27,7 +27,7 @@ The game finally has independent hosting and a custom domain!
 
 I'm slowly approaching the planned criteria I had imagined months ago when I had just started development. Version numbers allow me to reflect how close I am to what I feel is the full release.
 
-We are currently at: V0.7
+We are currently at: V0.7.4
 
 - V0.6 All upgrades functional
 - V0.6.1 (Bug fix) Maps rotating inbetween games
@@ -41,7 +41,9 @@ We are currently at: V0.7
 
 - V0.7 Optimise GUI and reward upgrade points upon kill
 - V0.7.1 Further improved GUI, smoothing on car classes
-- (Here) V0.7.2 Added css formatting and temporary mobile controls
+- V0.7.2 Added css formatting and temporary mobile controls
+- V0.7.3 Added more mobile controls and functionality
+- (Here) V0.7.4 Added css mobile breakpoints for different displays dependant on screen size
 
 - v0.8 Mobile integration
 
