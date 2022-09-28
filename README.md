@@ -27,7 +27,7 @@ The game finally has independent hosting and a custom domain!
 
 I'm slowly approaching the planned criteria I had imagined months ago when I had just started development. Version numbers allow me to reflect how close I am to what I feel is the full release.
 
-We are currently at: V0.7.4
+We are currently at: V0.7.5
 
 - V0.6 All upgrades functional
 - V0.6.1 (Bug fix) Maps rotating inbetween games
@@ -43,7 +43,8 @@ We are currently at: V0.7.4
 - V0.7.1 Further improved GUI, smoothing on car classes
 - V0.7.2 Added css formatting and temporary mobile controls
 - V0.7.3 Added more mobile controls and functionality
-- (Here) V0.7.4 Added css mobile breakpoints for different displays dependant on screen size
+- V0.7.4 Added css mobile breakpoints for different displays dependant on screen size
+- (Here) V0.7.5 Further GUI changes, reduced stress on server update packs
 
 - v0.8 Mobile integration
 
@@ -56,7 +57,7 @@ We are currently at: V0.7.4
 
 There are currently multiple bugs on list to be corrected one by one - I will update this list as often as I can so it stays relevant. As of 11/9/22 I advertised this game on the IOgames sub-reddit and wow, there was alot of bugs. Was really fun playing with everyone :)
 
-1. Upgrades don't work on mobile
-2. Sometimes, but rarely, lap checkpoints can be completely missed (likely due to the size of checkpoint triggers)
+1. Sometimes, but rarely, lap checkpoints can be completely missed (likely due to the size of checkpoint triggers)
+2. Leaving the page open for a long while will cause a client-side crash (likely due to the assinged room no longer existing)
 
 
