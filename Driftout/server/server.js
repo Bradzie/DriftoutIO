@@ -210,12 +210,18 @@ var Player = function(id, name, x, y, car, dev) {
   this.abilityCooldown = car.abilityCooldown;
   this.canAbility = Date.now();
   this.upgradePoints = 1;
+  this.upgrades = [];
   this.lapStart = Date.now();
   this.lapTime = 0;
   this.topLapTime = 0;
   this.god = [true, Date.now()+invincibilityPeriod];
   this.upgradeLock = 0;
   this.kills = 0;
+
+  for (var x in this.car.upgrades){
+    this.upgrades.push([0]);
+  }
+  console.log(this.upgrades)
 
   if(this.car.name == "Prankster"){
     this.ability = allCars.Prankster.ability;
@@ -344,6 +350,7 @@ var Player = function(id, name, x, y, car, dev) {
           for(var i in Object.entries(this.car.upgrades)){
             if(this.numPressed-1 == i){
               this.doUpgrade(Object.keys(this.car.upgrades)[i], Object.values(this.car.upgrades)[i]);
+              this.upgrades[this.numPressed-1]++;
               this.upgradePoints -= 1;
             }
           }
@@ -660,6 +667,7 @@ var Player = function(id, name, x, y, car, dev) {
         canBoost: this.canBoost,
         abilityCooldown: this.abilityCooldown,
         canAbility: this.canAbility,
+        upgrades: this.upgrades,
         upgradePoints: this.upgradePoints,
         lapTime: this.lapTime,
         topLapTime: this.topLapTime,
@@ -684,6 +692,7 @@ var Player = function(id, name, x, y, car, dev) {
         abilityCooldown: this.abilityCooldown,
         canAbility: this.canAbility,
         upgradePoints: this.upgradePoints,
+        upgrades: this.upgrades,
         lapTime: this.lapTime,
         topLapTime: this.topLapTime,
         god: this.god[0]?true:false,
@@ -706,6 +715,7 @@ var Player = function(id, name, x, y, car, dev) {
       abilityCooldown: this.abilityCooldown,
       canAbility: this.canAbility,
       upgradePoints: this.upgradePoints,
+      upgrades: this.upgrades,
       lapTime: this.lapTime,
       topLapTime: this.topLapTime,
       kills: this.kills,
