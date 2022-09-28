@@ -151,9 +151,7 @@ io.on("connection", function(socket){
   });
 
   socket.on("recieveMessage", (data) => {
-    console.log("message recieved");
     rooms[data.roomIndex].messages.push(data.author + ": " + data.message);
-    console.log(rooms[data.roomIndex].messages);
   });
 
   socket.on("removePlayerServer", (data) => {
@@ -221,7 +219,6 @@ var Player = function(id, name, x, y, car, dev) {
   for (var x in this.car.upgrades){
     this.upgrades.push([0]);
   }
-  console.log(this.upgrades)
 
   if(this.car.name == "Prankster"){
     this.ability = allCars.Prankster.ability;
@@ -579,6 +576,7 @@ var Player = function(id, name, x, y, car, dev) {
         this.checkPointCounter = [false, false, false, false];
         rooms[this.myRoom].notifications.push(this.name + " Completed a lap!");
         this.upgradePoints += 1;
+        this.HP = this.maxHP;
         this.lapStart = Date.now();
         if (this.lapTime < this.topLapTime || this.topLapTime == 0){
           this.topLapTime = this.lapTime;
@@ -788,7 +786,7 @@ setInterval(() => {
         }
       }
     }
-}, 1000/75)
+}, 1000/90)
 
 
 // loop spped to update player properties
@@ -807,7 +805,7 @@ setInterval(() => {
     }
     io.emit("updatePack", {updatePack:updatePack, i:i});
   }
-}, 1000/75)
+}, 1000/90)
 
 var checkPoints = [
   [-200, 200, 1600, 2000],
@@ -898,7 +896,7 @@ var Room = function(){
       this.currentTrack = allTracks.LeftRight;
     }
 
-    console.log("Map : " + this.currentTrack.name);
+    console.log("Room: " + this.roomIndex + " | Map : " + this.currentTrack.name);
 
     this.initPlayer();
   }
