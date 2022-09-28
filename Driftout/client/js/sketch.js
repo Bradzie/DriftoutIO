@@ -10,6 +10,7 @@ var mainCanvas = document.getElementById("mainCanvas"),
   classDisplay = document.getElementById('classDisplay'),
   classImage = document.getElementById('classImage'),
   nameInput = document.getElementById('nameInput'),
+  tipsContainer = document.getElementById('tipsContainer'),
   gameGuiContainer = document.getElementById('gameGuiContainer'),
   notificationContainer = document.getElementById('notificationContainer'),
   leaderboardContainer = document.getElementById('leaderboardContainer'),
@@ -61,8 +62,20 @@ var classEntries = [
   "Fragile<br>■□□ Speed<br>■□□ Handling<br>■□□ Durability<br>Ability: Gift",
   "Spike<br>■□□ Speed<br>■■■ Handling<br>■■□ Durability"
 ]
-var classDisplayAngle = 0;
 
+var tips = [
+  "Boosting from a lower speed increases boost power",
+  "Crash other players to earn upgrade points",
+  "Press 'q' to open a detailed leaderboard",
+  "Some cars are heavier and have reduced knockback",
+  "Round modifiers and more cars coming soon :)",
+  "This game also has mobile controls, but is resource intensive",
+  "Boosts and health refill upon completion of a lap"
+]
+
+var tipsCounter = Date.now();
+var tipsIndex = Math.floor(Math.random() * tips.length);
+var classDisplayAngle = 0;
 var numPressed = null;
 var totalConnections=0;
 var playerNames = [];
@@ -90,8 +103,6 @@ function setup(){
   menuContainer.style.opacity = "1";
 
   classDisplay.innerHTML = "<div id='classImageBlock'></div>" + classEntries[classIndex];
-
-  console.log(isMobile);
 
   socket = io();
 
@@ -328,6 +339,16 @@ function draw() {
       carChoice.drawCar(windowWidth/2 - 70, windowHeight - 175, classDisplayAngle);
     }
     classDisplayAngle+=0.04;
+    if(Date.now() > tipsCounter){
+      if(tipsIndex >= tips.length-1){
+        tipsIndex = 0;
+      }
+      else{
+        tipsIndex++;
+      }
+      tipsContainer.innerHTML = tips[tipsIndex];
+      tipsCounter = Date.now() + 3500;
+    }
   }
 }
 
@@ -392,6 +413,7 @@ function dupeCheck(){
 }
 
 function exitGame(){
+  notificationContainer.style.opacity = "0";
   menuContainer.style.visibility = "visible";
   menuContainer.style.opacity = "1";
   gameGuiContainer.style.visibility = "hidden";

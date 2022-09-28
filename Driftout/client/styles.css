@@ -32,6 +32,20 @@ a:hover{
   color: white;
 }
 
+#tipsContainer{
+  width: 50%;
+  height: 10%;
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  transform: translate(-50%);
+  font-size: 18px;
+  text-align: center;
+  line-height: 60px;
+  color: (200,200,200);
+  background-color: rgba(30,30,30, 0.2);
+}
+
 #gameUIContainer {
   position: absolute;
 	width: 100%;
