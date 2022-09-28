@@ -167,6 +167,7 @@ a:hover{
   width: 100%;
   white-space: nowrap;
   cursor:default;
+  text-align: center;
 }
 
 #abilityHint {
