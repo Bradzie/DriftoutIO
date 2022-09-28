@@ -10,6 +10,7 @@ var mainCanvas = document.getElementById("mainCanvas"),
   classDisplay = document.getElementById('classDisplay'),
   classImage = document.getElementById('classImage'),
   nameInput = document.getElementById('nameInput'),
+  tipsContainer = document.getElementById('tipsContainer'),
   gameGuiContainer = document.getElementById('gameGuiContainer'),
   notificationContainer = document.getElementById('notificationContainer'),
   leaderboardContainer = document.getElementById('leaderboardContainer'),
@@ -61,8 +62,20 @@ var classEntries = [
   "Fragile<br>■□□ Speed<br>■□□ Handling<br>■□□ Durability<br>Ability: Gift",
   "Spike<br>■□□ Speed<br>■■■ Handling<br>■■□ Durability"
 ]
-var classDisplayAngle = 0;
 
+var tips = [
+  "Boosting from a lower speed increases boost power",
+  "Crash other players to earn upgrade points",
+  "Press 'q' to open a detailed leaderboard",
+  "Some cars are heavier and have reduced knockback",
+  "Round modifiers and more cars coming soon :)",
+  "This game also has mobile controls, but is resource intensive",
+  "Boosts and health refill upon completion of a lap"
+]
+
+var tipsCounter = Date.now();
+var tipsIndex = Math.floor(Math.random() * tips.length);
+var classDisplayAngle = 0;
 var numPressed = null;
 var totalConnections=0;
 var playerNames = [];
@@ -90,8 +103,6 @@ function setup(){
   menuContainer.style.opacity = "1";
 
   classDisplay.innerHTML = "<div id='classImageBlock'></div>" + classEntries[classIndex];
-
-  console.log(isMobile);
 
   socket = io();
 
@@ -147,33 +158,33 @@ function setup(){
     if(currentRoom != null){
       if(data.i == currentRoom.roomIndex){
         for(var i in data.updatePack) {
-            for(var j in allPlayers) {
-                if(allPlayers[j].id === data.updatePack[i].id) {
-                    allPlayers[j].x = data.updatePack[i].x;
-                    allPlayers[j].y = data.updatePack[i].y;
-                    allPlayers[j].angle = data.updatePack[i].angle;
-                    allPlayers[j].HP = data.updatePack[i].HP;
-                    allPlayers[j].maxHP = data.updatePack[i].maxHP;
-                    allPlayers[j].alive = data.updatePack[i].alive;
-                    allPlayers[j].laps = data.updatePack[i].laps;
-                    allPlayers[j].boosts = data.updatePack[i].boosts;
-                    allPlayers[j].canBoost = data.updatePack[i].canBoost;
-                    allPlayers[j].boostCooldown = data.updatePack[i].boostCooldown;
-                    allPlayers[j].canAbility = data.updatePack[i].canAbility;
-                    allPlayers[j].abilityCooldown = data.updatePack[i].abilityCooldown;
-                    allPlayers[j].upgradePoints = data.updatePack[i].upgradePoints;
-                    allPlayers[j].lapTime = data.updatePack[i].lapTime;
-                    allPlayers[j].topLapTime = data.updatePack[i].topLapTime;
-                    allPlayers[j].god = data.updatePack[i].god;
-                    allPlayers[j].kills = data.updatePack[i].kills;
-                    if (allPlayers[j].car.name == "Prankster"){
-                      allPlayers[j].trapSize = data.updatePack[i].trapSize;
-                    }
-                    if (allPlayers[j].car.name == "Spike"){
-                      allPlayers[j].bodySize = data.updatePack[i].bodySize;
-                    }
-                }
+          for(var j in allPlayers) {
+            if(allPlayers[j].id === data.updatePack[i].id) {
+              allPlayers[j].x = data.updatePack[i].x;
+              allPlayers[j].y = data.updatePack[i].y;
+              allPlayers[j].angle = data.updatePack[i].angle;
+              allPlayers[j].HP = data.updatePack[i].HP;
+              allPlayers[j].maxHP = data.updatePack[i].maxHP;
+              allPlayers[j].alive = data.updatePack[i].alive;
+              allPlayers[j].laps = data.updatePack[i].laps;
+              allPlayers[j].boosts = data.updatePack[i].boosts;
+              allPlayers[j].canBoost = data.updatePack[i].canBoost;
+              allPlayers[j].boostCooldown = data.updatePack[i].boostCooldown;
+              allPlayers[j].canAbility = data.updatePack[i].canAbility;
+              allPlayers[j].abilityCooldown = data.updatePack[i].abilityCooldown;
+              allPlayers[j].upgradePoints = data.updatePack[i].upgradePoints;
+              allPlayers[j].lapTime = data.updatePack[i].lapTime;
+              allPlayers[j].topLapTime = data.updatePack[i].topLapTime;
+              allPlayers[j].god = data.updatePack[i].god;
+              allPlayers[j].kills = data.updatePack[i].kills;
+              if (allPlayers[j].car.name == "Prankster"){
+                allPlayers[j].trapSize = data.updatePack[i].trapSize;
+              }
+              if (allPlayers[j].car.name == "Spike"){
+                allPlayers[j].bodySize = data.updatePack[i].bodySize;
+              }
             }
+          }
         }
       }
     }
@@ -328,6 +339,16 @@ function draw() {
       carChoice.drawCar(windowWidth/2 - 70, windowHeight - 175, classDisplayAngle);
     }
     classDisplayAngle+=0.04;
+    if(Date.now() > tipsCounter){
+      if(tipsIndex >= tips.length-1){
+        tipsIndex = 0;
+      }
+      else{
+        tipsIndex++;
+      }
+      tipsContainer.innerHTML = tips[tipsIndex];
+      tipsCounter = Date.now() + 3500;
+    }
   }
 }
 
@@ -392,6 +413,7 @@ function dupeCheck(){
 }
 
 function exitGame(){
+  notificationContainer.style.opacity = "0";
   menuContainer.style.visibility = "visible";
   menuContainer.style.opacity = "1";
   gameGuiContainer.style.visibility = "hidden";
@@ -447,7 +469,7 @@ function enterGame(){
       upgradeBlocks += "<button id='upgradeItem' style='width:fit-content' onClick = numPress(" + displayNum + ") type = 'button'>" + Object.keys(carChoice.upgrades)[j] + "</div>";
     }
     else{
-      upgradeBlocks += "<div id='upgradeItem'>" + "<span style='color:#02f6fa'>[" + displayNum + "]</span><br>" + Object.keys(carChoice.upgrades)[j] + "</div>";
+      upgradeBlocks += "<div id='upgradeItem'>" + "<span style='color:#02f6fa'>" + displayNum + "</span><br>" + Object.keys(carChoice.upgrades)[j] + "</div>";
     }
   }
   upgradeContainer.innerHTML = upgradeBlocks;
@@ -617,12 +639,12 @@ function refreshDisplays(){
         }
 
       // Time Overlay
-        timeContainerInterior.innerHTML = "Lap: " +  Math.round(allPlayers[i].lapTime * 100.0 / 1000) / 100;
-        bestTimeContainerInterior.innerHTML = "Best: " + Math.round(allPlayers[i].topLapTime * 100.0 / 1000) / 100;
+        timeContainerInterior.innerHTML = "Lap  " +  Math.round(allPlayers[i].lapTime * 100.0 / 1000) / 100;
+        bestTimeContainerInterior.innerHTML = "Best  " + Math.round(allPlayers[i].topLapTime * 100.0 / 1000) / 100;
 
 
       // Boost Overlay
-        boostContainerCooldown.innerHTML = "Boost " + allPlayers[i].boosts;
+        boostContainerCooldown.innerHTML = allPlayers[i].boosts;
         if(allPlayers[i].boosts == 0){
           boostContainerCooldown.style.backgroundColor = "rgba(180, 30, 30, 0.6)";
         }
@@ -771,9 +793,14 @@ var Player = function(id, name, x, y, car, dev) {
   this.boostCooldown = 0;
   this.laps = 0;
   this.upgradePoints = 1;
+  this.upgrades = [];
   this.lapTime = 0;
   this.topLapTime = 0;
   this.god = true;
+
+  for (var x in this.car.upgrades){
+    this.upgrades.push([0]);
+  }
 
   this.draw = function() {
     // Player's car

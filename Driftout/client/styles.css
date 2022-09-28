@@ -32,6 +32,20 @@ a:hover{
   color: white;
 }
 
+#tipsContainer{
+  width: 50%;
+  height: 10%;
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  transform: translate(-50%);
+  font-size: 18px;
+  text-align: center;
+  line-height: 60px;
+  color: (200,200,200);
+  background-color: rgba(30,30,30, 0.2);
+}
+
 #gameUIContainer {
   position: absolute;
 	width: 100%;
@@ -135,10 +149,9 @@ a:hover{
 #abilityContainer {
   position: absolute;
   width: 4em;
-  bottom: 100px;
+  bottom: 110px;
   left: 10px;
   padding: 5px;
-  border-radius: 3px;
   background-color: rgba(30, 30, 30, 0.6);
   font-family: 'Kdam Thmor Pro';
   font-size: 32px;
@@ -147,18 +160,18 @@ a:hover{
 }
 
 #abilityContainerCooldown {
-  bottom: 100px;
+  bottom: 110px;
   left: 10px;
   padding: 5px;
-  border-radius: 2px;
   border-bottom: solid white 5px;
   width: 100%;
   white-space: nowrap;
   cursor:default;
+  text-align: center;
 }
 
 #abilityHint {
-  font-size: 12px;
+  font-size: 16px;
   color: white;
   text-align: center;
   padding: 0px;
@@ -189,7 +202,6 @@ a:hover{
   bottom: 130px;
   right: 10px;
   padding: 5px;
-  border-radius: 3px;
   background-color: rgba(30, 30, 30, 0.6);
   font-family: 'Kdam Thmor Pro';
   font-size: 30px;
@@ -201,7 +213,6 @@ a:hover{
   bottom: 120px;
   left: 10px;
   padding: 5px;
-  border-radius: 2px;
   background-color: rgba(30, 30, 30, 0.6);
   width: 92%;
   white-space: nowrap;
@@ -215,7 +226,6 @@ a:hover{
   bottom: 70px;
   right: 10px;
   padding: 5px;
-  border-radius: 3px;
   background-color: rgba(30, 30, 30, 0.6);
   font-family: 'Kdam Thmor Pro';
   font-size: 24px;
@@ -227,7 +237,6 @@ a:hover{
   bottom: 70px;
   left: 10px;
   padding: 5px;
-  border-radius: 2px;
   background-color: rgba(30, 30, 30, 0.6);
   width: 92%;
   white-space: nowrap;
@@ -240,7 +249,6 @@ a:hover{
   bottom: 10px;
   right: 10px;
   padding: 5px;
-  border-radius: 3px;
   background-color: rgba(30, 30, 30, 0.6);
   font-family: 'Kdam Thmor Pro';
   font-size: 24px;
@@ -252,7 +260,6 @@ a:hover{
   bottom: 10px;
   left: 10px;
   padding: 5px;
-  border-radius: 2px;
   background-color: rgba(30, 30, 30, 0.6);
   width: 92%;
   white-space: nowrap;
@@ -316,15 +323,15 @@ a:hover{
 
 #boostContainer {
   position: absolute;
-  width: 4em;
+  width: 9%;
   bottom: 10px;
   left: 10px;
   padding: 5px;
-  border-radius: 3px;
   background-color: rgba(30, 30, 30, 0.6);
   font-family: 'Kdam Thmor Pro';
-  font-size: 32px;
+  font-size: 16px;
   color: white;
+  text-align: center;
   cursor:default;
 }
 
@@ -332,9 +339,9 @@ a:hover{
   bottom: 10px;
   left: 10px;
   padding: 5px;
-  border-radius: 2px;
   border-bottom: solid white 5px;
   width: 100%;
+  font-size: 32px;
   white-space: nowrap;
   cursor:default;
 }
@@ -467,6 +474,7 @@ a:hover{
   margin: 0 auto;
   display: block;
   font-family: 'Overpass';
+  transition: scale 2s;
 }
 
 #inputContainer {
@@ -490,10 +498,12 @@ a:hover{
   border: none;
   font-family: 'Overpass';
   text-align: center;
+  transition: transform 2s;
 }
 
 #enterGameButton:hover{
   background-color: #008f91;
+  transform: translateX(10%);
 }
 
 #changeClassButton{
@@ -506,10 +516,12 @@ a:hover{
   border: none;
   font-family: 'Overpass';
   text-align: center;
+  transition: transform 2s;
 }
 
 #changeClassButton:hover{
   background-color: #008f91;
+  transform: translateX(-10%);
 }
 
 #classImageBlock{
@@ -672,13 +684,18 @@ a:hover{
 
   #upgradeContainer {
     width: 95%;
-    font-size: 16px;
+    font-size: 20px;
   }
 
   #upgradeItem {
     border: none;
-    font-size: 26px;
+    font-size: 30px;
     font-weight: bold;
+  }
+
+  #upgradeProgress {
+    width:100%;
+    border-top: solid white 4px;
   }
 
   #upgradeItem : hover {
