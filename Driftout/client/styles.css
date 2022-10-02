@@ -714,6 +714,7 @@ a:hover{
 
   #boostContainerCooldown {
     top: 10px;
+    height: 66px;
   }
 
   #currentLaps {
