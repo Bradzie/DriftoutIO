@@ -45,7 +45,8 @@ We are currently at: V0.7.6
 - V0.7.3 Added more mobile controls and functionality
 - V0.7.4 Added css mobile breakpoints for different displays dependant on screen size
 - V0.7.5 Further GUI changes, reduced stress on server update packs
-- (Here) V0.7.6 (Bug fix) Classes no longer display over metrics screen, aligned ability and boost containers
+- V0.7.6 (Bug fix) Classes no longer display over metrics screen, aligned ability and boost containers
+- (Here) V0.7.7 Mobile GUI changes, Google adsense
 
 - v0.8 Mobile integration
 
