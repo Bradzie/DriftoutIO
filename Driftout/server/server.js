@@ -928,7 +928,7 @@ var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boo
 
 // Car class objects
 allCars = {
-  Racer : new Car('Racer', 150, 6, 8, {
+  Racer : new Car('Racer', 150, 6, 5, {
     MaxHP : 12,
     RegenHP : 0.005,
     MaxBoosts: 1,
@@ -937,7 +937,7 @@ allCars = {
     SingleBoost : 7.5
   }, 0.11, 2.5, 25, 5, null, null, null),
 
-  Prankster : new Car('Prankster', 120, 6, 5, {
+  Prankster : new Car('Prankster', 120, 6, 4, {
     MaxHP : 10,
     RegenHP : 2,
     TrapDamage: 8,
@@ -960,7 +960,7 @@ allCars = {
     };
   }, null),
 
-  Bullet : new Car('Bullet', 100, 12, 5, {
+  Bullet : new Car('Bullet', 100, 12, 3, {
     MaxHP : 10,
     RegenHP : 2,
     MaxBoosts: 1,
@@ -975,7 +975,7 @@ allCars = {
   }
 }, null),
 
-  Tank : new Car('Tank', 200, 4, 5, {
+  Tank : new Car('Tank', 200, 4, 4, {
     MaxHP : 14,
     RegenHP : 2,
     MaxBoosts: 1,
@@ -986,7 +986,7 @@ allCars = {
     return null
   }, null),
 
-  Sprinter : new Car('Sprinter', 80, 12, 10, {
+  Sprinter : new Car('Sprinter', 80, 12, 5, {
     MaxHP : 8,
     RegenHP : 3,
     MaxBoosts: 1,
@@ -1000,7 +1000,7 @@ allCars = {
     }
   }, null),
 
-  Fragile : new Car('Fragile', 70, 6, 5, {
+  Fragile : new Car('Fragile', 70, 6, 3, {
     MaxHP : 20,
     RegenHP : 3,
     MaxBoosts: 2,

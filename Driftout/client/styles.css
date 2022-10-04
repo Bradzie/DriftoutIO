@@ -148,7 +148,7 @@ a:hover{
 
 #abilityContainer {
   position: absolute;
-  width: 4em;
+  width: 9%;
   bottom: 110px;
   left: 10px;
   padding: 5px;
@@ -498,7 +498,7 @@ a:hover{
   border: none;
   font-family: 'Overpass';
   text-align: center;
-  transition: transform 2s;
+  transition: transform 3s;
 }
 
 #enterGameButton:hover{
@@ -516,7 +516,7 @@ a:hover{
   border: none;
   font-family: 'Overpass';
   text-align: center;
-  transition: transform 2s;
+  transition: transform 3s;
 }
 
 #changeClassButton:hover{
@@ -714,6 +714,7 @@ a:hover{
 
   #boostContainerCooldown {
     top: 10px;
+    height: 66px;
   }
 
   #currentLaps {
