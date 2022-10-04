@@ -43,6 +43,7 @@ var mainCanvas = document.getElementById("mainCanvas"),
 var dev = false;
 var socket;
 var playing = false;
+var metricsDisplay = false;
 var allCars;
 var allTracks;
 var currentTrack;
@@ -332,22 +333,29 @@ function draw() {
     if(classIndex == 6){
       carChoice = allCars.Spike;
     }
-    if(windowWidth < 1024){
-      carChoice.drawCar(windowWidth/2.65, windowHeight/1.7, classDisplayAngle, 3);
-    }
-    else{
-      carChoice.drawCar(windowWidth/2 - 70, windowHeight - 175, classDisplayAngle);
-    }
-    classDisplayAngle+=0.04;
-    if(Date.now() > tipsCounter){
-      if(tipsIndex >= tips.length-1){
-        tipsIndex = 0;
+    if(!metricsDisplay){
+      if(windowWidth < 1024){
+        if(isMobile){
+          carChoice.drawCar(windowWidth/2.65, windowHeight/1.7, classDisplayAngle, 3);
+        }
+        else{
+          carChoice.drawCar(windowWidth/2.65, windowHeight/1.55, classDisplayAngle, 2);
+        }
       }
       else{
-        tipsIndex++;
+        carChoice.drawCar(windowWidth/2 - 70, windowHeight - 175, classDisplayAngle);
       }
-      tipsContainer.innerHTML = tips[tipsIndex];
-      tipsCounter = Date.now() + 3500;
+      classDisplayAngle+=0.04;
+      if(Date.now() > tipsCounter){
+        if(tipsIndex >= tips.length-1){
+          tipsIndex = 0;
+        }
+        else{
+          tipsIndex++;
+        }
+        tipsContainer.innerHTML = tips[tipsIndex];
+        tipsCounter = Date.now() + 3500;
+      }
     }
   }
 }
@@ -513,11 +521,13 @@ function toggleMetricsOn(){
       }
       metricsData.innerHTML = "Total page vists since restart: " + totalConnections + "</br>All player names: " + playerNameList;
     }
+    metricsDisplay = true;
 }
 
 function toggleMetricsOff(){
     metricsContainer.style.opacity = "0";
     metricsContainer.style.visibility = "hidden";
+    metricsDisplay = false;
 }
 
 function numPress(num){
@@ -1004,7 +1014,7 @@ var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boo
 }
 
 allCars = {
-  Racer : new Car('Racer', 150, 6, 8, {
+  Racer : new Car('Racer', 150, 6, 5, {
     MaxHP : 12,
     RegenHP : 0.05,
     MaxBoosts: 1,
@@ -1028,7 +1038,7 @@ allCars = {
     smooth(4);
     pop();
   }),
-  Prankster : new Car('Prankster', 120, 6, 5, {
+  Prankster : new Car('Prankster', 120, 6, 4, {
     MaxHP : 10,
     RegenHP : 0.05,
     TrapDamage: 8,
@@ -1095,7 +1105,7 @@ allCars = {
     smooth();
     pop();
   }),
-  Bullet : new Car('Bullet', 100, 12, 5, {
+  Bullet : new Car('Bullet', 100, 12, 3, {
     MaxHP : 10,
     RegenHP : 0.08,
     MaxBoosts: 1,
@@ -1128,7 +1138,7 @@ allCars = {
     smooth();
     pop();
   }),
-  Tank : new Car('Tank', 200, 4, 5, {
+  Tank : new Car('Tank', 200, 4, 4, {
     MaxHP : 14,
     RegenHP : 0.04,
     MaxBoosts: 1,
@@ -1148,7 +1158,7 @@ allCars = {
     smooth();
     pop();
   }),
-  Sprinter : new Car('Sprinter', 80, 12, 10, {
+  Sprinter : new Car('Sprinter', 80, 12, 5, {
     MaxHP : 8,
     RegenHP : 0.05,
     MaxBoosts: 1,
@@ -1177,7 +1187,7 @@ allCars = {
     smooth();
     pop();
   }),
-  Fragile : new Car('Fragile', 70, 6, 5, {
+  Fragile : new Car('Fragile', 70, 6, 3, {
     MaxHP : 20,
     RegenHP : 0.06,
     MaxBoosts: 2,
