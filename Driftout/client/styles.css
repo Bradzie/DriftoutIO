@@ -583,14 +583,14 @@ a:hover{
 
   #nameInput {
     width:100%;
-    height: 15vw;
+    height: 10vh;
     align-self: center;
     text-align: center;
     border-radius: 0px;
     border: 0;
     outline: 0;
-    font-size: 10vw;
-    padding: 5px 1em, 1em, 5px;
+    font-size: 8vh;
+    padding: 1vh 1em, 1em, 1vh;
     display: block;
     font-family: 'Overpass';
   }
@@ -605,33 +605,33 @@ a:hover{
   }
 
   #enterGameButton{
-    height: 12vw;
+    height: 8vh;
     width:100%;
-    font-size: 5vw;
-    padding: 3vw;
+    font-size: 4vh;
+    padding: 1vh;
   }
 
   #changeClassButton{
-    height: 12vw;
+    height: 8vh;
     width:100%;
-    font-size: 5vw;
-    padding: 3vw;
+    font-size: 4vh;
+    padding: 1vh;
   }
 
   #classDisplay{
-    max-width: 60vw;
-    min-width: 60vw;
-    max-height: 35vw;
-    min-height: 35vw;
+    max-width: 48vh;
+    min-width: 48vh;
+    max-height: 25vh;
+    min-height: 25vh;
     position:absolute;
     top:45%;
-    font-size: 3vw;
+    font-size: 2.5vh;
     padding: 0.5em;
   }
 
   #classImageBlock{
-    width: 29vw;
-    height: 29vw;
+    width: 20vh;
+    height: 20vh;
     padding: 1em;
   }
 
@@ -639,7 +639,7 @@ a:hover{
     display: flex;
     text-align: center;
     align-self: center;
-    font-size: 3vw;
+    font-size: 3vh;
     padding: 0em;
     text-decoration: none;
     color: white;
@@ -651,20 +651,20 @@ a:hover{
 
   #authorContainer {
     position: absolute;
-    top:80%;
+    top:84%;
     left: 50%;
     transform: translate(-50%);
-    font-size: 5vw;
+    font-size: 3vh;
     font-weight: 600;
     text-align: left;
   }
 
   #inspirationContainer {
     position: absolute;
-    top:88%;
+    top:89%;
     left: 50%;
     transform: translate(-50%);
-    font-size: 5vw;
+    font-size: 3vh;
     font-weight: 600;
     text-align: left;
   }
@@ -758,6 +758,10 @@ a:hover{
 
   #abilityContainerCooldown {
     top: 100px
+  }
+
+  #tipsContainer{
+    visibility: hidden;
   }
 
 }

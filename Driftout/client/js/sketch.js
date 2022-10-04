@@ -336,10 +336,10 @@ function draw() {
     if(!metricsDisplay){
       if(windowWidth < 1024){
         if(isMobile){
-          carChoice.drawCar(windowWidth/2.65, windowHeight/1.7, classDisplayAngle, 3);
+          carChoice.drawCar(windowWidth/2.65, windowHeight/1.7, classDisplayAngle, 2);
         }
         else{
-          carChoice.drawCar(windowWidth/2.65, windowHeight/1.55, classDisplayAngle, 2);
+          carChoice.drawCar(windowWidth/2.8, windowHeight/1.55, classDisplayAngle, 1.5);
         }
       }
       else{
