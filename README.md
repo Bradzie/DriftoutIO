@@ -27,7 +27,7 @@ The game finally has independent hosting and a custom domain!
 
 I'm slowly approaching the planned criteria I had imagined months ago when I had just started development. Version numbers allow me to reflect how close I am to what I feel is the full release.
 
-We are currently at: V0.7.5
+We are currently at: V0.7.6
 
 - V0.6 All upgrades functional
 - V0.6.1 (Bug fix) Maps rotating inbetween games
@@ -44,7 +44,8 @@ We are currently at: V0.7.5
 - V0.7.2 Added css formatting and temporary mobile controls
 - V0.7.3 Added more mobile controls and functionality
 - V0.7.4 Added css mobile breakpoints for different displays dependant on screen size
-- (Here) V0.7.5 Further GUI changes, reduced stress on server update packs
+- V0.7.5 Further GUI changes, reduced stress on server update packs
+- (Here) V0.7.6 (Bug fix) Classes no longer display over metrics screen, aligned ability and boost containers
 
 - v0.8 Mobile integration
 
