@@ -786,7 +786,7 @@ setInterval(() => {
         }
       }
     }
-}, 1000/90)
+}, 1000/75)
 
 
 // loop spped to update player properties
@@ -805,7 +805,7 @@ setInterval(() => {
     }
     io.emit("updatePack", {updatePack:updatePack, i:i});
   }
-}, 1000/90)
+}, 1000/75)
 
 var checkPoints = [
   [-200, 200, 1600, 2000],
