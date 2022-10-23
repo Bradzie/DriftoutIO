@@ -451,6 +451,14 @@ a:hover{
   right: 1%;
 }
 
+#ioGameSpaceLink {
+  position: absolute;
+  bottom: 35px;
+  font-size: 24px;
+  font-weight: 600;
+  right: 1%;
+}
+
 #carSelect {
   align-items: center;
   text-align: center;
