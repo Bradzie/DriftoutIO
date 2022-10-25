@@ -438,7 +438,6 @@ function exitGame(){
 // Executed on main menu 'race' button,
 
 function enterGame(){
-  return;
   var carChoice = '';
   playing = true;
   if(classIndex == 0){

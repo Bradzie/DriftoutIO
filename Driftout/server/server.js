@@ -20,12 +20,13 @@ var currentTrack;
 var currentConnections = [];
 var totalConnections = 0;
 var playerNames = [];
+var debug = true;
 
 // ---------- MODIFIERS ----------
 
 var grip = 0.99;
 var lapsToWin = 20;
-var maxRoomSize = 8;
+var maxRoomSize = 10;
 var invincibilityPeriod = 4000;
 
 // ---------- ---------- ----------
@@ -320,6 +321,8 @@ var Player = function(id, name, x, y, car, dev) {
   }
 
   this.events = function() {
+
+    if(debug){this.HP=100};
 
     if (this.god[0]){
       if(Date.now()>this.god[1]){
@@ -792,15 +795,19 @@ setInterval(() => {
 // loop spped to update player properties
 setInterval(() => {
   for(var i in rooms){
+    // If period after a win is complete, kill all players & restart game
     if(Date.now() > rooms[i].gameEndPeriod && rooms[i].gameEndPeriod != 0){
       for(var j in rooms[i].allPlayers) {
         rooms[i].allPlayers[j].alive = false;
       }
       rooms[i].startGame();
     }
-  var updatePack = [];
+
+    // Init and assign player data to update packet & send to clients
+    var updatePack = [];
     for(var j in rooms[i].allPlayers) {
         updatePack.push(rooms[i].allPlayers[j].getUpdatePack());
+        // Process player events
         rooms[i].allPlayers[j].events();
     }
     io.emit("updatePack", {updatePack:updatePack, i:i});
