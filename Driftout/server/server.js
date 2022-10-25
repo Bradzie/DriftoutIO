@@ -63,15 +63,18 @@ io.on("connection", function(socket){
           player.myRoom = i;
           rooms[i].allPlayers.push(player);
           allocated = true;
+          console.log("New player: '" + player.name + "' in room " + i  + " ID: " + player.id);
           break;
         }
       }
 
       if(allocated == false){
         rooms.push(new Room());
+        console.log("Room " + (rooms.length-1) + " created")
         player.myRoom = rooms.length-1;
         rooms[rooms.length-1].allPlayers.push(player);
         rooms[rooms.length-1].startGame();
+        console.log("New player: '" + player.name + "' in room " + (rooms.length-1) + " ID: " + player.id);
       }
 
       io.emit("roomUpdate", {rooms:rooms, roomIndex:player.myRoom});
@@ -195,7 +198,7 @@ var Player = function(id, name, x, y, car, dev) {
   this.boostPower = car.boostPower;
   this.size = car.size;
   this.mass = car.mass;
-  this.collisionDamage = car.name == "Spike" ? 30 : 20;
+  this.collisionDamage = car.name == "Spike" ? 22 : 20;
   this.angle = 0;
   this.canBoost = Date.now();
   this.boostCooldown = 3000;
@@ -475,13 +478,15 @@ var Player = function(id, name, x, y, car, dev) {
             this.vX *= 0.3;
             this.vY *= 0.3;
             this.HP -= rooms[this.myRoom].currentEntities[i].damage;
-            if(this.HP < 0 && rooms[this.myRoom].allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId).length > 0){
-              rooms[this.myRoom].allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].upgradePoints++;
-              rooms[this.myRoom].allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].kills++;
-              rooms[this.myRoom].notifications.push(allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].name + " crashed " + this.name + "!");
-              this.alive = false;
+            if(allPlayers){
+              if(this.HP < 0 && rooms[this.myRoom].allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId).length > 0){
+                rooms[this.myRoom].allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].upgradePoints++;
+                rooms[this.myRoom].allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].kills++;
+                rooms[this.myRoom].notifications.push(allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].name + " crashed " + this.name + "!");
+                this.alive = false;
+              }
+              rooms[this.myRoom].currentEntities.splice(i, 1);
             }
-            rooms[this.myRoom].currentEntities.splice(i, 1);
           }
         }
       }
@@ -492,7 +497,7 @@ var Player = function(id, name, x, y, car, dev) {
           if (rooms[this.myRoom].allPlayers[i].id != this.id){
 
             // If this player's car overlaps any other player's car
-            if (Math.sqrt(((this.x-rooms[this.myRoom].allPlayers[i].x)**2)+((this.y-rooms[this.myRoom].allPlayers[i].y)**2)) < this.size + rooms[this.myRoom].allPlayers[i].size){
+            if (Math.sqrt(((this.x-rooms[this.myRoom].allPlayers[i].x)**2)+((this.y-rooms[this.myRoom].allPlayers[i].y)**2)) < this.size + rooms[this.myRoom].allPlayers[i].size) && rooms[this.myRoom].allPlayers[i].alive == true{
 
               // Physics Calc
 
