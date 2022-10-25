@@ -353,7 +353,8 @@ function draw() {
         else{
           tipsIndex++;
         }
-        tipsContainer.innerHTML = tips[tipsIndex];
+        //tipsContainer.innerHTML = tips[tipsIndex];
+        tipsContainer.innerHTML = "This game is currently under maintenance, come back soon :)"
         tipsCounter = Date.now() + 3500;
       }
     }
@@ -437,6 +438,7 @@ function exitGame(){
 // Executed on main menu 'race' button,
 
 function enterGame(){
+  return;
   var carChoice = '';
   playing = true;
   if(classIndex == 0){
