@@ -60,7 +60,8 @@ We are currently at: V0.7.6
 
 There are currently multiple bugs on list to be corrected one by one - I will update this list as often as I can so it stays relevant. As of 11/9/22 I advertised this game on the IOgames sub-reddit and wow, there was alot of bugs. Was really fun playing with everyone :)
 
-1. Sometimes, but rarely, lap checkpoints can be completely missed (likely due to the size of checkpoint triggers)
-2. Leaving the page open for a long while will cause a client-side crash (likely due to the assinged room no longer existing)
+1. -- Major -- Sometimes the camera will not properly follow the player, and tracks are out of sync with collisions. This is top of the list right now :)
+2. Sometimes, but rarely, lap checkpoints can be completely missed (likely due to the size of checkpoint triggers)
+3. Leaving the page open for a long while will cause a client-side crash (likely due to the assinged room no longer existing)
 
 
