@@ -20,10 +20,10 @@ var currentTrack;
 var currentConnections = [];
 var totalConnections = 0;
 var playerNames = [];
-var debug = true;
 
 // ---------- MODIFIERS ----------
 
+var debug = false;
 var grip = 0.99;
 var lapsToWin = 20;
 var maxRoomSize = 10;
@@ -34,13 +34,6 @@ var invincibilityPeriod = 4000;
 server.listen(port, host);
 
 console.log("Server started on port " + port);
-
-function startGame(){
-  gameEndPeriod = 0;
-  notifications = [];
-  currentEntities = [];
-
-}
 
 io.on("connection", function(socket){
   console.log("New connection, ID: " + socket.id);
@@ -163,9 +156,11 @@ io.on("connection", function(socket){
 });
 
 function removePlayer (roomIndex, removeId){
-  for(var i in rooms[roomIndex].allPlayers){
-    if(rooms[roomIndex].allPlayers[i].id == removeId){
-      rooms[roomIndex].allPlayers.splice(i,1);
+  if(rooms.length > 0){
+    for(var i in rooms[roomIndex].allPlayers){
+      if(rooms[roomIndex].allPlayers[i].id == removeId){
+        rooms[roomIndex].allPlayers.splice(i,1);
+      }
     }
   }
 }
@@ -1031,5 +1026,3 @@ allCars = {
     return null
   }, null)
 };
-
-startGame();

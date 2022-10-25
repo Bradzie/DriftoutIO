@@ -63,7 +63,10 @@ var classEntries = [
   "Fragile<br>■□□ Speed<br>■□□ Handling<br>■□□ Durability<br>Ability: Gift",
   "Spike<br>■□□ Speed<br>■■■ Handling<br>■■□ Durability"
 ]
-
+var forceDisconnect = 0;
+var errors = [
+  "Failed to reach server for 3 seconds, disconnected. Please refresh :)"
+]
 var tips = [
   "Boosting from a lower speed increases boost power",
   "Crash other players to earn upgrade points",
@@ -84,6 +87,7 @@ var currentRoom = null;
 var myName;
 var isMobile;
 var mobileCoords;
+var timeOutTick = 0;
 
 function preload(){
 }
@@ -189,6 +193,7 @@ function setup(){
         }
       }
     }
+    timeOutTick = 0;
   });
 
   // update socket for entities
@@ -204,8 +209,6 @@ function setup(){
       }
     }
     if(playing == true && currentRoom != null){
-      //console.log(data.currentEntities, currentRoom);
-      //console.log(currentRoom);
       if(data.currentEntities[0] == currentRoom.roomIndex){
         currentEntities = data.currentEntities[1];
         if (currentEntities.length == 0 && data.currentEntities[1].length > 0){
@@ -267,12 +270,31 @@ if(isMobile){
 }
 
 function draw() {
+  // Resize canvas to correct dimensions (non-functional on mobile?)
   resizeCanvas(windowWidth, windowHeight);
+
+  // Render game only if player exists within room
   if (playing == true && allPlayers.filter(player => player.id === myId).length == 1){
-    background(37, 150, 190); // it gets a hex/rgb color
+
+    // Start counting up from last packet recieved
+    timeOutTick++;
+
+    // If no packets recieved in 3 seconds (30FPS * 3 = 90 ticks), exit game
+    if(timeOutTick > 90){
+      exitGame();
+      forceDisconnect = 1;
+      enterGameButton.setAttribute('onClick', '');
+      return;
+    }
+
+    // Render background and GUI's
+    background(37, 150, 190);
     refreshDisplays();
+
+    // Send keyboard/mouse inputs to server
     sendInputData();
 
+    // Translate screen to match assinged player and exit if player is not alive
     for(var i in allPlayers) {
         if(allPlayers[i].id == myId) {
           allPlayers[i].angle = clientPlayerAngle;
@@ -283,18 +305,22 @@ function draw() {
         }
     }
 
+    // Draw track in current room
     currentTrack.drawMap();
 
+    // Draw entities only if they exist
     for(var i in currentEntities){
       if (typeof currentEntities[i].draw != "undefined"){
         currentEntities[i].draw(currentEntities[i].x, currentEntities[i].y, currentEntities[i].size/20);
       }
     }
 
+    // Draw mobile controls if device is classed as mobile
     if(isMobile == true){
       drawMobileControls();
     }
 
+    // Draw player
     for(var i in allPlayers) {
       if(allPlayers[i].alive == true){
         allPlayers[i].draw();
@@ -302,7 +328,6 @@ function draw() {
         if(allPlayers[i].bodySize){
           scale(allPlayers[i].bodySize);
         }
-        //debugDraw(allPlayers[i].topLapTime);
       }
     }
 
@@ -353,8 +378,12 @@ function draw() {
         else{
           tipsIndex++;
         }
-        //tipsContainer.innerHTML = tips[tipsIndex];
-        tipsContainer.innerHTML = "This game is currently under maintenance, come back soon :)"
+        if(forceDisconnect > 0){
+          tipsContainer.innerHTML = errors[0];
+        }
+        else{
+          tipsContainer.innerHTML = tips[tipsIndex];
+        }
         tipsCounter = Date.now() + 3500;
       }
     }
