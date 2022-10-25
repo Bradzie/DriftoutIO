@@ -604,6 +604,8 @@ a:hover{
   }
 
   #inputContainer {
+    transition: none;
+    width: 100%;
     position: absolute;
     top:12%;
     align-self: center;
@@ -614,7 +616,7 @@ a:hover{
 
   #enterGameButton{
     height: 8vh;
-    width:100%;
+    width: 100%;
     font-size: 4vh;
     padding: 1vh;
   }
@@ -655,6 +657,7 @@ a:hover{
 
   #sourceCodeNav{
     align-self: center;
+    font-size: 2vh;
   }
 
   #authorContainer {
@@ -662,7 +665,7 @@ a:hover{
     top:84%;
     left: 50%;
     transform: translate(-50%);
-    font-size: 3vh;
+    font-size: 2vh;
     font-weight: 600;
     text-align: left;
   }
@@ -672,7 +675,7 @@ a:hover{
     top:89%;
     left: 50%;
     transform: translate(-50%);
-    font-size: 3vh;
+    font-size: 2vh;
     font-weight: 600;
     text-align: left;
   }
@@ -683,6 +686,14 @@ a:hover{
     font-size: 3vw;
     font-weight: 600;
     right: 1%;
+  }
+
+  #metricsButton {
+    font-size: 2vh;
+  }
+
+  #ioGameSpaceLink {
+    font-size: 3vw;
   }
 
   #upgradePointsTitle {
@@ -722,7 +733,7 @@ a:hover{
 
   #boostContainerCooldown {
     top: 10px;
-    height: 66px;
+    height: 45%;
   }
 
   #currentLaps {

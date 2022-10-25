@@ -65,7 +65,7 @@ var classEntries = [
 ]
 var forceDisconnect = 0;
 var errors = [
-  "Failed to reach server for 3 seconds, disconnected. Please refresh :)"
+  "Failed to reach server for 3 seconds. Most likely an update, refresh in a minute. :D"
 ]
 var tips = [
   "Boosting from a lower speed increases boost power",
@@ -361,10 +361,10 @@ function draw() {
     if(!metricsDisplay){
       if(windowWidth < 1024){
         if(isMobile){
-          carChoice.drawCar(windowWidth/2.65, windowHeight/1.7, classDisplayAngle, 3);
+          carChoice.drawCar(windowWidth/2 - 200, windowHeight/1.5, classDisplayAngle, 3);
         }
         else{
-          carChoice.drawCar(windowWidth/2.8, windowHeight/1.55, classDisplayAngle, 1.5);
+          carChoice.drawCar(windowWidth/2 - 70, windowHeight/1.55, classDisplayAngle);
         }
       }
       else{
@@ -534,6 +534,7 @@ function toggleChat(){
     chatDisplay.style.display = "none";
   } else {
     chatDisplay.style.display = "block";
+    chatToggle.style.backgroundColor = "rgba(30, 30, 30, 0.6)";
   }
 }
 
@@ -597,6 +598,10 @@ function refreshDisplays(){
     tabLeaderboard.style.opacity = "1";
   }
 
+  if(keyIsDown(67) && chatDisplay.style.display != "block"){
+    toggleChat();
+  }
+
   if(keyIsDown(13) && chatInput.value != ""){
     for(var i in currentRoom.allPlayers){
       if (currentRoom.allPlayers[i].id == myId){
@@ -614,6 +619,9 @@ function refreshDisplays(){
       }
       //chatText += "</table>";
       chatContent.innerHTML = chatText;
+      if(chatDisplay.style.display != "block"){
+        chatToggle.style.backgroundColor = "yellow";
+      }
   }
 
   var order = 0;

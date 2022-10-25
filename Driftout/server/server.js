@@ -490,19 +490,27 @@ var Player = function(id, name, x, y, car, dev) {
       if (rooms[this.myRoom].allPlayers.length > 1){
         for (var i in rooms[this.myRoom].allPlayers){
           if (rooms[this.myRoom].allPlayers[i].id != this.id){
+
+            // If this player's car overlaps any other player's car
             if (Math.sqrt(((this.x-rooms[this.myRoom].allPlayers[i].x)**2)+((this.y-rooms[this.myRoom].allPlayers[i].y)**2)) < this.size + rooms[this.myRoom].allPlayers[i].size){
 
               // Physics Calc
 
+              // Calculate angle at which this player collided with another
               var collidedPlayerAngle = Math.atan2(this.y - rooms[this.myRoom].allPlayers[i].y, this.x - rooms[this.myRoom].allPlayers[i].x);
 
+              // Calculate difference in velocities
               var xVDiff = this.vX - rooms[this.myRoom].allPlayers[i].vX;
               var yVDiff = this.vY - rooms[this.myRoom].allPlayers[i].vY;
 
+              // Calulcate difference in distances
               var xDist = rooms[this.myRoom].allPlayers[i].x - this.x;
               var yDist = rooms[this.myRoom].allPlayers[i].y - this.y;
 
+              // Check if both cars are approaching each-other
               if(xVDiff * xDist + yVDiff * yDist >= 0){
+                console.log("Collision! - - - - - - - -")
+                console.log("Between: " + rooms[this.myRoom].allPlayers[i].name + " and " + this.name);
                 var angle = -Math.atan2(rooms[this.myRoom].allPlayers[i].y - this.y, rooms[this.myRoom].allPlayers[i].x - this.x);
 
                 var m1 = this.mass;
@@ -517,6 +525,11 @@ var Player = function(id, name, x, y, car, dev) {
                 var v1Final = rotate(v1, -angle);
                 var v2Final = rotate(v2, -angle);
 
+                var impact = (Math.abs(xVDiff) + Math.abs(yVDiff))/3;
+                console.log(impact);
+
+                console.log(v1Final, v2Final)
+
                 //Damage Calc
 
                 if(rooms[this.myRoom].allPlayers[i].god[0]){
@@ -524,14 +537,17 @@ var Player = function(id, name, x, y, car, dev) {
                 }
 
                 if (this.resisting == true){
-                  this.HP -= Math.abs((this.vX + this.vY)/2) * (rooms[this.myRoom].allPlayers[i].collisionDamage * this.ability().dashResist);
+                  this.HP -= impact * rooms[this.myRoom].allPlayers[i].collisionDamage * this.ability().dashResist;
                 }
                 else{
-                  this.HP -= Math.abs((this.vX + this.vY)/2) * rooms[this.myRoom].allPlayers[i].collisionDamage;
+                  console.log("Player 1 damaged by: " + impact * rooms[this.myRoom].allPlayers[i].collisionDamage);
+                  this.HP -= impact * rooms[this.myRoom].allPlayers[i].collisionDamage;
                 }
-                rooms[this.myRoom].allPlayers[i].HP -= Math.abs((rooms[this.myRoom].allPlayers[i].vX + rooms[this.myRoom].allPlayers[i].vY)/2) * this.collisionDamage;
+                console.log("Player 2 damaged by: " + impact * this.collisionDamage);
+                rooms[this.myRoom].allPlayers[i].HP -= impact * this.collisionDamage;
 
                 if(rooms[this.myRoom].allPlayers[i].HP < 0){
+                  console.log("Player 2 has crashed!");
                   this.upgradePoints++;
                   this.kills++;
                   rooms[this.myRoom].notifications.push(this.name + " crashed " + rooms[this.myRoom].allPlayers[i].name + "!");
@@ -540,8 +556,8 @@ var Player = function(id, name, x, y, car, dev) {
 
                 //Apply Movement
 
-                this.vX = v1Final.x;
-                this.vY = v1Final.y;
+                this.vX = v1Final.x*1.1;
+                this.vY = v1Final.y*1.1;
 
                 if(this.bounceModifier){
                   rooms[this.myRoom].allPlayers[i].vX = v2Final.x*this.bounceModifier;
@@ -932,7 +948,7 @@ var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boo
 allCars = {
   Racer : new Car('Racer', 150, 6, 5, {
     MaxHP : 12,
-    RegenHP : 0.005,
+    RegenHP : 0.3,
     MaxBoosts: 1,
     MoveSpeed : [0.01, 0.5],
     SingleHeal : 0.4,
@@ -941,7 +957,7 @@ allCars = {
 
   Prankster : new Car('Prankster', 120, 6, 4, {
     MaxHP : 10,
-    RegenHP : 2,
+    RegenHP : 0.3,
     TrapDamage: 8,
     TrapCooldown : 250,
     TrapSize : 4,
@@ -964,7 +980,7 @@ allCars = {
 
   Bullet : new Car('Bullet', 100, 12, 3, {
     MaxHP : 10,
-    RegenHP : 2,
+    RegenHP : 0.4,
     MaxBoosts: 1,
     MoveSpeed : [0.005, 0.8],
     DashResist : 0.05,
@@ -979,7 +995,7 @@ allCars = {
 
   Tank : new Car('Tank', 200, 4, 4, {
     MaxHP : 14,
-    RegenHP : 2,
+    RegenHP : 0.8,
     MaxBoosts: 1,
     BoostPower : 0.4,
     BouncePower : 0.1,
@@ -990,7 +1006,7 @@ allCars = {
 
   Sprinter : new Car('Sprinter', 80, 12, 5, {
     MaxHP : 8,
-    RegenHP : 3,
+    RegenHP : 0.5,
     MaxBoosts: 1,
     SteadyHandling : 0.2,
     SingleHeal : 0.4,
@@ -1004,7 +1020,7 @@ allCars = {
 
   Fragile : new Car('Fragile', 70, 6, 3, {
     MaxHP : 20,
-    RegenHP : 3,
+    RegenHP : 0.5,
     MaxBoosts: 2,
     MoveSpeed : [0.015, 0.6],
     GiftCooldown : 500,
@@ -1017,7 +1033,7 @@ allCars = {
 
   Spike : new Car('Spike', 150, 5, 3, {
     MaxHP : 12,
-    RegenHP : 2,
+    RegenHP : 0.2,
     MaxBoosts: 1,
     MoveSpeed : [0.01, 0.4],
     CollisionDamage : 5,
