@@ -268,9 +268,6 @@ var isMobile = mobileCheck()? true : false;
 if(isMobile){
   var mouseWithinJoystickRadius = false;
   abilityHint.innerHTML = "";
-  if(windowWidth > windowHeight){
-    forceDisconnect = 2;
-  }
 }
 
 function draw() {
