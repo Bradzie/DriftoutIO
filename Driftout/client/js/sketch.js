@@ -65,7 +65,8 @@ var classEntries = [
 ]
 var forceDisconnect = 0;
 var errors = [
-  "Failed to reach server for 3 seconds. Most likely an update, refresh in a minute. :D"
+  "Failed to reach server for 3 seconds. Most likely an update, refresh in a minute. :D",
+  "This game only functions properly in portrait mode, please rotate your device and refresh :)"
 ]
 var tips = [
   "Boosting from a lower speed increases boost power",
@@ -267,6 +268,9 @@ var isMobile = mobileCheck()? true : false;
 if(isMobile){
   var mouseWithinJoystickRadius = false;
   abilityHint.innerHTML = "";
+  if(windowWidth > windowHeight){
+    forceDisconnect = 2;
+  }
 }
 
 function draw() {
@@ -378,8 +382,11 @@ function draw() {
         else{
           tipsIndex++;
         }
-        if(forceDisconnect > 0){
+        if(forceDisconnect == 1){
           tipsContainer.innerHTML = errors[0];
+        }
+        if(forceDisconnect == 2){
+          tipsContainer.innerHTML = errors[1];
         }
         else{
           tipsContainer.innerHTML = tips[tipsIndex];
