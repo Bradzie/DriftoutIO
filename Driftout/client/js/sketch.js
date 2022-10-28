@@ -265,12 +265,10 @@ function setup(){
 
 // Check if device is mobile (p5js setup function cannot call global functions on startup)
 var isMobile = mobileCheck()? true : false;
+isMobile = true;
 if(isMobile){
   var mouseWithinJoystickRadius = false;
   abilityHint.innerHTML = "";
-  if(windowWidth > windowHeight){
-    forceDisconnect = 2;
-  }
 }
 
 function draw() {
