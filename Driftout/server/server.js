@@ -26,7 +26,7 @@ var playerNames = [];
 var debug = false;
 var grip = 0.99;
 var lapsToWin = 20;
-var maxRoomSize = 10;
+var maxRoomSize = 1;
 var invincibilityPeriod = 4000;
 
 // ---------- ---------- ----------
@@ -215,6 +215,11 @@ var Player = function(id, name, x, y, car, dev) {
   this.upgradeLock = 0;
   this.kills = 0;
 
+  //Dev gets godmode indefinitely
+  if(this.dev){
+    this.god = [true, Date.now() + 60000*60];
+  }
+
   for (var x in this.car.upgrades){
     this.upgrades.push([0]);
   }
@@ -241,6 +246,12 @@ var Player = function(id, name, x, y, car, dev) {
   }
   if(this.car.name == "Spike"){
     this.bodySize = 1;
+  }
+  if(this.car.name == "Swapper"){
+    this.form = false;
+    this.ability = allCars.Swapper.ability;
+    this.resisting = true;
+    this.resistance = 0.8;
   }
 
   this.doUpgrade = function(upgradeName, value=0){
@@ -315,6 +326,13 @@ var Player = function(id, name, x, y, car, dev) {
     if(upgradeName == "BodySize"){
       this.bodySize += value;
       this.size += 3;
+    }
+    if(upgradeName == "OffenseSpeed"){
+      this.acceleration += value[0];
+      this.maxSpeed += value[1];
+    }
+    if(upgradeName == "DefenseResist"){
+      this.resistance += value;
     }
   }
 
@@ -419,6 +437,18 @@ var Player = function(id, name, x, y, car, dev) {
           this.canAbility = Date.now() + this.abilityCooldown;
           this.upgradePoints += 1;
         }
+
+        if (this.ability != null && this.car.name == "Swapper"){
+          this.canAbility = Date.now() + this.abilityCooldown;
+          if(this.form){
+            this.form = false;
+            this.resisting = true;
+          }
+          else{
+            this.form = true;
+            this.resisting = false;
+          }
+        }
       }
 
       // Boosts
@@ -434,11 +464,32 @@ var Player = function(id, name, x, y, car, dev) {
 
         // Movement
 
-        if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
-          this.vX += Math.cos(this.angle)*this.acceleration;
+        if(this.car.name == "Swapper"){
+          if(this.form == true){
+            if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
+              this.vX += Math.cos(this.angle)*this.acceleration;
+            }
+            if (this.vY < this.maxSpeed && this.vY > -this.maxSpeed){
+              this.vY += Math.sin(this.angle)*this.acceleration;
+            }
+          }
+          if(this.form != true){
+            if (this.vX < this.ability().formSpeed[0] && this.vX > -this.ability().formSpeed[0]){
+              this.vX += Math.cos(this.angle)*this.ability().formSpeed[1];
+            }
+            if (this.vY < this.ability().formSpeed[0] && this.vY > -this.ability().formSpeed[0]){
+              this.vY += Math.sin(this.angle)*this.ability().formSpeed[1];
+            }
+          }
         }
-        if (this.vY < this.maxSpeed && this.vY > -this.maxSpeed){
-          this.vY += Math.sin(this.angle)*this.acceleration;
+
+        else{
+          if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
+            this.vX += Math.cos(this.angle)*this.acceleration;
+          }
+          if (this.vY < this.maxSpeed && this.vY > -this.maxSpeed){
+            this.vY += Math.sin(this.angle)*this.acceleration;
+          }
         }
 
       }
@@ -532,25 +583,56 @@ var Player = function(id, name, x, y, car, dev) {
                 var v2Final = rotate(v2, -angle);
 
                 var impact = (Math.abs(xVDiff) + Math.abs(yVDiff))/3;
-                console.log(impact);
-
-                console.log(v1Final, v2Final)
+                console.log("Impact: " + impact);
 
                 //Damage Calc
 
-                if(rooms[this.myRoom].allPlayers[i].god[0]){
+                //If either player has godmode, no damage is taken
+                if(rooms[this.myRoom].allPlayers[i].god[0] || this.god[0]){
                   continue;
                 }
 
+                //Perform calculation for this player
+
                 if (this.resisting == true){
-                  this.HP -= impact * rooms[this.myRoom].allPlayers[i].collisionDamage * this.ability().dashResist;
+                  if(this.car.name == "Bullet"){
+                    this.HP -= impact * rooms[this.myRoom].allPlayers[i].collisionDamage * this.ability().dashResist;
+                    console.log("Player 1 damaged by (Resist " + this.ability().dashResist + "): " + impact * rooms[this.myRoom].allPlayers[i].collisionDamage * this.ability().dashResist);
+                  }
+                  if(this.car.name == "Swapper"){
+                    this.HP -= impact * rooms[this.myRoom].allPlayers[i].collisionDamage * this.resistance;
+                    console.log("Player 1 damaged by (Resist " + this.resistance + "): " + impact * rooms[this.myRoom].allPlayers[i].collisionDamage * this.resistance);
+                  }
                 }
                 else{
                   console.log("Player 1 damaged by: " + impact * rooms[this.myRoom].allPlayers[i].collisionDamage);
                   this.HP -= impact * rooms[this.myRoom].allPlayers[i].collisionDamage;
                 }
-                console.log("Player 2 damaged by: " + impact * this.collisionDamage);
-                rooms[this.myRoom].allPlayers[i].HP -= impact * this.collisionDamage;
+
+                if(this.HP < 0){
+                  console.log("Player 1 has crashed!");
+                  rooms[this.myRoom].allPlayers[i].upgradePoints++;
+                  rooms[this.myRoom].allPlayers[i].kills++;
+                  rooms[this.myRoom].notifications.push(this.name + " crashed " + rooms[this.myRoom].allPlayers[i].name + "!");
+                  this.alive = false;
+                }
+
+                //Perform calculation for that player
+
+                if (rooms[this.myRoom].allPlayers[i].resisting == true){
+                  if(rooms[this.myRoom].allPlayers[i].car.name == "Bullet"){
+                    rooms[this.myRoom].allPlayers[i].HP -= impact * this.collisionDamage * rooms[this.myRoom].allPlayers[i].ability().dashResist;
+                    console.log("Player 1 damaged by (Resist " + rooms[this.myRoom].allPlayers[i].ability().dashResist + "): " + impact * this.collisionDamage * rooms[this.myRoom].allPlayers[i].ability().dashResist);
+                  }
+                  if(rooms[this.myRoom].allPlayers[i].car.name == "Swapper"){
+                    rooms[this.myRoom].allPlayers[i].HP -= impact * this.collisionDamage * rooms[this.myRoom].allPlayers[i].resistance;
+                    console.log("Player 1 damaged by (Resist " + rooms[this.myRoom].allPlayers[i].resistance + "): " + impact * this.collisionDamage * rooms[this.myRoom].allPlayers[i].resistance);
+                  }
+                }
+                else{
+                  console.log("Player 2 damaged by: " + impact * this.collisionDamage);
+                  rooms[this.myRoom].allPlayers[i].HP -= impact * this.collisionDamage;
+                }
 
                 if(rooms[this.myRoom].allPlayers[i].HP < 0){
                   console.log("Player 2 has crashed!");
@@ -716,6 +798,30 @@ var Player = function(id, name, x, y, car, dev) {
         god: this.god[0]?true:false,
         kills: this.kills,
         bodySize : this.bodySize
+      }
+    }
+    if(this.car.name == "Swapper"){
+      return {
+        id: this.id,
+        x: this.x,
+        y: this.y,
+        angle: this.angle,
+        HP: this.HP,
+        maxHP : this.maxHP,
+        alive: this.alive,
+        laps: this.laps,
+        boosts: this.boosts,
+        boostCooldown: this.boostCooldown,
+        canBoost: this.canBoost,
+        abilityCooldown: this.abilityCooldown,
+        canAbility: this.canAbility,
+        upgradePoints: this.upgradePoints,
+        upgrades: this.upgrades,
+        lapTime: this.lapTime,
+        topLapTime: this.topLapTime,
+        god: this.god[0]?true:false,
+        kills: this.kills,
+        form: this.form?true:false
       }
     }
     return {
@@ -1046,5 +1152,19 @@ allCars = {
     BodySize : 1
   }, 0.12, 3, 30, 8, null, function(){
     return null
+  }, null),
+
+  Swapper : new Car('Swapper', 80, 100, 3, {
+    MaxHP : 10,
+    RegenHP : 0.2,
+    MaxBoosts : 1,
+    OffenseSpeed : [0.014, 0.5],
+    DefenseResist : 3,
+    SwitchCooldown : 120
+  }, 0.9, 3, 25, 2, 5000, function(){
+    return {
+      name : "Switch",
+      formSpeed : [3, 0.1]
+    }
   }, null)
 };
