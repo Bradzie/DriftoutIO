@@ -47,7 +47,8 @@ We are currently at: V0.7.6
 - V0.7.5 Further GUI changes, reduced stress on server update packs
 - V0.7.6 (Bug fix) Classes no longer display over metrics screen, aligned ability and boost containers
 - V0.7.7 Mobile GUI changes, Google adsense
-- (Here) V0.7.8 Major upgrade changes (HP regen nerfs). Collision algorithm changed and conenction timeouts
+- V0.7.8 Major upgrade changes (HP regen nerfs). Collision algorithm changed and conenction timeouts
+- (Here) V0.7.9 New class (Swapper), Room size 8 -> 10, Collision changes, GUI changes
 
 - v0.8 Mobile integration
 
