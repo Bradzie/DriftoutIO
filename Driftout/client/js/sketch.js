@@ -61,7 +61,8 @@ var classEntries = [
   "Prankster<br>■■□ Speed<br>■■□ Handling<br>■□□ Durability<br>Ability: Trap",
   "Bullet<br>■■■ Speed<br>■□□ Handling<br>■■■ Durability<br>Ability: Dash",
   "Fragile<br>■□□ Speed<br>■□□ Handling<br>■□□ Durability<br>Ability: Gift",
-  "Spike<br>■□□ Speed<br>■■■ Handling<br>■■□ Durability"
+  "Spike<br>■□□ Speed<br>■■■ Handling<br>■■□ Durability",
+  "Swapper<br>■□□ Speed<br>■■■ Handling<br>■■■ Durability<br>Ability: Switch"
 ]
 var forceDisconnect = 0;
 var errors = [
@@ -188,6 +189,10 @@ function setup(){
               }
               if (allPlayers[j].car.name == "Spike"){
                 allPlayers[j].bodySize = data.updatePack[i].bodySize;
+              }
+              if (allPlayers[j].car.name == "Swapper"){
+                allPlayers[j].form = data.updatePack[i].form;
+                console.log(data.updatePack[i].form)
               }
             }
           }
@@ -359,6 +364,9 @@ function draw() {
     if(classIndex == 6){
       carChoice = allCars.Spike;
     }
+    if(classIndex == 7){
+      carChoice = allCars.Swapper;
+    }
     if(!metricsDisplay){
       if(windowWidth < 1024){
         if(isMobile){
@@ -494,6 +502,9 @@ function enterGame(){
   if(classIndex == 6){
     carChoice = allCars.Spike;
   }
+  if(classIndex == 7){
+    carChoice = allCars.Swapper;
+  }
 
   socket.emit("ready", {name: nameInput.value, car: carChoice, dev: dev});
 
@@ -580,7 +591,7 @@ function refreshDisplays(){
       else{
         notificationContainer.innerHTML = notifications[0];
       }
-      nextNotification = millis() + 2000;
+      nextNotification = millis() + 1600;
       notifications.shift();
     }
   }
@@ -849,6 +860,7 @@ var Player = function(id, name, x, y, car, dev) {
   this.lapTime = 0;
   this.topLapTime = 0;
   this.god = true;
+  this.form = false;
 
   for (var x in this.car.upgrades){
     this.upgrades.push([0]);
@@ -858,6 +870,10 @@ var Player = function(id, name, x, y, car, dev) {
     // Player's car
     if(this.bodySize){
       this.drawCar(this.x, this.y, this.angle, this.bodySize);
+    }
+    if(this.car.name == "Swapper"){
+      this.drawCar(this.x, this.y, this.angle, 1, this.form);
+      console.log(this.form);
     }
     else{
       this.drawCar(this.x, this.y, this.angle);
@@ -1296,6 +1312,42 @@ allCars = {
     endShape(CLOSE);
     fill(0, 0, 0);
     circle(0,0,40);
+    pop();
+  }),
+
+  Swapper : new Car('Swapper', 100, 9, 3, {
+    MaxHP : 12,
+    RegenHP : 0.2,
+    MaxBoosts : 1,
+    OffenseSpeed : [0.014, 0.5],
+    DefenseResist : 3,
+    SwitchCooldown : 120
+  }, 0.13, 3, 25, 2, 5000, function(){
+    return {
+    name : "Switch"
+    }
+  }, function(x, y, angle, size=1, form){
+    push();
+    translate(x, y);
+    scale(size);
+    rotate(angle);
+    strokeWeight(7);
+    strokeJoin(ROUND);
+    fill(100, 100, 100);
+    if(form){
+      stroke(250, 100, 100);
+    }
+    else{
+      stroke(100, 250, 100);
+    }
+    beginShape();
+    vertex(30, 0);
+    vertex(10, 30);
+    vertex(-30, 20);
+    vertex(-30, -20);
+    vertex(10, -30);
+    endShape(CLOSE);
+    smooth();
     pop();
   })
 };
