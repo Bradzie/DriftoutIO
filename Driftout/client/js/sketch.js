@@ -591,7 +591,7 @@ function refreshDisplays(){
       else{
         notificationContainer.innerHTML = notifications[0];
       }
-      nextNotification = millis() + 2000;
+      nextNotification = millis() + 1600;
       notifications.shift();
     }
   }

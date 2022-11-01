@@ -389,6 +389,7 @@ a:hover{
   opacity: 0;
   position: absolute;
   display: flex;
+  overflow: scroll;
   top: 15%;
   left: 15%;
   height: 70%;
@@ -398,15 +399,13 @@ a:hover{
   background-color: white;
   border-radius: 0.5em;
   border: 0.5em solid black;
-  border-top: 2em solid black;
 }
 
 #metricsContainerExitButton{
   margin-left: auto;
-  height: 2.2em;
-  width: 2.2em;
+  height: 2em;
+  width: 2em;
   background-color: red;
-  transform: translateY(-2.2em);
   font-weight: 600;
   border: none;
 }

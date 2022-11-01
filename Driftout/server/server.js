@@ -26,7 +26,7 @@ var playerNames = [];
 var debug = false;
 var grip = 0.99;
 var lapsToWin = 20;
-var maxRoomSize = 1;
+var maxRoomSize = 10;
 var invincibilityPeriod = 4000;
 
 // ---------- ---------- ----------
