@@ -43,6 +43,9 @@ io.on("connection", function(socket){
   var player;
   socket.on("ready", (data) => {
       player = new Player(socket.id, data.name, 900, Math.floor((Math.random()-0.5)*200), data.car, data.dev);
+      if(player.name.length > 14){
+        player.name = "";
+      }
       if(player.name == ""){
         player.name = player.car.name;
       }
@@ -332,7 +335,7 @@ var Player = function(id, name, x, y, car, dev) {
       this.maxSpeed += value[1];
     }
     if(upgradeName == "DefenseResist"){
-      this.resistance += value;
+      this.resistance -= value;
     }
   }
 
@@ -622,11 +625,11 @@ var Player = function(id, name, x, y, car, dev) {
                 if (rooms[this.myRoom].allPlayers[i].resisting == true){
                   if(rooms[this.myRoom].allPlayers[i].car.name == "Bullet"){
                     rooms[this.myRoom].allPlayers[i].HP -= impact * this.collisionDamage * rooms[this.myRoom].allPlayers[i].ability().dashResist;
-                    console.log("Player 1 damaged by (Resist " + rooms[this.myRoom].allPlayers[i].ability().dashResist + "): " + impact * this.collisionDamage * rooms[this.myRoom].allPlayers[i].ability().dashResist);
+                    console.log("Player 2 damaged by (Resist " + rooms[this.myRoom].allPlayers[i].ability().dashResist + "): " + impact * this.collisionDamage * rooms[this.myRoom].allPlayers[i].ability().dashResist);
                   }
                   if(rooms[this.myRoom].allPlayers[i].car.name == "Swapper"){
                     rooms[this.myRoom].allPlayers[i].HP -= impact * this.collisionDamage * rooms[this.myRoom].allPlayers[i].resistance;
-                    console.log("Player 1 damaged by (Resist " + rooms[this.myRoom].allPlayers[i].resistance + "): " + impact * this.collisionDamage * rooms[this.myRoom].allPlayers[i].resistance);
+                    console.log("Player 2 damaged by (Resist " + rooms[this.myRoom].allPlayers[i].resistance + "): " + impact * this.collisionDamage * rooms[this.myRoom].allPlayers[i].resistance);
                   }
                 }
                 else{
@@ -1159,7 +1162,7 @@ allCars = {
     RegenHP : 0.2,
     MaxBoosts : 1,
     OffenseSpeed : [0.014, 0.5],
-    DefenseResist : 3,
+    DefenseResist : 0.04,
     SwitchCooldown : 120
   }, 0.9, 3, 25, 2, 5000, function(){
     return {
