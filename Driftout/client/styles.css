@@ -365,6 +365,71 @@ a:hover{
   font-size: 18px;
 }
 
+#newsButton {
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 20px;
+  font-weight: bold;
+  padding: 1em;
+  background-color: #105e7a;
+  font-family: 'Overpass';
+  border: none;
+  border-radius: 0 0 0 40%;
+}
+
+#newsButton:hover{
+  background-color: #063d52;
+}
+
+#newsContainer {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  display: block;
+  overflow: scroll;
+  top: 15%;
+  left: 15%;
+  height: 70%;
+  width: 70%;
+  text-align: right;
+  color:#476596;
+  background-color: white;
+  border-radius: 0.5em;
+  border: 0.5em solid black;
+}
+
+#newsExitButton {
+  margin-left: auto;
+  height: 2em;
+  width: 2em;
+  background-color: red;
+  font-weight: 600;
+  border: none;
+}
+
+#newsExitButton:hover {
+  background-color:  #ff5733;
+}
+
+#newsArticle{
+  transform: translateY(2em);
+  text-align: center;
+  background-color: #8dc5d9;
+}
+
+#newsArticle h1{
+  padding: 0 1em 0 1em;
+}
+
+#newsArticle h2{
+  padding: 0 1em 0 1em;
+}
+
+#newsArticle p{
+  font-weight: bolder;
+}
+
 #metricsButton {
   color:#476596;
   border-radius: 0.2em;

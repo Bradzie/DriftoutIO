@@ -36,14 +36,18 @@ var mainCanvas = document.getElementById("mainCanvas"),
   chatInput = document.getElementById('chatInput'),
   chatContent = document.getElementById('chatContent'),
   metricsData = document.getElementById('metricsData'),
-  metricsContainer = document.getElementById('metricsContainer');
+  metricsContainer = document.getElementById('metricsContainer'),
+  newsButton = document.getElementById('newsButton'),
+  newsContainer = document.getElementById('newsContainer'),
+  newsArticle = document.getElementById('newsArticle'),
+  newsExitButton = document.getElementById('newsExitButton');
 
 // Global Vars
 
 var dev = false;
 var socket;
 var playing = false;
-var metricsDisplay = false;
+var windowDisplay = false;
 var allCars;
 var allTracks;
 var currentTrack;
@@ -90,6 +94,22 @@ var myName;
 var isMobile;
 var mobileCoords;
 var timeOutTick = 0;
+
+class NewsPiece{
+  constructor(title, date, content){
+    this.title = title;
+    this.date = date;
+    this.content = content;
+  }
+}
+
+currentNews = [
+  new NewsPiece("Server Migration", "4/12/22", "Hey everyone!\nThe last month has left me with very little spare time to commit updates to Driftout, and after having this game listed on some IO game websites, it gained alot of traction. As a result, the hosting is becoming rather expensive. So over the next few days I will be migrating the hosting from Digital Ocean to a more cost-friendly alternative.\n Apologies for any performance issues caused by this as I am aiming for as effective connection possible for the money I am willing to spend. Thanks! :) ~ Brad")
+]
+
+for(article in currentNews){
+  newsContainer.innerHTML += "<div id='newsArticle'><h1>" + currentNews[article].title + "</h1><p>" + currentNews[article].date + "</p><h2>" + currentNews[article].content + "</h2></div>";
+}
 
 function preload(){
 }
@@ -367,7 +387,7 @@ function draw() {
     if(classIndex == 7){
       carChoice = allCars.Swapper;
     }
-    if(!metricsDisplay){
+    if(!windowDisplay){
       if(windowWidth < 1024){
         if(isMobile){
           carChoice.drawCar(windowWidth/2 - 200, windowHeight/1.5, classDisplayAngle, 3);
@@ -553,7 +573,22 @@ function toggleChat(){
   }
 }
 
+function toggleNewsOn(){
+  if(!windowDisplay){
+    newsContainer.style.opacity = "1";
+    newsContainer.style.visibility = "visible";
+    windowDisplay = true;
+  }
+}
+
+function toggleNewsOff(){
+  newsContainer.style.visibility = "hidden";
+  newsContainer.style.opacity = "0";
+  windowDisplay = false;
+}
+
 function toggleMetricsOn(){
+  if(!windowDisplay){
     metricsContainer.style.opacity = "1";
     metricsContainer.style.visibility = "visible";
     socket.emit("specifcData", "metrics");
@@ -567,13 +602,14 @@ function toggleMetricsOn(){
       }
       metricsData.innerHTML = "Total page vists since restart: " + totalConnections + "</br>All player names: " + playerNameList;
     }
-    metricsDisplay = true;
+    windowDisplay = true;
+  }
 }
 
 function toggleMetricsOff(){
     metricsContainer.style.opacity = "0";
     metricsContainer.style.visibility = "hidden";
-    metricsDisplay = false;
+    windowDisplay = false;
 }
 
 function numPress(num){
@@ -1315,7 +1351,7 @@ allCars = {
     pop();
   }),
 
-  Swapper : new Car('Swapper', 100, 9, 3, {
+  Swapper : new Car('Swapper', 75, 9, 3, {
     MaxHP : 12,
     RegenHP : 0.2,
     MaxBoosts : 1,
