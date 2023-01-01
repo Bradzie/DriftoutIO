@@ -2,10 +2,10 @@
 
 ## A fast-paced royle/racing game inspired by driftin.io built with socket.io, p5js and node.js
 
-The game finally has independent hosting and a custom domain!
-
-! https://driftout.io !
-
+I was originally hosting this at driftout.io after advertising on the IOgames subreddit, but all the popularity 
+unfortunately made the hosting too expensive. ): Until I can sort a cost effective replacement this app will
+likely remain deactivated.
+ 
 ## Battle other racers to be the first to complete 20 laps! 🚗
 
 > Select from 7 different car classes each with different attributes and some with abilities ⚔️
@@ -27,7 +27,7 @@ The game finally has independent hosting and a custom domain!
 
 I'm slowly approaching the planned criteria I had imagined months ago when I had just started development. Version numbers allow me to reflect how close I am to what I feel is the full release.
 
-We are currently at: V0.7.6
+We are currently at: V0.7.9
 
 - V0.6 All upgrades functional
 - V0.6.1 (Bug fix) Maps rotating inbetween games
