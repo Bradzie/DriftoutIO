@@ -41,63 +41,93 @@ io.on("connection", function(socket){
   currentConnections.push(socket.id);
 
   var player;
-  socket.on("ready", (data) => {
-      player = new Player(socket.id, data.name, 900, Math.floor((Math.random()-0.5)*200), data.car, data.dev);
-      if(player.name.length > 14){
-        player.name = "";
+  socket.on("ready", (data) => {      
+    var newName = data.name;
+    if (newName == "" || newName.length > 14 || newName.includes("<")) {
+      newName = data.car;
+    }
+
+    switch (data.car){
+      case "Racer" : data.car = allCars.Racer;
+        break;
+      case "Sprinter" : data.car = allCars.Sprinter;
+        break;
+      case "Tank" : data.car = allCars.Tank;
+        break;
+      case "Prankster" : data.car = allCars.Prankster;
+        break;
+      case "Bullet" : data.car = allCars.Bullet;
+        break;
+      case "Fragile" : data.car = allCars.Fragile;
+        break;
+      case "Spike" : data.car = allCars.Spike;
+        break;
+      case "Swapper" : data.car = allCars.Swapper;
+        break;
+    }
+
+    data.alive = true;
+    playerNames.push(newName);
+
+    player = new Player(socket.id, newName, 900, Math.floor((Math.random()-0.5)*200), data.car, data.dev);
+
+    socket.emit("myID", {id: player.id});
+
+    if(rooms.length==0){
+      rooms.push(new Room());
+      rooms[0].startGame();
+    }
+
+    var allocated = false;
+
+    for(var i in rooms){
+      if(rooms[i].allPlayers.length < maxRoomSize){
+        player.myRoom = i;
+        rooms[i].allPlayers.push(player);
+        allocated = true;
+        console.log("New player: '" + player.name + "' in room " + i  + " ID: " + player.id);
+        break;
       }
-      if(player.name == ""){
-        player.name = player.car.name;
-      }
-      player.alive = true;
-      playerNames.push(player.name);
+    }
 
-      socket.emit("myID", {id: player.id});
+    if(allocated == false){
+      rooms.push(new Room());
+      console.log("Room " + (rooms.length-1) + " created")
+      player.myRoom = rooms.length-1;
+      rooms[rooms.length-1].allPlayers.push(player);
+      rooms[rooms.length-1].startGame();
+      console.log("New player: '" + player.name + "' in room " + (rooms.length-1) + " ID: " + player.id);
+    }
 
-      if(rooms.length==0){
-        rooms.push(new Room());
-        rooms[0].startGame();
-      }
-
-      var allocated = false;
-
-      for(var i in rooms){
-        if(rooms[i].allPlayers.length < maxRoomSize){
-          player.myRoom = i;
-          rooms[i].allPlayers.push(player);
-          allocated = true;
-          console.log("New player: '" + player.name + "' in room " + i  + " ID: " + player.id);
-          break;
-        }
-      }
-
-      if(allocated == false){
-        rooms.push(new Room());
-        console.log("Room " + (rooms.length-1) + " created")
-        player.myRoom = rooms.length-1;
-        rooms[rooms.length-1].allPlayers.push(player);
-        rooms[rooms.length-1].startGame();
-        console.log("New player: '" + player.name + "' in room " + (rooms.length-1) + " ID: " + player.id);
-      }
-
-      io.emit("roomUpdate", {rooms:rooms, roomIndex:player.myRoom});
-      //console.log(player.id);
-
-      socket.emit("initPack", {initPack: rooms[player.myRoom].initPlayer(), currentTrack:rooms[player.myRoom].currentTrack, room:player.myRoom});
-      socket.broadcast.emit("initPlayer", {initPack: player.getInitPack(), room:player.myRoom});
-
-
-
-      io.emit("syncedData", {
-        notification: "Track: " + rooms[player.myRoom].currentTrack.name,
-        currentEntities: [],
-        message: []
+    io.emit("roomUpdate", {
+      rooms: rooms, 
+      roomIndex: player.myRoom
+    });
+    
+    socket.emit("initPack", {
+        initPack: rooms[player.myRoom].initPlayer(), 
+        currentTrack: rooms[player.myRoom].currentTrack, 
+        room: player.myRoom
       });
+
+    socket.broadcast.emit("initPlayer", {
+      initPack: player.getInitPack(), 
+      room:player.myRoom
+    });
+
+    io.emit("syncedData", {
+      notification: "Track: " + rooms[player.myRoom].currentTrack.name,
+      currentEntities: [],
+      message: []
+    });
   });
 
   socket.on("specifcData", (data) => {
     if(data == "metrics"){
-      socket.emit("returnData", {name:"metrics", totalConnections:totalConnections, playerNames:playerNames})
+      socket.emit("returnData", {
+        name: "metrics", 
+        totalConnections: totalConnections, 
+        playerNames: playerNames})
     }
   })
 
@@ -1003,6 +1033,31 @@ allTracks = {
   )
 }
 
+var roundModifier = function(name, intervalModifier = null, startupModifier = null){
+  this.name = name;
+  this.intervalModifier = intervalModifier;
+  this.startupModifier = startupModifier;
+}
+
+allModifiers = {
+  none : new roundModifier(
+    // Name
+    "None",
+  ),
+  obstacles : new roundModifier(
+    // Name
+    "Obstacles",
+    // Interval Modifier
+    null,
+    // Startup Modifier
+    function(room){
+      //var newEntity = ()
+      //room.currentEntities.push()
+      return room
+    }
+  )
+}
+
 // The room object constructor
 var Room = function(){
   this.roomIndex = rooms.length;
@@ -1012,13 +1067,13 @@ var Room = function(){
   this.currentEntities = [];
   this.gameEndPeriod = 0;
   this.lapsToWin = lapsToWin;
+  this.roundModifier = allModifiers.none;
 
   this.startGame = function(){
     this.gameEndPeriod = 0;
     this.notifications = [];
     this.currentEntities = [];
-
-    var trackChoice = Math.floor(Math.random() * 3);
+    var trackChoice = Math.floor(Math.random() * Object.keys(allTracks).length);
     if(trackChoice == 0){
       this.currentTrack = allTracks.Square;
     }

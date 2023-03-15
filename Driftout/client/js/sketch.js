@@ -151,7 +151,32 @@ function setup(){
   socket.on("initPlayer", function(data){
     if(playing){
       if(data.room == currentRoom.roomIndex){
-        var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack.car.name)[0][1];
+        switch (data.initPack.car.name) {
+          case "Racer":
+            var newCar = allCars.Racer;
+            break;
+          case "Prankster":
+            var newCar = allCars.Prankster;
+            break;
+          case "Bullet":
+            var newCar = allCars.Bullet;
+            break;
+          case "Tank":
+            var newCar = allCars.Tank;
+            break;
+          case "Fragile":
+            var newCar = allCars.Fragile;
+            break;
+          case "Sprinter":
+            var newCar = allCars.Sprinter;
+            break;
+          case "Spike":
+            var newCar = allCars.Sprinter;
+            break;
+          case "Swapper":
+            var newCar = allCars.Sprinter;
+            break;
+        }
         var player = new Player(data.initPack.id, data.initPack.name, data.initPack.x, data.initPack.y, newCar, dev);
         allPlayers.push(player);
       }
@@ -163,7 +188,32 @@ function setup(){
   socket.on("initPack", function(data) {
     if(data.room == currentRoom.roomIndex){
         for(var i in data.initPack) {
-            var newCar = Object.entries(allCars).filter(car => car[0] == data.initPack[i].car.name)[0][1];
+            switch (data.initPack[i].car.name) {
+              case "Racer":
+                var newCar = allCars.Racer;
+                break;
+              case "Prankster":
+                var newCar = allCars.Prankster;
+                break;
+              case "Bullet":
+                var newCar = allCars.Bullet;
+                break;
+              case "Tank":
+                var newCar = allCars.Tank;
+                break;
+              case "Fragile":
+                var newCar = allCars.Fragile;
+                break;
+              case "Sprinter":
+                var newCar = allCars.Sprinter;
+                break;
+              case "Spike":
+                var newCar = allCars.Sprinter;
+                break;
+              case "Swapper":
+                var newCar = allCars.Sprinter;
+                break;
+            }
             var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar, dev);
             allPlayers.push(player);
             dupeCheck();
@@ -499,7 +549,7 @@ function exitGame(){
 // Executed on main menu 'race' button,
 
 function enterGame(){
-  var carChoice = '';
+  var carChoice;
   playing = true;
   if(classIndex == 0){
     carChoice = allCars.Racer;
@@ -526,7 +576,7 @@ function enterGame(){
     carChoice = allCars.Swapper;
   }
 
-  socket.emit("ready", {name: nameInput.value, car: carChoice, dev: dev});
+  socket.emit("ready", {name: nameInput.value, car: carChoice.name, dev: dev});
 
   notifications = [];
   enterGameButton.setAttribute('onClick', '');
@@ -1091,7 +1141,7 @@ allTracks = {
   )
 }
 
-// The car object constructor
+// Car object constructor
 var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, size, mass, abilityCooldown, ability, drawCar){
   this.name = name;
   this.maxHP = maxHP;
@@ -1099,12 +1149,56 @@ var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boo
   this.maxBoosts = maxBoosts;
   this.upgrades = upgrades;
   this.acceleration = acceleration;
-  this.drawCar = drawCar;
   this.boostPower = boostPower;
   this.mass = mass;
   this.size = size;
   this.ability = ability;
   this.abilityCooldown = abilityCooldown;
+  this.drawCar = drawCar;
+}
+
+// Entity object constructor
+var Entity = function(name, x, y, vX, vY, size, damage, cooldown, ownerId, draw, newEntity = true, createdAt = DateTime.Now()){
+  this.name = name;
+  this.x = x;
+  this.y = y;
+  this.vX = vX;
+  this.vY = vY;
+  this.size = size;
+  this.damage = damage;
+  this.cooldown = cooldown;
+  this.ownerId = ownerId;
+  this.draw = draw;
+  this.newEntity = newEntity;
+  this.createdAt = createdAt;
+}
+
+extraEntities = {
+  mapObstacle : function(x, y, size){
+    return new Entity(
+      "Map Obstacle",
+      x,
+      y,
+      0,
+      0,
+      size,
+      10,
+      null,
+      "1",
+      function(x, y, size){
+        push();
+        translate(x, y);
+        scale(size);
+        strokeWeight(5);
+        strokeJoin(ROUND);
+        fill(255,255,255);
+        stroke(100,100,100);
+        circle(0,0,70);
+        smooth();
+        pop();
+      }
+    )
+  }
 }
 
 allCars = {
