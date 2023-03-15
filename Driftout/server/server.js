@@ -2,8 +2,8 @@ var path = require("path");
 var http = require("http");
 var express = require("express");
 var socketIO = require("socket.io");
+var matterjs = require("matter-js")
 
-// Needs replacement upon cloud hosting?
 var publicPath = path.join(__dirname, "../client")
 var port = process.env.PORT || 80;
 var host = process.env.HOST || '0.0.0.0';
@@ -20,6 +20,10 @@ var currentTrack;
 var currentConnections = [];
 var totalConnections = 0;
 var playerNames = [];
+const Bodies = matterjs.Bodies;
+const Engine = matterjs.Engine;
+const Body = matterjs.Body;
+const Vector = matterjs.Vector;
 
 // ---------- MODIFIERS ----------
 
@@ -69,7 +73,7 @@ io.on("connection", function(socket){
     data.alive = true;
     playerNames.push(newName);
 
-    player = new Player(socket.id, newName, 900, Math.floor((Math.random()-0.5)*200), data.car, data.dev);
+    player = new Player(socket.id, newName, data.car, data.dev);
 
     socket.emit("myID", {id: player.id});
 
@@ -99,16 +103,31 @@ io.on("connection", function(socket){
       console.log("New player: '" + player.name + "' in room " + (rooms.length-1) + " ID: " + player.id);
     }
 
+    console.log("1")
+
     io.emit("roomUpdate", {
-      rooms: rooms, 
-      roomIndex: player.myRoom
+      room: new tempRoom(
+        player.myRoom,
+        rooms[player.myRoom].allPlayers,
+        rooms[player.myRoom].notifications,
+        rooms[player.myRoom].messages,
+        rooms[player.myRoom].currentEntities,
+        rooms[player.myRoom].gameEndPeriod,
+        rooms[player.myRoom].lapsToWin,
+        rooms[player.myRoom].roundModifier
+        )
     });
+
+    console.log("1")
     
     socket.emit("initPack", {
         initPack: rooms[player.myRoom].initPlayer(), 
         currentTrack: rooms[player.myRoom].currentTrack, 
-        room: player.myRoom
+        room: player.myRoom,
+        body: player.body
       });
+
+    console.log("1")
 
     socket.broadcast.emit("initPlayer", {
       initPack: player.getInitPack(), 
@@ -202,15 +221,12 @@ function removePlayer (roomIndex, removeId){
 }
 
 // The player object constructor
-var Player = function(id, name, x, y, car, dev) {
+var Player = function(id, name, car, dev) {
+  this.body = null;//Bodies.circle(0, 0, 40);
   this.myRoom;
   this.id = id;
   this.name = name;
   this.dev = dev;
-  this.x = x;
-  this.y = y;
-  this.vX = 0;
-  this.vY = 0;
   this.mouseX;
   this.mouseY;
   this.mouseDistanceToCar;
@@ -428,356 +444,98 @@ var Player = function(id, name, x, y, car, dev) {
 
       if (this.spacePressed == true && Date.now() > this.canAbility){
 
-
         // Prankster Ability
-        if (this.ability != null && this.car.name == "Prankster"){
-          if (rooms[this.myRoom].currentEntities.filter(entity => entity.ownerId == this.id).length >= 5){
-            for (i in rooms[this.myRoom].currentEntities){
-              if (rooms[this.myRoom].currentEntities[i].ownerId == this.id){
-                rooms[this.myRoom].currentEntities.splice(i, 1);
-                break;
-              }
-            }
-          }
-          var newEntity = this.ability(this.x, this.y, this.angle, this.id);
-          newEntity.size = this.trapSize;
-          newEntity.damage = this.trapDamage;
-          rooms[this.myRoom].currentEntities.push(newEntity);
-          this.canAbility = Date.now() + this.abilityCooldown;
-          this.vX += Math.cos((this.angle) % 360) * 3;
-          this.vY += Math.sin((this.angle) % 360) * 3;
-        }
+      //   if (this.ability != null && this.car.name == "Prankster"){
+      //     if (rooms[this.myRoom].currentEntities.filter(entity => entity.ownerId == this.id).length >= 5){
+      //       for (i in rooms[this.myRoom].currentEntities){
+      //         if (rooms[this.myRoom].currentEntities[i].ownerId == this.id){
+      //           rooms[this.myRoom].currentEntities.splice(i, 1);
+      //           break;
+      //         }
+      //       }
+      //     }
+      //     var newEntity = this.ability(this.x, this.y, this.angle, this.id);
+      //     newEntity.size = this.trapSize;
+      //     newEntity.damage = this.trapDamage;
+      //     rooms[this.myRoom].currentEntities.push(newEntity);
+      //     this.canAbility = Date.now() + this.abilityCooldown;
+      //     this.vX += Math.cos((this.angle) % 360) * 3;
+      //     this.vY += Math.sin((this.angle) % 360) * 3;
+      //   }
 
-        // Bullet Ability
-        if (this.ability != null && this.car.name == "Bullet"){
-          this.canAbility = Date.now() + this.abilityCooldown;
-          this.vX += Math.cos((this.angle) % 360) * this.ability().dashPower;
-          this.vY += Math.sin((this.angle) % 360) * this.ability().dashPower;
-          this.abilityDuration = Date.now() + 1000;
-          this.resisting = true;
-        }
+      //   // Bullet Ability
+      //   if (this.ability != null && this.car.name == "Bullet"){
+      //     this.canAbility = Date.now() + this.abilityCooldown;
+      //     this.vX += Math.cos((this.angle) % 360) * this.ability().dashPower;
+      //     this.vY += Math.sin((this.angle) % 360) * this.ability().dashPower;
+      //     this.abilityDuration = Date.now() + 1000;
+      //     this.resisting = true;
+      //   }
 
-        // Sprinter Ability
-        if (this.ability != null && this.car.name == "Sprinter"){
-          this.canAbility = Date.now() + this.abilityCooldown;
-          this.abilityDuration = Date.now() + 2000;
-          this.acceleration = this.ability().handling[0];
-          this.maxSpeed = this.ability().handling[1];
-        }
+      //   // Sprinter Ability
+      //   if (this.ability != null && this.car.name == "Sprinter"){
+      //     this.canAbility = Date.now() + this.abilityCooldown;
+      //     this.abilityDuration = Date.now() + 2000;
+      //     this.acceleration = this.ability().handling[0];
+      //     this.maxSpeed = this.ability().handling[1];
+      //   }
 
-        // Fragile Ability
-        if (this.ability != null && this.car.name == "Fragile"){
-          this.canAbility = Date.now() + this.abilityCooldown;
-          this.upgradePoints += 1;
-        }
+      //   // Fragile Ability
+      //   if (this.ability != null && this.car.name == "Fragile"){
+      //     this.canAbility = Date.now() + this.abilityCooldown;
+      //     this.upgradePoints += 1;
+      //   }
 
-        if (this.ability != null && this.car.name == "Swapper"){
-          this.canAbility = Date.now() + this.abilityCooldown;
-          if(this.form){
-            this.form = false;
-            this.resisting = true;
-          }
-          else{
-            this.form = true;
-            this.resisting = false;
-          }
-        }
-      }
+      //   if (this.ability != null && this.car.name == "Swapper"){
+      //     this.canAbility = Date.now() + this.abilityCooldown;
+      //     if(this.form){
+      //       this.form = false;
+      //       this.resisting = true;
+      //     }
+      //     else{
+      //       this.form = true;
+      //       this.resisting = false;
+      //     }
+      //   }
+      // }
 
       // Boosts
 
-      if(!this.brake){
+      // if(!this.brake){
 
-        if (this.mouseIsPressed == true && Date.now() > this.canBoost && this.boosts > 0){
-          this.vX += this.vX > this.maxSpeed / 3 || this.vX < -this.maxSpeed / 3 ? Math.cos(this.angle)*this.boostPower : Math.cos(this.angle)*(this.boostPower)*3;
-          this.vY += this.vY > this.maxSpeed / 3 || this.vY < -this.maxSpeed / 3 ? Math.sin(this.angle)*this.boostPower : Math.sin(this.angle)*(this.boostPower)*3;
-          this.canBoost = Date.now() + this.boostCooldown;
-          this.boosts-=1;
-        }
+      //   if (this.mouseIsPressed == true && Date.now() > this.canBoost && this.boosts > 0){
+      //     this.vX += this.vX > this.maxSpeed / 3 || this.vX < -this.maxSpeed / 3 ? Math.cos(this.angle)*this.boostPower : Math.cos(this.angle)*(this.boostPower)*3;
+      //     this.vY += this.vY > this.maxSpeed / 3 || this.vY < -this.maxSpeed / 3 ? Math.sin(this.angle)*this.boostPower : Math.sin(this.angle)*(this.boostPower)*3;
+      //     this.canBoost = Date.now() + this.boostCooldown;
+      //     this.boosts-=1;
+      //   }
 
         // Movement
 
-        if(this.car.name == "Swapper"){
-          if(this.form == true){
-            if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
-              this.vX += Math.cos(this.angle)*this.acceleration;
-            }
-            if (this.vY < this.maxSpeed && this.vY > -this.maxSpeed){
-              this.vY += Math.sin(this.angle)*this.acceleration;
-            }
-          }
-          if(this.form != true){
-            if (this.vX < this.ability().formSpeed[0] && this.vX > -this.ability().formSpeed[0]){
-              this.vX += Math.cos(this.angle)*this.ability().formSpeed[1];
-            }
-            if (this.vY < this.ability().formSpeed[0] && this.vY > -this.ability().formSpeed[0]){
-              this.vY += Math.sin(this.angle)*this.ability().formSpeed[1];
-            }
-          }
-        }
+        let cur = Body.getVelocity(this.body)
 
-        else{
-          if (this.vX < this.maxSpeed && this.vX > -this.maxSpeed){
-            this.vX += Math.cos(this.angle)*this.acceleration;
-          }
-          if (this.vY < this.maxSpeed && this.vY > -this.maxSpeed){
-            this.vY += Math.sin(this.angle)*this.acceleration;
-          }
+        if (cur.x < this.maxSpeed && cur.x > -this.maxSpeed){
+          //cur.x += Math.cos(this.angle)*this.acceleration;
+          Body.setVelocity(this.body, Vector.create(Math.cos(this.angle)*this.acceleration));
         }
-
+        if (cur.y < this.maxSpeed && cur.y > -this.maxSpeed){
+          Body.setVelocity(this.body, Vector.create(Math.sin(this.angle)*this.acceleration));
+        }
       }
-
-      // Apply mouse distance
-      // if (this.mouseDistanceToCar < 30){
-      //   this.vX *= (this.mouseDistanceToCar + 10)/40;
-      //   this.vY *= (this.mouseDistanceToCar + 10)/40;
-      // }
-
-      // Apply movement to player location
-      this.x += this.vX;
-      this.y += this.vY;
-
-      this.vX = this.vX * grip;
-      this.vY = this.vY * grip;
-
-      // Collisions
-
-      this.doCollisions();
-
-      // Health regen
 
       if(this.HP < this.maxHP && this.regen > 0){
         this.HP += this.regen;
+
       }
     }
   }
-
-  this.doCollisions = function() {
-
-    // Entity Collisions
-    if (!this.god[0]){
-      for (var i in rooms[this.myRoom].currentEntities){
-        if (rooms[this.myRoom].currentEntities[i].ownerId != this.id){
-          if (Math.sqrt(((this.x-rooms[this.myRoom].currentEntities[i].x)**2)+((this.y-rooms[this.myRoom].currentEntities[i].y)**2)) < this.size + rooms[this.myRoom].currentEntities[i].size){
-            this.vX *= 0.3;
-            this.vY *= 0.3;
-            this.HP -= rooms[this.myRoom].currentEntities[i].damage;
-            if(rooms[this.myRoom].allPlayers){
-              if(this.HP < 0 && rooms[this.myRoom].allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId).length > 0){
-                rooms[this.myRoom].allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].upgradePoints++;
-                rooms[this.myRoom].allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].kills++;
-                rooms[this.myRoom].notifications.push(rooms[this.myRoom].allPlayers.filter(player => player.id == rooms[this.myRoom].currentEntities[i].ownerId)[0].name + " crashed " + this.name + "!");
-                this.alive = false;
-              }
-              rooms[this.myRoom].currentEntities.splice(i, 1);
-            }
-          }
-        }
-      }
-
-      // Player Collisions
-      if (rooms[this.myRoom].allPlayers.length > 1){
-        for (var i in rooms[this.myRoom].allPlayers){
-          if (rooms[this.myRoom].allPlayers[i].id != this.id){
-
-            // If this player's car overlaps any other player's car
-            if (Math.sqrt(((this.x-rooms[this.myRoom].allPlayers[i].x)**2)+((this.y-rooms[this.myRoom].allPlayers[i].y)**2))
-             < this.size + rooms[this.myRoom].allPlayers[i].size && rooms[this.myRoom].allPlayers[i].alive == true){
-
-              // Physics Calc
-
-              // Calculate angle at which this player collided with another
-              var collidedPlayerAngle = Math.atan2(this.y - rooms[this.myRoom].allPlayers[i].y, this.x - rooms[this.myRoom].allPlayers[i].x);
-
-              // Calculate difference in velocities
-              var xVDiff = this.vX - rooms[this.myRoom].allPlayers[i].vX;
-              var yVDiff = this.vY - rooms[this.myRoom].allPlayers[i].vY;
-
-              // Calulcate difference in distances
-              var xDist = rooms[this.myRoom].allPlayers[i].x - this.x;
-              var yDist = rooms[this.myRoom].allPlayers[i].y - this.y;
-
-              // Check if both cars are approaching each-other
-              if(xVDiff * xDist + yVDiff * yDist >= 0){
-                console.log("Collision! - - - - - - - -")
-                console.log("Between: " + rooms[this.myRoom].allPlayers[i].name + " and " + this.name);
-                var angle = -Math.atan2(rooms[this.myRoom].allPlayers[i].y - this.y, rooms[this.myRoom].allPlayers[i].x - this.x);
-
-                var m1 = this.mass;
-                var m2 = rooms[this.myRoom].allPlayers[i].mass;
-
-                const u1 = rotate({x : this.vX, y : this.vY}, angle);
-                const u2 = rotate({x : rooms[this.myRoom].allPlayers[i].vX, y : rooms[this.myRoom].allPlayers[i].vY}, angle);
-
-                var v1 = {x: u1.x * (m1 - m2) / (m1 + m2) + u2.x * 2 * m2 / (m1 + m2), y: u1.y};
-                var v2 = {x: u2.x * (m1 - m2) / (m1 + m2) + u1.x * 2 * m2 / (m1 + m2), y: u2.y};
-
-                var v1Final = rotate(v1, -angle);
-                var v2Final = rotate(v2, -angle);
-
-                var impact = (Math.abs(xVDiff) + Math.abs(yVDiff))/3;
-                console.log("Impact: " + impact);
-
-                //Damage Calc
-
-                //If either player has godmode, no damage is taken
-                if(rooms[this.myRoom].allPlayers[i].god[0] || this.god[0]){
-                  continue;
-                }
-
-                //Perform calculation for this player
-
-                if (this.resisting == true){
-                  if(this.car.name == "Bullet"){
-                    this.HP -= impact * rooms[this.myRoom].allPlayers[i].collisionDamage * this.ability().dashResist;
-                    console.log("Player 1 damaged by (Resist " + this.ability().dashResist + "): " + impact * rooms[this.myRoom].allPlayers[i].collisionDamage * this.ability().dashResist);
-                  }
-                  if(this.car.name == "Swapper"){
-                    this.HP -= impact * rooms[this.myRoom].allPlayers[i].collisionDamage * this.resistance;
-                    console.log("Player 1 damaged by (Resist " + this.resistance + "): " + impact * rooms[this.myRoom].allPlayers[i].collisionDamage * this.resistance);
-                  }
-                }
-                else{
-                  console.log("Player 1 damaged by: " + impact * rooms[this.myRoom].allPlayers[i].collisionDamage);
-                  this.HP -= impact * rooms[this.myRoom].allPlayers[i].collisionDamage;
-                }
-
-                if(this.HP < 0){
-                  console.log("Player 1 has crashed!");
-                  rooms[this.myRoom].allPlayers[i].upgradePoints++;
-                  rooms[this.myRoom].allPlayers[i].kills++;
-                  rooms[this.myRoom].notifications.push(this.name + " crashed " + rooms[this.myRoom].allPlayers[i].name + "!");
-                  this.alive = false;
-                }
-
-                //Perform calculation for that player
-
-                if (rooms[this.myRoom].allPlayers[i].resisting == true){
-                  if(rooms[this.myRoom].allPlayers[i].car.name == "Bullet"){
-                    rooms[this.myRoom].allPlayers[i].HP -= impact * this.collisionDamage * rooms[this.myRoom].allPlayers[i].ability().dashResist;
-                    console.log("Player 2 damaged by (Resist " + rooms[this.myRoom].allPlayers[i].ability().dashResist + "): " + impact * this.collisionDamage * rooms[this.myRoom].allPlayers[i].ability().dashResist);
-                  }
-                  if(rooms[this.myRoom].allPlayers[i].car.name == "Swapper"){
-                    rooms[this.myRoom].allPlayers[i].HP -= impact * this.collisionDamage * rooms[this.myRoom].allPlayers[i].resistance;
-                    console.log("Player 2 damaged by (Resist " + rooms[this.myRoom].allPlayers[i].resistance + "): " + impact * this.collisionDamage * rooms[this.myRoom].allPlayers[i].resistance);
-                  }
-                }
-                else{
-                  console.log("Player 2 damaged by: " + impact * this.collisionDamage);
-                  rooms[this.myRoom].allPlayers[i].HP -= impact * this.collisionDamage;
-                }
-
-                if(rooms[this.myRoom].allPlayers[i].HP < 0){
-                  console.log("Player 2 has crashed!");
-                  this.upgradePoints++;
-                  this.kills++;
-                  rooms[this.myRoom].notifications.push(this.name + " crashed " + rooms[this.myRoom].allPlayers[i].name + "!");
-                  rooms[this.myRoom].allPlayers[i].alive = false;
-                }
-
-                //Apply Movement
-
-                this.vX = v1Final.x*1.1;
-                this.vY = v1Final.y*1.1;
-
-                if(this.bounceModifier){
-                  rooms[this.myRoom].allPlayers[i].vX = v2Final.x*this.bounceModifier;
-                  rooms[this.myRoom].allPlayers[i].vY = v2Final.y*this.bounceModifier;
-                }
-                else{
-                  rooms[this.myRoom].allPlayers[i].vX = v2Final.x;
-                  rooms[this.myRoom].allPlayers[i].vY = v2Final.y;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    for(var i in rooms[this.myRoom].currentTrack.walls){
-      this.collision(this.x, this.y, rooms[this.myRoom].currentTrack.walls[i][0], rooms[this.myRoom].currentTrack.walls[i][1],
-        rooms[this.myRoom].currentTrack.walls[i][2], rooms[this.myRoom].currentTrack.walls[i][3],
-        rooms[this.myRoom].currentTrack.walls[i][4], rooms[this.myRoom].currentTrack.walls[i][5],
-        rooms[this.myRoom].currentTrack.walls[i][6])
-    }
-
-    // Check if inside finish line
-    if (this.collision(this.x, this.y, rooms[this.myRoom].currentTrack.finishLine[0], rooms[this.myRoom].currentTrack.finishLine[1],
-    rooms[this.myRoom].currentTrack.finishLine[2], rooms[this.myRoom].currentTrack.finishLine[3], "trigger") == true){
-      if (this.checkPointCounter.every(point => point == true)){
-        this.laps += 1;
-        this.boosts = this.maxBoosts;
-        this.checkPointCounter = [false, false, false, false];
-        rooms[this.myRoom].notifications.push(this.name + " Completed a lap!");
-        this.upgradePoints += 1;
-        this.HP = this.maxHP;
-        this.lapStart = Date.now();
-        if (this.lapTime < this.topLapTime || this.topLapTime == 0){
-          this.topLapTime = this.lapTime;
-        }
-        if (this.laps >= lapsToWin){
-          rooms[this.myRoom].notifications.push(this.name + " has Won!!!");
-          rooms[this.myRoom].gameEndPeriod = Date.now()+5000;
-          for(var i in rooms[this.myRoom].allPlayers){
-            rooms[this.myRoom].allPlayers[i].brake = true;
-            rooms[this.myRoom].allPlayers[i].god[1] = Date.now() + 5000;
-            rooms[this.myRoom].allPlayers[i].god[0] = true;
-          }
-        }
-      }
-    }
-
-    // Check for collision with check points
-    for(var i in rooms[this.myRoom].currentTrack.checkPoints){
-      if (this.collision(this.x, this.y, rooms[this.myRoom].currentTrack.checkPoints[i][0], rooms[this.myRoom].currentTrack.checkPoints[i][1],
-      rooms[this.myRoom].currentTrack.checkPoints[i][2], rooms[this.myRoom].currentTrack.checkPoints[i][3], "trigger") == true){
-        this.checkPointCounter[i] = true;
-      }
-    }
-
-    }
-    // The collision function
-    this.collision = function(playerx, playery, x1, x2, y1, y2, effect, damage=0, bounce=0) {
-      if ((playerx > x1 && playerx < x2) && (playery > y1 && playery < y2)){
-       if (effect == "x-1"){
-         this.x -= 1;
-         this.HP -= this.god[0]?0:(Math.abs(this.vX)*damage) + 2;
-         this.vX = -this.vX * bounce;
-         }
-       if (effect == "x+1"){
-         this.x += 1;
-         this.HP -= this.god[0]?0:(Math.abs(this.vX)*damage) + 2;
-         this.vX = Math.abs(this.vX)*bounce;
-         }
-       if (effect == "y-1"){
-         this.y -= 1;
-         this.HP -= this.god[0]?0:(Math.abs(this.vY)*damage) + 2;
-         this.vY = -this.vY * bounce;
-         }
-       if (effect == "y+1"){
-         this.y += 1;
-         this.HP -= this.god[0]?0:(Math.abs(this.vY)*damage) + 2;
-         this.vY = Math.abs(this.vY)*bounce;
-         }
-       if (effect == "trigger"){
-        return true;
-        }
-       }
-      else{
-        if (effect == "trigger"){
-          return false;
-        }
-      }
-    }
 
   // Pack to initialize a new instance of a player
   this.getInitPack = function () {
     return {
       id: this.id,
+      body: this.body,
       name: this.name,
-      x: this.x,
-      y: this.y,
       car: this.car,
       dev: this.dev
     }
@@ -788,8 +546,7 @@ var Player = function(id, name, x, y, car, dev) {
     if(this.car.name == "Prankster"){
       return {
         id: this.id,
-        x: this.x,
-        y: this.y,
+        body: this.body,
         angle: this.angle,
         HP: this.HP,
         maxHP : this.maxHP,
@@ -812,8 +569,7 @@ var Player = function(id, name, x, y, car, dev) {
     if(this.car.name == "Spike"){
       return {
         id: this.id,
-        x: this.x,
-        y: this.y,
+        body: this.body,
         angle: this.angle,
         HP: this.HP,
         maxHP : this.maxHP,
@@ -836,8 +592,7 @@ var Player = function(id, name, x, y, car, dev) {
     if(this.car.name == "Swapper"){
       return {
         id: this.id,
-        x: this.x,
-        y: this.y,
+        body: this.body,
         angle: this.angle,
         HP: this.HP,
         maxHP : this.maxHP,
@@ -859,8 +614,7 @@ var Player = function(id, name, x, y, car, dev) {
     }
     return {
       id: this.id,
-      x: this.x,
-      y: this.y,
+      body: this.body,
       angle: this.angle,
       HP: this.HP,
       maxHP : this.maxHP,
@@ -920,31 +674,31 @@ setInterval(() => {
       });
     }
 
-    for(var i in rooms){
-      if (rooms[i].currentEntities.length > 0){
-        for (var j in rooms[i].currentEntities){
-          if (rooms[i].currentEntities[j].newEntity == true){
-            rooms[i].currentEntities[j].newEntity = false;
-            rooms[i].currentEntities[j].createdAt = Date.now();
-          }
-          rooms[i].currentEntities[j].vX *= 0.95;
-          rooms[i].currentEntities[j].vY *= 0.95;
-          rooms[i].currentEntities[j].x += rooms[i].currentEntities[j].vX;
-          rooms[i].currentEntities[j].y += rooms[i].currentEntities[j].vY;
+    // for(var i in rooms){
+    //   if (rooms[i].currentEntities.length > 0){
+    //     for (var j in rooms[i].currentEntities){
+    //       if (rooms[i].currentEntities[j].newEntity == true){
+    //         rooms[i].currentEntities[j].newEntity = false;
+    //         rooms[i].currentEntities[j].createdAt = Date.now();
+    //       }
+    //       rooms[i].currentEntities[j].vX *= 0.95;
+    //       rooms[i].currentEntities[j].vY *= 0.95;
+    //       rooms[i].currentEntities[j].x += rooms[i].currentEntities[j].vX;
+    //       rooms[i].currentEntities[j].y += rooms[i].currentEntities[j].vY;
 
-          for(var k in rooms[i].currentTrack.walls){
-            if ((rooms[i].currentEntities[j].x > rooms[i].currentTrack.walls[k][0] && rooms[i].currentEntities[j].x < rooms[i].currentTrack.walls[k][1]) &&
-            (rooms[i].currentEntities[j].y > rooms[i].currentTrack.walls[k][2] && rooms[i].currentEntities[j].y < rooms[i].currentTrack.walls[k][3])){
-              rooms[i].currentEntities[j].vX = 0;
-              rooms[i].currentEntities[j].vY = 0;
-            }
-          }
-          // if (currentEntities[i].createdAt + 10000 > Date.now()){
-          //   currentEntities.splice(i, i+1);
-          // }
-        }
-      }
-    }
+    //       for(var k in rooms[i].currentTrack.walls){
+    //         if ((rooms[i].currentEntities[j].x > rooms[i].currentTrack.walls[k][0] && rooms[i].currentEntities[j].x < rooms[i].currentTrack.walls[k][1]) &&
+    //         (rooms[i].currentEntities[j].y > rooms[i].currentTrack.walls[k][2] && rooms[i].currentEntities[j].y < rooms[i].currentTrack.walls[k][3])){
+    //           rooms[i].currentEntities[j].vX = 0;
+    //           rooms[i].currentEntities[j].vY = 0;
+    //         }
+    //       }
+    //       // if (currentEntities[i].createdAt + 10000 > Date.now()){
+    //       //   currentEntities.splice(i, i+1);
+    //       // }
+    //     }
+    //   }
+    // }
 }, 1000/75)
 
 
@@ -1058,6 +812,17 @@ allModifiers = {
   )
 }
 
+var tempRoom = function(index, allPlayers, notifications, messages, currentEntities, endPeriod, lapsToWin, modifier){
+  this.roomIndex = index;
+  this.allPlayers = allPlayers;
+  this.notifications = notifications;
+  this.messages = messages;
+  this.currentEntities = currentEntities;
+  this.gameEndPeriod = endPeriod;
+  this.lapsToWin = lapsToWin;
+  this.roundModifier = modifier;
+}
+
 // The room object constructor
 var Room = function(){
   this.roomIndex = rooms.length;
@@ -1068,11 +833,15 @@ var Room = function(){
   this.gameEndPeriod = 0;
   this.lapsToWin = lapsToWin;
   this.roundModifier = allModifiers.none;
+  this.engine = Engine.create();
 
   this.startGame = function(){
     this.gameEndPeriod = 0;
     this.notifications = [];
     this.currentEntities = [];
+    console.log("before")
+    console.log("after")
+
     var trackChoice = Math.floor(Math.random() * Object.keys(allTracks).length);
     if(trackChoice == 0){
       this.currentTrack = allTracks.Square;
@@ -1099,8 +868,9 @@ var Room = function(){
 }
 
 // The car object constructor
-var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, size, mass, abilityCooldown, ability, drawCar){
+var Car = function(name, body, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boostPower, size, mass, abilityCooldown, ability, drawCar){
   this.name = name;
+  this.body = body;
   this.maxHP = maxHP;
   this.maxSpeed = maxSpeed;
   this.maxBoosts = maxBoosts;
@@ -1116,7 +886,9 @@ var Car = function(name, maxHP, maxSpeed, maxBoosts, upgrades, acceleration, boo
 
 // Car class objects
 allCars = {
-  Racer : new Car('Racer', 150, 6, 5, {
+  Racer : new Car('Racer',
+    Bodies.circle(0,0,100),
+    150, 6, 5, {
     MaxHP : 12,
     RegenHP : 0.3,
     MaxBoosts: 1,
@@ -1125,7 +897,9 @@ allCars = {
     SingleBoost : 7.5
   }, 0.11, 2.5, 25, 5, null, null, null),
 
-  Prankster : new Car('Prankster', 120, 6, 4, {
+  Prankster : new Car('Prankster',
+    Bodies.circle(0,0,100),
+    120, 6, 4, {
     MaxHP : 10,
     RegenHP : 0.3,
     TrapDamage: 8,
@@ -1148,7 +922,9 @@ allCars = {
     };
   }, null),
 
-  Bullet : new Car('Bullet', 100, 12, 3, {
+  Bullet : new Car('Bullet',
+    Bodies.circle(0,0,100),
+    100, 12, 3, {
     MaxHP : 10,
     RegenHP : 0.4,
     MaxBoosts: 1,
@@ -1163,7 +939,9 @@ allCars = {
   }
 }, null),
 
-  Tank : new Car('Tank', 200, 4, 4, {
+  Tank : new Car('Tank',
+   Bodies.circle(0,0,100),
+    200, 4, 4, {
     MaxHP : 14,
     RegenHP : 0.8,
     MaxBoosts: 1,
@@ -1174,7 +952,9 @@ allCars = {
     return null
   }, null),
 
-  Sprinter : new Car('Sprinter', 80, 12, 5, {
+  Sprinter : new Car('Sprinter',
+    Bodies.circle(0,0,100),
+    80, 12, 5, {
     MaxHP : 8,
     RegenHP : 0.5,
     MaxBoosts: 1,
@@ -1188,7 +968,9 @@ allCars = {
     }
   }, null),
 
-  Fragile : new Car('Fragile', 70, 6, 3, {
+  Fragile : new Car('Fragile',
+    Bodies.circle(0,0,100),
+    70, 6, 3, {
     MaxHP : 20,
     RegenHP : 0.5,
     MaxBoosts: 2,
@@ -1201,7 +983,9 @@ allCars = {
  }
   }, null),
 
-  Spike : new Car('Spike', 150, 5, 3, {
+  Spike : new Car('Spike',
+    Bodies.circle(0,0,100),
+    150, 5, 3, {
     MaxHP : 12,
     RegenHP : 0.2,
     MaxBoosts: 1,
@@ -1212,7 +996,9 @@ allCars = {
     return null
   }, null),
 
-  Swapper : new Car('Swapper', 80, 100, 3, {
+  Swapper : new Car('Swapper',
+    Bodies.circle(0,0,100),
+    80, 100, 3, {
     MaxHP : 10,
     RegenHP : 0.2,
     MaxBoosts : 1,

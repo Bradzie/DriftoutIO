@@ -42,6 +42,17 @@ var mainCanvas = document.getElementById("mainCanvas"),
   newsArticle = document.getElementById('newsArticle'),
   newsExitButton = document.getElementById('newsExitButton');
 
+// Init MatterJS Aliases
+
+var Render = Matter.Render;
+var Runner = Matter.Runner;
+var Composite = Matter.Composite;
+
+var world = Composite;
+var renderer;
+var clientRunner;
+var clientEngine;
+
 // Global Vars
 
 var dev = false;
@@ -131,6 +142,8 @@ function setup(){
 
   classDisplay.innerHTML = "<div id='classImageBlock'></div>" + classEntries[classIndex];
 
+  canvas = createCanvas(windowWidth, windowHeight);
+
   socket = io();
 
   socket.on("myID", function(data) {
@@ -138,13 +151,9 @@ function setup(){
   });
 
   socket.on("roomUpdate", function(data){
+    console.log("1")
     if(playing){
-      if(currentRoom == null){
-        currentRoom = data.rooms[data.roomIndex];
-      }
-      if(data.roomIndex == currentRoom.roomIndex){
-        currentRoom = data.rooms[data.roomIndex];
-      }
+      currentRoom = data.room;
     }
   })
 
@@ -177,7 +186,7 @@ function setup(){
             var newCar = allCars.Sprinter;
             break;
         }
-        var player = new Player(data.initPack.id, data.initPack.name, data.initPack.x, data.initPack.y, newCar, dev);
+        var player = new Player(data.initPack.id, data.initPack.name, data.initPack.x, data.initPack.y, newCar, dev, data.body);
         allPlayers.push(player);
       }
     }
@@ -214,7 +223,7 @@ function setup(){
                 var newCar = allCars.Sprinter;
                 break;
             }
-            var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar, dev);
+            var player = new Player(data.initPack[i].id, data.initPack[i].name, data.initPack[i].x, data.initPack[i].y, newCar, dev, data.initPack[i].body);
             allPlayers.push(player);
             dupeCheck();
         }
@@ -237,8 +246,7 @@ function setup(){
         for(var i in data.updatePack) {
           for(var j in allPlayers) {
             if(allPlayers[j].id === data.updatePack[i].id) {
-              allPlayers[j].x = data.updatePack[i].x;
-              allPlayers[j].y = data.updatePack[i].y;
+              allPlayers[j].body = data.updatePack[i].body;
               allPlayers[j].angle = data.updatePack[i].angle;
               allPlayers[j].HP = data.updatePack[i].HP;
               allPlayers[j].maxHP = data.updatePack[i].maxHP;
@@ -350,7 +358,7 @@ function draw() {
   resizeCanvas(windowWidth, windowHeight);
 
   // Render game only if player exists within room
-  if (playing == true && allPlayers.filter(player => player.id === myId).length == 1){
+  if (playing == true && allPlayers.filter(player => player.id === myId).length == 1){  
 
     // Start counting up from last packet recieved
     timeOutTick++;
@@ -364,48 +372,14 @@ function draw() {
     }
 
     // Render background and GUI's
-    background(37, 150, 190);
+    //background(37, 150, 190);
     refreshDisplays();
 
     // Send keyboard/mouse inputs to server
     sendInputData();
 
-    // Translate screen to match assinged player and exit if player is not alive
-    for(var i in allPlayers) {
-        if(allPlayers[i].id == myId) {
-          allPlayers[i].angle = clientPlayerAngle;
-          if(allPlayers[i].alive == false){
-            exitGame();
-          }
-          translate(width/2 - allPlayers[i].x, height/2 - allPlayers[i].y);
-        }
-    }
-
-    // Draw track in current room
-    currentTrack.drawMap();
-
-    // Draw entities only if they exist
-    for(var i in currentEntities){
-      if (typeof currentEntities[i].draw != "undefined"){
-        currentEntities[i].draw(currentEntities[i].x, currentEntities[i].y, currentEntities[i].size/20);
-      }
-    }
-
-    // Draw mobile controls if device is classed as mobile
-    if(isMobile == true){
-      drawMobileControls();
-    }
-
-    // Draw player
-    for(var i in allPlayers) {
-      if(allPlayers[i].alive == true){
-        allPlayers[i].draw();
-        smooth(4);
-        if(allPlayers[i].bodySize){
-          scale(allPlayers[i].bodySize);
-        }
-      }
-    }
+    Render.run(renderer);
+    Runner.run(clientRunner, clientEngine);
 
     if(allPlayers.filter(player => player.id === myId).length == 0){
       exitGame();
@@ -549,6 +523,21 @@ function exitGame(){
 // Executed on main menu 'race' button,
 
 function enterGame(){
+
+  clientEngine = Matter.Engine.create();
+  clientRunner = Runner.create();
+
+  renderer = Render.create({
+    element: document.body,
+    engine: clientEngine,
+    options: {
+      width: windowWidth,
+      height: windowHeight,
+      wireframes: false,
+      background: "white"
+    }
+  });
+
   var carChoice;
   playing = true;
   if(classIndex == 0){
@@ -916,8 +905,9 @@ function sendInputData() {
 // ----------- OBJECTS ---------------------------------------------------
 
 // The player object constructor
-var Player = function(id, name, x, y, car, dev) {
+var Player = function(id, name, x, y, car, dev, body) {
   this.id = id;
+  this.body = body;
   this.name = name;
   this.dev = dev;
   this.x = x;
@@ -947,6 +937,8 @@ var Player = function(id, name, x, y, car, dev) {
   this.topLapTime = 0;
   this.god = true;
   this.form = false;
+
+  world.add(this.body);
 
   for (var x in this.car.upgrades){
     this.upgrades.push([0]);
