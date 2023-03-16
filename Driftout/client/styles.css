@@ -15,7 +15,7 @@ html, body{
 }
 
 body {
-  background: linear-gradient(#84b5c4, black);
+  background: #84b5c4;
   margin: 0;
   overflow: hidden;
 }
