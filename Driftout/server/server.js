@@ -23,6 +23,7 @@ const Body = matterjs.Body;
 const Vector = matterjs.Vector;
 const Composite = matterjs.Composite;
 const Vertices = matterjs.Vertices;
+const Events = matterjs.Events;
 
 // ---------- GLOBALS ----------
 
@@ -33,7 +34,7 @@ var entities = {players: [], entities: [], walls: []};
 var currentConnections = [];
 var totalConnections = 0;
 var currentTrack = Tracks.Square;
-var carChoice = Cars.Tank;
+var carChoice = Cars.Bullet;
 
 // ---------- MODIFIERS ----------
 
@@ -45,6 +46,7 @@ const engine = Engine.create();
 engine.gravity.scale = 0;
 engine.velocityIterations = 2;
 engine.positionIterations = 3;
+
 
 // ---------- WALL OBJS ----------
 
@@ -88,6 +90,9 @@ io.on("connection", function(socket){
 });
 
 var processState = function(){
+
+  // Apply movement velocities to players
+
   for(var i in allPlayers){
     let vx = Body.getVelocity(allPlayers[i].body).x;
     let vy = Body.getVelocity(allPlayers[i].body).y;
@@ -97,13 +102,17 @@ var processState = function(){
     vx < allPlayers[i].maxSpeed && vx > -allPlayers[i].maxSpeed
         ? vx + Math.cos(allPlayers[i].angle)*allPlayers[i].acceleration
         : vx,
-    vx < allPlayers[i].maxSpeed && vx > -allPlayers[i].maxSpeed
+    vy < allPlayers[i].maxSpeed && vy > -allPlayers[i].maxSpeed
         ? vy + Math.sin(allPlayers[i].angle)*allPlayers[i].acceleration
         : vy
       )
     );
 
     Body.rotate(allPlayers[i].body, allPlayers[i].angle - allPlayers[i].body.angle);
+
+    // Process player events
+
+    allPlayers[i].events();
   }
 }
 
@@ -119,8 +128,8 @@ var Player = function(id, car) {
   this.mouseX;
   this.mouseY;
   this.pos;
-  this.maxHP = car.maxHP;
-  this.HP = this.maxHP;
+  this.maxHP = car.HP;
+  this.HP = car.HP;
   this.regen = 0.1;
   this.alive = true;
   this.angle = 0;
@@ -128,17 +137,19 @@ var Player = function(id, car) {
   this.acceleration = car.acceleration;
 
   this.events = function() {
-    if(this.HP < this.maxHP && this.regen > 0){
+    if(this.HP < this.maxHP){
       this.HP += this.regen;
     }
   }
 
-  this.updatePack = {
+  this.getUpdatePack = function(){
+    return{
     id: this.id,
     pos: this.body.position,
-    hp: this.HP,
-    maxhp: this.maxHP,
+    HP: this.HP,
+    maxHP: this.maxHP,
     alive: this.alive
+    }
   }
 
   return this;
@@ -154,6 +165,29 @@ function rotate(velocity, angle) {
     return rotatedVelocities;
 }
 
+// Previous velocity handler
+
+var prevVelocities = [];
+Events.on(engine, 'beforeUpdate', function () {
+  entities.players.forEach(function (body) {
+      body.velocityPrev = prevVelocities[body.id] ? prevVelocities[body.id] : Body.getVelocity(body);
+      prevVelocities[body.id] = Body.getVelocity(body);
+  })
+});
+
+// Collision event handler
+
+Events.on(engine, "collisionStart", function(event){
+  bodyPairs = event.pairs.map(e => [e.bodyA.id, e.bodyB.id])
+  bodyPairs.forEach(function (bp) {
+    for (var i in allPlayers){
+      if(allPlayers[i].body.id == bp[0] || allPlayers[i].body.id == bp[1]){
+        allPlayers[i].HP -= Math.abs(prevVelocities[allPlayers[i].body.id].x) + Math.abs(prevVelocities[allPlayers[i].body.id].y)
+      }
+    }
+  })
+});
+
 // loop spped to update player properties
 setInterval(() => {
   processState();
@@ -167,6 +201,7 @@ setInterval(() => {
         ({x, y})))
   });
   const playerData = [];
-  allPlayers.forEach(p => playerData.push(p.updatePack));
+  allPlayers.forEach(p => playerData.push(p.getUpdatePack()));
+
   io.emit("playerData", playerData);
 }, frameRate)

@@ -131,7 +131,6 @@ function setup(){
   });
 
   socket.on("addPlayer", function(data) {
-    console.log("1")
     allPlayers.push(new Player(data.playerID, data.vector.x, data.vector.y));
   });
 
@@ -145,11 +144,12 @@ function setup(){
 
   socket.on("playerData", (data) => {
     for(var i in data){
-      //console.log(data[i]);
       for(var j in allPlayers){
         if(allPlayers[j].id === data[i].id){
-          allPlayers[j].x = data[i].pos.x // (serverCanvas.width / windowWidth);
-          allPlayers[j].y = data[i].pos.y // (serverCanvas.height / windowHeight);
+          allPlayers[j].x = data[i].pos.x
+          allPlayers[j].y = data[i].pos.y
+          allPlayers[j].HP = data[i].HP
+          allPlayers[j].maxHP = data[i].maxHP
           break;
         }
       }
@@ -170,9 +170,23 @@ function draw() {
       if(allPlayers[i].id == myId){
         translate(windowWidth/2 - allPlayers[i].x, windowHeight/2 - allPlayers[i].y);
       }
+
+      allPlayers[i].drawGUI();
     }
 
-    // Draw shapes based on verticies sent by server
+    // Draw wall shapes based on verticies sent by server
+    state.walls.forEach(w => {
+      strokeCap(ROUND);
+      strokeWeight(12);
+      stroke(30,30,30);
+      fill(0,0,0);
+      beginShape();
+      w.forEach(v => vertex(v.x, v.y));
+      endShape(CLOSE);
+    });
+
+
+    // Draw player shapes based on verticies sent by server
     state.players.forEach(p => {
       strokeWeight(5);
       fill(p[1].r, p[1].g, p[1].b);
@@ -182,16 +196,6 @@ function draw() {
       p[0].forEach(v => vertex(v.x, v.y));
       endShape(CLOSE);
       smooth(5);
-    });
-
-    state.walls.forEach(w => {
-      strokeCap(ROUND);
-      strokeWeight(5);
-      stroke(30,30,30);
-      fill(0,0,0);
-      beginShape();
-      w.forEach(v => vertex(v.x, v.y));
-      endShape(CLOSE);
     });
 
     // Start counting up from last packet recieved
@@ -401,4 +405,30 @@ var Player = function(id, vector) {
   this.x = vector.x;
   this.y = vector.y;
   this.name = "Racer";
+  this.maxHP = 0;
+  this.HP = 0;
+
+  this.drawGUI = function(){
+
+    // Player HP bar
+    if (this.HP < this.maxHP && this.HP > 0){
+      push();
+      strokeWeight(12);
+      stroke(120,120,120)
+      line(this.x - 20, this.y + 70, this.x + 20, this.y + 70);
+      strokeWeight(8);
+      stroke(80, 80, 80);
+      line(this.x - 20, this.y + 70, this.x + 20, this.y + 70);
+      if (this.HP < (this.maxHP / 4)){
+        stroke(220, 0, 0);
+      }
+      else{
+        stroke(0, 220, 0);
+      }
+      line(this.x - (this.HP / (this.maxHP / 20)), this.y + 70, this.x + (this.HP / (this.maxHP / 20)),
+          this.y + 70);
+      pop();
+    }
+  }
+
 }
