@@ -85,6 +85,7 @@ var mobileCoords;
 var timeOutTick = 0;
 var state;
 var myId = 0;
+var serverCanvas = {width: 2000, height: 2000};
 
 class NewsPiece{
   constructor(title, date, content){
@@ -124,13 +125,14 @@ function setup(){
 
   socket = io();
 
-  socket.on("myID", function(data) {
+  socket.on("setupData", function(data) {
       myId = data.id;
+      serverCanvas = data.serverCanvas;
   });
 
   socket.on("addPlayer", function(data) {
     console.log("1")
-    allPlayers.push(new Player(data.playerID));
+    allPlayers.push(new Player(data.playerID, data.vector.x, data.vector.y));
   });
 
   var mainCanvas = createCanvas(windowWidth, windowHeight);
@@ -139,6 +141,19 @@ function setup(){
   socket.on("updateState", (data) => {
     state = data;
     timeOutTick = 0;
+  });
+
+  socket.on("playerData", (data) => {
+    for(var i in data){
+      //console.log(data[i]);
+      for(var j in allPlayers){
+        if(allPlayers[j].id === data[i].id){
+          allPlayers[j].x = data[i].pos.x // (serverCanvas.width / windowWidth);
+          allPlayers[j].y = data[i].pos.y // (serverCanvas.height / windowHeight);
+          break;
+        }
+      }
+    }
   });
 
 }
@@ -150,18 +165,32 @@ function draw() {
   // Render game only if playing
   if (playing == true){  
 
+    // Translate window to match position of player
+    for(var i in allPlayers){
+      if(allPlayers[i].id == myId){
+        translate(windowWidth/2 - allPlayers[i].x, windowHeight/2 - allPlayers[i].y);
+      }
+    }
+
     // Draw shapes based on verticies sent by server
     state.players.forEach(p => {
       strokeWeight(5);
+      fill(p[1].r, p[1].g, p[1].b);
+      stroke(p[2].r, p[2].g, p[2].b);
+      strokeJoin(ROUND);
       beginShape();
-      p.forEach(v => vertex(v.x, v.y + 100));
+      p[0].forEach(v => vertex(v.x, v.y));
       endShape(CLOSE);
+      smooth(5);
     });
 
     state.walls.forEach(w => {
-      strokeWeight(10);
+      strokeCap(ROUND);
+      strokeWeight(5);
+      stroke(30,30,30);
+      fill(0,0,0);
       beginShape();
-      w.forEach(v => vertex(v.x, v.y + 100));
+      w.forEach(v => vertex(v.x, v.y));
       endShape(CLOSE);
     });
 
@@ -182,9 +211,9 @@ function draw() {
     // Send keyboard/mouse inputs to server
     sendInputData();
 
-    if(allPlayers.filter(player => player.id === myId).length == 0){
-      exitGame();
-    }
+    // if(allPlayers.filter(player => player.id === myId).length == 0){
+    //   exitGame();
+    // }
   }
 
   else{
@@ -366,8 +395,10 @@ function sendInputData() {
 // ----------- OBJECTS ---------------------------------------------------
 
 // The player object constructor
-var Player = function(id) {
+var Player = function(id, vector) {
   this.id = id;
   this.verticies;
+  this.x = vector.x;
+  this.y = vector.y;
   this.name = "Racer";
 }
