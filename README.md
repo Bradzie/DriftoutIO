@@ -5,6 +5,10 @@
 I was originally hosting this at driftout.io after advertising on the IOgames subreddit, but all the popularity 
 unfortunately made the hosting too expensive. ): Until I can sort a cost effective replacement this app will
 likely remain deactivated.
+
+## Update | 18/03/23
+
+I recently started my first software job in december and have been allocating alot of time getting up to speed with it, however after a few months I now feel comfortable putting aside some free time to work on this project once again :) Big changes are coming, I'm going to completely refactor the phyiscs with the Matter.js library (https://brm.io/matter-js/) and build this once again from the ground up knowing the difficulties and issues I had last time. I can't wait to share a working product - Brad.
  
 ## Battle other racers to be the first to complete 20 laps! 🚗
 
