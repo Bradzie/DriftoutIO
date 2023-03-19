@@ -34,7 +34,7 @@ var entities = {players: [], entities: [], walls: []};
 var currentConnections = [];
 var totalConnections = 0;
 var currentTrack = Tracks.Square;
-var carChoice = Cars.Bullet;
+const carChoice = Cars.Racer;
 
 // ---------- MODIFIERS ----------
 
@@ -53,6 +53,18 @@ engine.positionIterations = 3;
 currentTrack.walls.forEach(w => entities.walls.push(w));
 Composite.add(engine.world, Object.values(entities).flat());
 
+// ---------- UTILITIES ----------
+
+const buildBody = function(template) {
+  switch(template.type) {
+    case "Vertices":
+      return Bodies.fromVertices(template.x, template.y, Vertices.fromPath(template.points), {restitution: template.bounce});
+      break;
+    case "Polygon":
+      return Bodies.polygon(template.x, template.y, template.sides, template.radius, {restitution: template.bounce})
+  }
+}
+
 server.listen(port, host);
 
 console.log("Server started on port " + port);
@@ -62,21 +74,23 @@ io.on("connection", function(socket){
   totalConnections++;
   currentConnections.push(socket.id);
 
-  var player;
+  // New connection
+
   socket.on("ready", () => {      
-    player = new Player(socket.id, carChoice);
+    let player = new Player(socket.id, carChoice, buildBody(carChoice.body));
     socket.emit("setupData", {id: player.id, serverCanvas: engineCanvas});
     socket.emit("addPlayer", {playerID: player.id, vector: {x: player.body.position.x, y: player.body.position.y}});
+    player.setup();
     allPlayers.push(player);
-    player.body.playerID = player.id;
-    player.body.colour = player.car.colour;
-    player.body.colourOutline = player.car.colourOutline;
     entities.players.push(player.body);
-    Composite.add(engine.world, player.body);
+    Composite.clear(engine.world, false);
+    Composite.add(engine.world, Object.values(entities).flat());
   });
 
+  // Update player inputs
+
   socket.on("inputData", (data) => {
-    for(var i in allPlayers){
+    for(var i in allPlayers) {
       if(allPlayers[i].id === socket.id) {
         allPlayers[i].mouseX = data.mouseX;
         allPlayers[i].mouseY = data.mouseY;
@@ -87,6 +101,20 @@ io.on("connection", function(socket){
     }
   });
 
+  // Listen for players leaving
+
+  socket.on("removePlayerServer", (data) => {
+    let i = allPlayers.indexOf(p => p.id === data.id);
+    if(i > -1){
+      console.log("Player left | ID: " + allPlayers[i].id);
+      j = entities.players.indexOf(p => p.id === allPlayers[i].body.id);
+      entities.players.splice(j, 1);
+      allPlayers.splice(i, 1);
+      Composite.clear(engine.world, false);
+      Composite.add(engine.world, Object.values(entities).flat());
+    }
+  });
+
 });
 
 var processState = function(){
@@ -94,6 +122,8 @@ var processState = function(){
   // Apply movement velocities to players
 
   for(var i in allPlayers){
+
+    // --- PLAYER MOVEMENT ---
     let vx = Body.getVelocity(allPlayers[i].body).x;
     let vy = Body.getVelocity(allPlayers[i].body).y;
 
@@ -110,17 +140,28 @@ var processState = function(){
 
     Body.rotate(allPlayers[i].body, allPlayers[i].angle - allPlayers[i].body.angle);
 
-    // Process player events
+    // --- PLAYER EVENTS ---
+    if(allPlayers[i].HP < allPlayers[i].maxHP){
+      allPlayers[i].HP += allPlayers[i].regen;
+    }
 
-    allPlayers[i].events();
+    if(allPlayers[i].HP < 0){
+      console.log("Player crashed | ID: " + allPlayers[i].id);
+      j = entities.players.indexOf(p => p.id === allPlayers[i].body.id);
+      entities.players.splice(j, 1);
+      io.emit("removePlayer", {id: allPlayers[i].id});
+      allPlayers.splice(i, 1);
+      Composite.clear(engine.world, false);
+      Composite.add(engine.world, Object.values(entities).flat());
+    }
   }
 }
 
 // The player object constructor
-var Player = function(id, car) {
-  this.body = car.body
+var Player = function(id, car, body) {
+  this.body = body
   this.id = id;
-  this.bodyid = this.body.id;
+  this.bodyid = body.id;
   this.car = car;
   this.windowWidth = 0;
   this.windowHeight = 0;
@@ -131,38 +172,33 @@ var Player = function(id, car) {
   this.maxHP = car.HP;
   this.HP = car.HP;
   this.regen = 0.1;
-  this.alive = true;
   this.angle = 0;
   this.maxSpeed = car.maxSpeed;
   this.acceleration = car.acceleration;
+  this.colour = car.colour;
+  this.colourOutline = car.colourOutline;
+  this.boost = {
+    cooldown: 6000,
+    power: 3,
+    nextAvailible: 0
+  }
 
-  this.events = function() {
-    if(this.HP < this.maxHP){
-      this.HP += this.regen;
-    }
+  this.setup = function(){
+    this.body.playerID = this.id;
+    this.body.colour = this.colour;
+    this.body.colourOutline = this.colourOutline;
   }
 
   this.getUpdatePack = function(){
     return{
-    id: this.id,
-    pos: this.body.position,
-    HP: this.HP,
-    maxHP: this.maxHP,
-    alive: this.alive
+      id: this.id,
+      pos: this.body.position,
+      HP: this.HP,
+      maxHP: this.maxHP,
     }
   }
 
   return this;
-}
-
-
-function rotate(velocity, angle) {
-    const rotatedVelocities = {
-        x: velocity.x * Math.cos(angle) - velocity.y * Math.sin(angle),
-        y: velocity.x * Math.sin(angle) + velocity.y * Math.cos(angle)
-    }
-
-    return rotatedVelocities;
 }
 
 // Previous velocity handler
@@ -202,6 +238,5 @@ setInterval(() => {
   });
   const playerData = [];
   allPlayers.forEach(p => playerData.push(p.getUpdatePack()));
-
   io.emit("playerData", playerData);
 }, frameRate)

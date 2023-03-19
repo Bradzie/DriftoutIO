@@ -125,23 +125,36 @@ function setup(){
 
   socket = io();
 
+  // Recieve player ID and canvas size
   socket.on("setupData", function(data) {
       myId = data.id;
       serverCanvas = data.serverCanvas;
   });
 
+  // Add new player to current game
   socket.on("addPlayer", function(data) {
     allPlayers.push(new Player(data.playerID, data.vector.x, data.vector.y));
   });
 
+  // Remove player from current game
+  socket.on("removePlayer", function(data) {
+    let i = allPlayers.indexOf(p => p.id == data.id);
+    if(i > -1)
+      allPlayers.splice(i, 1);
+      exitGame();
+  });
+
+  // Init canvas
   var mainCanvas = createCanvas(windowWidth, windowHeight);
   mainCanvas.parent("mainCanvas");
 
+  // Recieve physics updates
   socket.on("updateState", (data) => {
     state = data;
     timeOutTick = 0;
   });
 
+  // Recieve player-specific updates
   socket.on("playerData", (data) => {
     for(var i in data){
       for(var j in allPlayers){
@@ -170,15 +183,17 @@ function draw() {
       if(allPlayers[i].id == myId){
         translate(windowWidth/2 - allPlayers[i].x, windowHeight/2 - allPlayers[i].y);
       }
-
-      allPlayers[i].drawGUI();
     }
+
+    // Draw track inner-colour
+    fill(200,200,200);
+    square(0,0,5000);
 
     // Draw wall shapes based on verticies sent by server
     state.walls.forEach(w => {
       strokeCap(ROUND);
       strokeWeight(12);
-      stroke(30,30,30);
+      stroke(100,100,100);
       fill(0,0,0);
       beginShape();
       w.forEach(v => vertex(v.x, v.y));
@@ -209,15 +224,16 @@ function draw() {
       return;
     }
 
+    // Second for loop for GUI overlay (Surely there's a better way)
+    for(var i in allPlayers){
+      allPlayers[i].drawGUI();
+    }
+
     // Render background and GUI's
     refreshDisplays();
 
     // Send keyboard/mouse inputs to server
     sendInputData();
-
-    // if(allPlayers.filter(player => player.id === myId).length == 0){
-    //   exitGame();
-    // }
   }
 
   else{
@@ -260,6 +276,7 @@ function exitGame(){
   gameGuiContainer.style.visibility = "hidden";
   gameGuiContainer.style.opacity = "0";
   playing = false;
+  socket.emit("removePlayerServer", { id:myId });
   enterGameButton.setAttribute('onClick', 'enterGame()');
   allPlayers=[];
   refreshDisplays();
