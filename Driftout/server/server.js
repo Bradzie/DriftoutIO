@@ -97,6 +97,7 @@ io.on("connection", function(socket){
         allPlayers[i].angle = data.clientPlayerAngle;
         allPlayers[i].windowWidth = data.windowWidth;
         allPlayers[i].windowHeight = data.windowHeight;
+        allPlayers[i].mouseClick = data.mouseClick;
       }
     }
   });
@@ -126,14 +127,21 @@ var processState = function(){
     // --- PLAYER MOVEMENT ---
     let vx = Body.getVelocity(allPlayers[i].body).x;
     let vy = Body.getVelocity(allPlayers[i].body).y;
+    let maxSpeed = allPlayers[i].mouseClick && allPlayers[i].boost > 0 ? allPlayers[i].maxSpeed * 1.4 : allPlayers[i].maxSpeed;
+    let accl = allPlayers[i].mouseClick && allPlayers[i].boost > 0 ? allPlayers[i].acceleration * 1.6 : allPlayers[i].acceleration;
+    if (allPlayers[i].mouseClick) {
+      allPlayers[i].boost -= allPlayers[i].boost > 0 ? 0.1 : 0;
+      console.log(allPlayers[i].boost);
+    }
+
 
     Body.setVelocity(allPlayers[i].body, Vector.create
       (
-    vx < allPlayers[i].maxSpeed && vx > -allPlayers[i].maxSpeed
-        ? vx + Math.cos(allPlayers[i].angle)*allPlayers[i].acceleration
+    vx < maxSpeed && vx > -maxSpeed
+        ? vx + Math.cos(allPlayers[i].angle)*accl
         : vx,
-    vy < allPlayers[i].maxSpeed && vy > -allPlayers[i].maxSpeed
-        ? vy + Math.sin(allPlayers[i].angle)*allPlayers[i].acceleration
+    vy < maxSpeed && vy > -maxSpeed
+        ? vy + Math.sin(allPlayers[i].angle)*accl
         : vy
       )
     );
@@ -168,6 +176,7 @@ var Player = function(id, car, body) {
   this.name = car.name;
   this.mouseX;
   this.mouseY;
+  this.mouseClick;
   this.pos;
   this.maxHP = car.HP;
   this.HP = car.HP;
@@ -177,11 +186,7 @@ var Player = function(id, car, body) {
   this.acceleration = car.acceleration;
   this.colour = car.colour;
   this.colourOutline = car.colourOutline;
-  this.boost = {
-    cooldown: 6000,
-    power: 3,
-    nextAvailible: 0
-  }
+  this.boost = 100;
 
   this.setup = function(){
     this.body.playerID = this.id;
@@ -201,8 +206,9 @@ var Player = function(id, car, body) {
   return this;
 }
 
-// Previous velocity handler
+// ---------- COLLISION HANDLING ----------
 
+// Previous velocity handler
 var prevVelocities = [];
 Events.on(engine, 'beforeUpdate', function () {
   entities.players.forEach(function (body) {
@@ -212,7 +218,6 @@ Events.on(engine, 'beforeUpdate', function () {
 });
 
 // Collision event handler
-
 Events.on(engine, "collisionStart", function(event){
   bodyPairs = event.pairs.map(e => [e.bodyA.id, e.bodyB.id])
   bodyPairs.forEach(function (bp) {
@@ -224,7 +229,7 @@ Events.on(engine, "collisionStart", function(event){
   })
 });
 
-// loop spped to update player properties
+// ---------- GAME LOOP ----------
 setInterval(() => {
   processState();
   Engine.update(engine, frameRate);
