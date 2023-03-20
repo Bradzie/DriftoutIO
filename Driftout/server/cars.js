@@ -7,6 +7,8 @@ const getSpawn = function(){
 }
 
 module.exports = {
+
+    // Car templates
     Racer: {
         name: "Racer",
         HP: 100,
@@ -22,6 +24,7 @@ module.exports = {
         },//Bodies.fromVertices(getSpawn().x, getSpawn().y, Vertices.fromPath('25 0 -25 20 -25 -20'), {restitution: 0.5}),
         colour: {r: 20, g: 20, b: 200},
         colourOutline: {r: 100, g: 100, b: 255},
+        ability: null,
     },
     Tank: {
         name: "Tank",
@@ -39,6 +42,7 @@ module.exports = {
         },// Bodies.polygon(getSpawn().x, getSpawn().y, 16, 30, {restitution: 0.7}),
         colour: {r: 50, g: 255, b: 150},
         colourOutline: {r: 0, g: 150, b: 50},
+        ability: null,
     },
     Prankster: {
         name: "Prankster",
@@ -55,6 +59,13 @@ module.exports = {
         },//Bodies.fromVertices(getSpawn().x, getSpawn().y, Vertices.fromPath('-25 -20 -25 20 -10 10 -10 -10 -10 20 -10 -20 30 -20 30 20'), {restitution: 0.5}),
         colour: {r: 50, g: 255, b: 150},
         colourOutline: {r: 0, g: 150, b: 50},
+        ability: {
+            name: "Trap",
+            fire: function(player){
+                player.HP += 20;
+                return player;
+            }
+        },
     },
     Bullet: {
         name: "Bullet",
@@ -71,5 +82,37 @@ module.exports = {
         },//Bodies.fromVertices(getSpawn().x, getSpawn().y, Vertices.fromPath('30 -10 30 10 15 20 -30 20 -30 -20 15 -20'), {restitution: 0.5}),
         colour: {r: 230, g: 230, b: 10},
         colourOutline: {r: 125, g: 125, b: 0},
-    }
+        ability: {
+            name: "Dash",
+            fire: function(player){
+                player.maxSpeed = 20;
+                return player;
+            }
+        }
+    },
+
+    // Car displays for menu
+
+    // RacerDisplays: [
+    //     {
+    //         colour: {r: 50, g: 255, b: 150},
+    //         colourOutline: {r: 0, g: 150, b: 50},
+    //         points: '-25 -20 -25 20 -10 10 -10 -10 -10 20 -10 -20 30 -20 30 20',
+    //     },
+    //     {
+    //         colour: {r: 50, g: 255, b: 150},
+    //         colourOutline: {r: 0, g: 150, b: 50},
+    //         points: '-25 -20 -25 20 -10 10 -10 -10 -10 20 -10 -20 30 -20 30 20',
+    //     },
+    //     {
+    //         colour: {r: 50, g: 255, b: 150},
+    //         colourOutline: {r: 0, g: 150, b: 50},
+    //         points: '-25 -20 -25 20 -10 10 -10 -10 -10 20 -10 -20 30 -20 30 20',
+    //     },
+    //     {
+    //         colour: {r: 230, g: 230, b: 10},
+    //         colourOutline: {r: 125, g: 125, b: 0},
+    //         points: '30 -10 30 10 15 20 -30 20 -30 -20 15 -20',
+    //     },
+    //     ]
 }

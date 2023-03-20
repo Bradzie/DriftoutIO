@@ -34,7 +34,7 @@ var entities = {players: [], entities: [], walls: []};
 var currentConnections = [];
 var totalConnections = 0;
 var currentTrack = Tracks.Square;
-const carChoice = Cars.Racer;
+const carChoice = Cars.Bullet;
 
 // ---------- MODIFIERS ----------
 
@@ -78,7 +78,7 @@ io.on("connection", function(socket){
 
   socket.on("ready", () => {      
     let player = new Player(socket.id, carChoice, buildBody(carChoice.body));
-    socket.emit("setupData", {id: player.id, serverCanvas: engineCanvas});
+    socket.emit("setupData", {id: player.id, serverCanvas: engineCanvas, abilityName: carChoice.ability === null ? null : carChoice.ability.name});
     socket.emit("addPlayer", {playerID: player.id, vector: {x: player.body.position.x, y: player.body.position.y}});
     player.setup();
     allPlayers.push(player);
@@ -200,6 +200,7 @@ var Player = function(id, car, body) {
       pos: this.body.position,
       HP: this.HP,
       maxHP: this.maxHP,
+      boost: this.boost,
     }
   }
 

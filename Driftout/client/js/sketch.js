@@ -48,6 +48,7 @@ var socket;
 var playing = false;
 var windowDisplay = false;
 var allPlayers = [];
+var gameData = {alerts: [], messages: []};
 var clientPlayerAngle = 0;
 var classIndex = 0;
 var classEntries = [
@@ -129,6 +130,13 @@ function setup(){
   socket.on("setupData", function(data) {
       myId = data.id;
       serverCanvas = data.serverCanvas;
+      abilityContainer.visibility = "hidden";
+      abilityContainer.opacity = 0;
+      if(data.abilityName != null){
+        abilityContainerCooldown.innerHTML = data.abilityName;
+        abilityContainer.visibility = "visible";
+        abilityContainer.opacity = 1;
+      }
   });
 
   // Add new player to current game
@@ -163,6 +171,7 @@ function setup(){
           allPlayers[j].y = data[i].pos.y
           allPlayers[j].HP = data[i].HP
           allPlayers[j].maxHP = data[i].maxHP
+          allPlayers[j].boost = data[i].boost
           break;
         }
       }
@@ -236,6 +245,8 @@ function draw() {
     sendInputData();
   }
 
+  // ----- Menu code -----
+
   else{
     if(!windowDisplay){
       if(Date.now() > tipsCounter){
@@ -245,7 +256,7 @@ function draw() {
         else{
           tipsIndex++;
         }
-        if(forceDisconnect == 1){
+        if(forceDisconnect == 1){ // change colour to light red when errors occur?
           tipsContainer.innerHTML = errors[0];
         }
         if(forceDisconnect == 2){
@@ -258,15 +269,6 @@ function draw() {
       }
     }
   }
-}
-
-function debugDraw(debugText){
-  //[[-1000, -200, -600, 3000], [-1000, -600, -600, -200], [2600, 3000, -600, -200], [2600, 3000, 2600, 3000]]
-  textSize(20);
-  textAlign(CENTER);
-  textStyle(BOLD);
-  fill(0,0,0);
-  text(debugText, windowWidth/2,windowHeight/2);
 }
 
 function exitGame(){
@@ -291,75 +293,11 @@ function enterGame(){
   enterGameButton.setAttribute('onClick', '');
   menuContainer.style.visibility = "hidden";
   menuContainer.style.opacity = "0";
-  //gameGuiContainer.style.visibility = "visible";
-  //gameGuiContainer.style.opacity = "1";
+  gameGuiContainer.style.visibility = "visible";
+  gameGuiContainer.style.opacity = "1";
 
   playing = true;
 
-}
-
-function setPlayerName(){
-  for(var i in currentRoom.allPlayers){
-    if (currentRoom.allPlayers[i].id == myId){
-      myName = currentRoom.allPlayers[i].name;
-    }
-  }
-}
-
-function changeClass(){
-  classIndex++;
-  if(classIndex >= Object.keys(allCars).length){
-    classIndex=0;
-  }
-  classDisplay.innerHTML = "<div id='classImageBlock'></div>" + classEntries[classIndex];
-}
-
-function toggleChat(){
-  if (chatDisplay.style.display === "block") {
-    chatDisplay.style.display = "none";
-  } else {
-    chatDisplay.style.display = "block";
-    chatToggle.style.backgroundColor = "rgba(30, 30, 30, 0.6)";
-  }
-}
-
-function toggleNewsOn(){
-  if(!windowDisplay){
-    newsContainer.style.opacity = "1";
-    newsContainer.style.visibility = "visible";
-    windowDisplay = true;
-  }
-}
-
-function toggleNewsOff(){
-  newsContainer.style.visibility = "hidden";
-  newsContainer.style.opacity = "0";
-  windowDisplay = false;
-}
-
-function toggleMetricsOn(){
-  if(!windowDisplay){
-    metricsContainer.style.opacity = "1";
-    metricsContainer.style.visibility = "visible";
-    socket.emit("specifcData", "metrics");
-    if(totalConnections == 0 && playerNames == []){
-      metricsData.innerHTML = "Loading...";
-    }
-    else{
-      var playerNameList = "";
-      for(var i in playerNames){
-        playerNameList+=playerNames[i] + ", ";
-      }
-      metricsData.innerHTML = "Total page vists since restart: " + totalConnections + "</br>All player names: " + playerNameList;
-    }
-    windowDisplay = true;
-  }
-}
-
-function toggleMetricsOff(){
-    metricsContainer.style.opacity = "0";
-    metricsContainer.style.visibility = "hidden";
-    windowDisplay = false;
 }
 
 function refreshDisplays(){
@@ -424,6 +362,7 @@ var Player = function(id, vector) {
   this.name = "Racer";
   this.maxHP = 0;
   this.HP = 0;
+  this.boost = 0;
 
   this.drawGUI = function(){
 
@@ -448,4 +387,79 @@ var Player = function(id, vector) {
     }
   }
 
+}
+
+// ---------- UTILITIES ----------
+
+function debugDraw(debugText){
+  //[[-1000, -200, -600, 3000], [-1000, -600, -600, -200], [2600, 3000, -600, -200], [2600, 3000, 2600, 3000]]
+  textSize(20);
+  textAlign(CENTER);
+  textStyle(BOLD);
+  fill(0,0,0);
+  text(debugText, windowWidth/2,windowHeight/2);
+}
+
+function setPlayerName(){
+  for(var i in currentRoom.allPlayers){
+    if (currentRoom.allPlayers[i].id == myId){
+      myName = currentRoom.allPlayers[i].name;
+    }
+  }
+}
+
+function changeClass(){
+  classIndex++;
+  if(classIndex >= Object.keys(allCars).length){
+    classIndex=0;
+  }
+  classDisplay.innerHTML = "<div id='classImageBlock'></div>" + classEntries[classIndex];
+}
+
+function toggleChat(){
+  if (chatDisplay.style.display === "block") {
+    chatDisplay.style.display = "none";
+  } else {
+    chatDisplay.style.display = "block";
+    chatToggle.style.backgroundColor = "rgba(30, 30, 30, 0.6)";
+  }
+}
+
+function toggleNewsOn(){
+  if(!windowDisplay){
+    newsContainer.style.opacity = "1";
+    newsContainer.style.visibility = "visible";
+    windowDisplay = true;
+  }
+}
+
+function toggleNewsOff(){
+  newsContainer.style.visibility = "hidden";
+  newsContainer.style.opacity = "0";
+  windowDisplay = false;
+}
+
+function toggleMetricsOn(){
+  if(!windowDisplay){
+    metricsContainer.style.opacity = "1";
+    metricsContainer.style.visibility = "visible";
+    socket.emit("specifcData", "metrics");
+    if(totalConnections == 0 && playerNames == []){
+      metricsData.innerHTML = "Loading...";
+    }
+    else{
+      var playerNameList = "";
+      for(var i in playerNames){
+        playerNameList+=playerNames[i] + ", ";
+      }
+      metricsData.innerHTML = "Total page vists since restart: " + totalConnections + "</br>All player names: " + playerNameList;
+    }
+    windowDisplay = true;
+  }
+}
+
+function toggleMetricsOff(){
+    metricsContainer.style.opacity = "0";
+    metricsContainer.style.visibility = "hidden";
+    windowDisplay = false;
 }
