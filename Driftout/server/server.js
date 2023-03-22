@@ -28,7 +28,7 @@ const Events = matterjs.Events;
 // ---------- GLOBALS ----------
 
 const engineCanvas = {width: 5000, height: 5000}; // Also hard-coded in tracks.js
-var frameRate = 1000/80;
+var frameRate = 1000/60;
 var allPlayers = [];
 var entities = {players: [], entities: [], walls: []};
 var currentConnections = [];
@@ -44,9 +44,8 @@ var debug = false;
 
 const engine = Engine.create();
 engine.gravity.scale = 0;
-engine.velocityIterations = 2;
-engine.positionIterations = 3;
-
+engine.velocityIterations = 3;
+engine.positionIterations = 5;
 
 // ---------- WALL OBJS ----------
 
@@ -54,6 +53,16 @@ currentTrack.walls.forEach(w => entities.walls.push(w));
 Composite.add(engine.world, Object.values(entities).flat());
 
 // ---------- UTILITIES ----------
+
+const cleanseName = function(name, carName) {
+  console.log(carName)
+  if(name.length > 14)
+    name = name.substring(0,14);
+  if(name === "" || name.includes("<"))
+    name = carName;
+  console.log(name)
+  return name;
+}
 
 const buildBody = function(template) {
   switch(template.type) {
@@ -67,28 +76,29 @@ const buildBody = function(template) {
 
 server.listen(port, host);
 
-console.log("Server started on port " + port);
+console.log(`Server started on port ${port}`);
 
 io.on("connection", function(socket){
-  console.log("New connection, ID: " + socket.id);
+  console.log(`New connection, ID: ${socket.id}`);
   totalConnections++;
   currentConnections.push(socket.id);
 
-  // New connection
-
-  socket.on("ready", () => {      
-    let player = new Player(socket.id, carChoice, buildBody(carChoice.body));
+  // New player
+  socket.on("ready", (data) => {
+    const carChoice = Cars[Object.keys(Cars)[data.car]];
+    let playerName = cleanseName(data.name, carChoice.name);
+    let player = new Player(socket.id, playerName, carChoice, buildBody(carChoice.body));
     socket.emit("setupData", {id: player.id, serverCanvas: engineCanvas, abilityName: carChoice.ability === null ? null : carChoice.ability.name});
-    socket.emit("addPlayer", {playerID: player.id, vector: {x: player.body.position.x, y: player.body.position.y}});
+    socket.emit("addPlayer", {playerID: player.id, name: playerName, vector: {x: player.body.position.x, y: player.body.position.y}});
     player.setup();
     allPlayers.push(player);
     entities.players.push(player.body);
     Composite.clear(engine.world, false);
     Composite.add(engine.world, Object.values(entities).flat());
+    console.log(`New ${carChoice.name} | "${playerName}"`)
   });
 
   // Update player inputs
-
   socket.on("inputData", (data) => {
     for(var i in allPlayers) {
       if(allPlayers[i].id === socket.id) {
@@ -103,11 +113,10 @@ io.on("connection", function(socket){
   });
 
   // Listen for players leaving
-
   socket.on("removePlayerServer", (data) => {
     let i = allPlayers.indexOf(p => p.id === data.id);
     if(i > -1){
-      console.log("Player left | ID: " + allPlayers[i].id);
+      console.log(`Player left | ID: ${allPlayers[i].id}`);
       j = entities.players.indexOf(p => p.id === allPlayers[i].body.id);
       entities.players.splice(j, 1);
       allPlayers.splice(i, 1);
@@ -121,7 +130,6 @@ io.on("connection", function(socket){
 var processState = function(){
 
   // Apply movement velocities to players
-
   for(var i in allPlayers){
 
     // --- PLAYER MOVEMENT ---
@@ -130,8 +138,7 @@ var processState = function(){
     let maxSpeed = allPlayers[i].mouseClick && allPlayers[i].boost > 0 ? allPlayers[i].maxSpeed * 1.4 : allPlayers[i].maxSpeed;
     let accl = allPlayers[i].mouseClick && allPlayers[i].boost > 0 ? allPlayers[i].acceleration * 1.6 : allPlayers[i].acceleration;
     if (allPlayers[i].mouseClick) {
-      allPlayers[i].boost -= allPlayers[i].boost > 0 ? 0.1 : 0;
-      console.log(allPlayers[i].boost);
+      allPlayers[i].boost -= allPlayers[i].boost > 0.1 ? 0.1 : 0;
     }
 
 
@@ -146,7 +153,7 @@ var processState = function(){
       )
     );
 
-    Body.rotate(allPlayers[i].body, allPlayers[i].angle - allPlayers[i].body.angle);
+    Body.setAngularVelocity(allPlayers[i].body, allPlayers[i].angle - allPlayers[i].body.angle);
 
     // --- PLAYER EVENTS ---
     if(allPlayers[i].HP < allPlayers[i].maxHP){
@@ -154,21 +161,36 @@ var processState = function(){
     }
 
     if(allPlayers[i].HP < 0){
-      console.log("Player crashed | ID: " + allPlayers[i].id);
-      j = entities.players.indexOf(p => p.id === allPlayers[i].body.id);
-      entities.players.splice(j, 1);
+      console.log(`Player crashed | ID: ${allPlayers[i].id}`);
+      j = entities.players.findIndex(p => p.id === allPlayers[i].body.id);
+      entities.players[j].playerID = null;
+      entities.players[j].decay = Date.now() + 3000;
+      entities.players[j].colour = {r: 50, g: 50, b: 50};
+      entities.players[j].colourOutline = {r: 100, g: 100, b: 100};
       io.emit("removePlayer", {id: allPlayers[i].id});
       allPlayers.splice(i, 1);
-      Composite.clear(engine.world, false);
-      Composite.add(engine.world, Object.values(entities).flat());
+    }
+  }
+
+  // Process events for entities
+  for (var i in entities.players){
+
+    // Check decay timer and destroy entity when expired
+    if(entities.players[i].decay){
+      if(entities.players[i].decay < Date.now()){
+        entities.players.splice(j, 1);
+        Composite.clear(engine.world, false);
+        Composite.add(engine.world, Object.values(entities).flat());
+      }
     }
   }
 }
 
 // The player object constructor
-var Player = function(id, car, body) {
+var Player = function(id, name,  car, body) {
   this.body = body
   this.id = id;
+  this.name = name;
   this.bodyid = body.id;
   this.car = car;
   this.windowWidth = 0;
@@ -209,23 +231,15 @@ var Player = function(id, car, body) {
 
 // ---------- COLLISION HANDLING ----------
 
-// Previous velocity handler
-var prevVelocities = [];
-Events.on(engine, 'beforeUpdate', function () {
-  entities.players.forEach(function (body) {
-      body.velocityPrev = prevVelocities[body.id] ? prevVelocities[body.id] : Body.getVelocity(body);
-      prevVelocities[body.id] = Body.getVelocity(body);
-  })
-});
-
 // Collision event handler
 Events.on(engine, "collisionStart", function(event){
-  bodyPairs = event.pairs.map(e => [e.bodyA.id, e.bodyB.id])
+  bodyPairs = event.pairs.map(e => [e.bodyA, e.bodyB])
   bodyPairs.forEach(function (bp) {
-    for (var i in allPlayers){
-      if(allPlayers[i].body.id == bp[0] || allPlayers[i].body.id == bp[1]){
-        allPlayers[i].HP -= Math.abs(prevVelocities[allPlayers[i].body.id].x) + Math.abs(prevVelocities[allPlayers[i].body.id].y)
-      }
+    if(bp[0].playerID){
+      allPlayers[allPlayers.findIndex(p => p.body.id === bp[0].id)].HP -= event.pairs[0].collision.depth * 15;
+    }
+    if(bp[1].playerID){
+      allPlayers[allPlayers.findIndex(p => p.body.id === bp[1].id)].HP -= event.pairs[0].collision.depth * 15;
     }
   })
 });
@@ -240,7 +254,8 @@ setInterval(() => {
         ({x, y})), e.colour, e.colourOutline]),
     walls: entities.walls.map(e =>
        e.vertices.map(({x, y}) =>
-        ({x, y})))
+        ({x, y}))),
+    borderLines: currentTrack.borderLines,
   });
   const playerData = [];
   allPlayers.forEach(p => playerData.push(p.getUpdatePack()));

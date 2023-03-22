@@ -1,8 +1,9 @@
+const p5 = require('node-p5');
 const matterjs = require("matter-js");
 const Bodies = matterjs.Bodies;
 const Vertices = matterjs.Vertices;
 const getSpawn = function(){
-    let num = {x: 2500, y: 200 + Math.floor(Math.random() * 200)};
+    let num = {x: 2500, y: 300 + Math.floor(Math.random() * 200)};
     return num;
 }
 
@@ -19,11 +20,28 @@ module.exports = {
             type: "Vertices",
             x: getSpawn().x,
             y: getSpawn().y,
-            points: '25 0 -25 20 -25 -20',
+            points: '36 0 -36 26 -36 -26',
             bounce: 0.5
-        },//Bodies.fromVertices(getSpawn().x, getSpawn().y, Vertices.fromPath('25 0 -25 20 -25 -20'), {restitution: 0.5}),
+        },
         colour: {r: 20, g: 20, b: 200},
         colourOutline: {r: 100, g: 100, b: 255},
+        ability: null,
+    },
+    Sprinter: {
+        name: "Sprinter",
+        HP: 70,
+        maxSpeed: 24,
+        acceleration: 0.18,
+        density: 0.02,
+        body: {
+            type: "Vertices",
+            x: getSpawn().x,
+            y: getSpawn().y,
+            points: '40 0 -30 -20 -30 20',
+            bounce: 0.2
+        },
+        colour: {r: 255, g: 0, b: 0},
+        colourOutline: {r: 125, g: 0, b: 0},
         ability: null,
     },
     Tank: {
@@ -37,9 +55,9 @@ module.exports = {
             x: getSpawn().x,
             y: getSpawn().y,
             sides: 16,
-            radius: 30,
-            bounce: 0.5
-        },// Bodies.polygon(getSpawn().x, getSpawn().y, 16, 30, {restitution: 0.7}),
+            radius: 40,
+            bounce: 1
+        },
         colour: {r: 50, g: 255, b: 150},
         colourOutline: {r: 0, g: 150, b: 50},
         ability: null,
@@ -54,9 +72,9 @@ module.exports = {
             type: "Vertices",
             x: getSpawn().x,
             y: getSpawn().y,
-            points: '-25 -20 -25 20 -10 10 -10 -10 -10 20 -10 -20 30 -20 30 20',
+            points: '',
             bounce: 0.5
-        },//Bodies.fromVertices(getSpawn().x, getSpawn().y, Vertices.fromPath('-25 -20 -25 20 -10 10 -10 -10 -10 20 -10 -20 30 -20 30 20'), {restitution: 0.5}),
+        },
         colour: {r: 50, g: 255, b: 150},
         colourOutline: {r: 0, g: 150, b: 50},
         ability: {
@@ -77,9 +95,9 @@ module.exports = {
             type: "Vertices",
             x: getSpawn().x,
             y: getSpawn().y,
-            points: '30 -10 30 10 15 20 -30 20 -30 -20 15 -20',
+            points: '40 -12 40 12 20 26 -40 26 -40 -26 20 -26',
             bounce: 0.5
-        },//Bodies.fromVertices(getSpawn().x, getSpawn().y, Vertices.fromPath('30 -10 30 10 15 20 -30 20 -30 -20 15 -20'), {restitution: 0.5}),
+        },
         colour: {r: 230, g: 230, b: 10},
         colourOutline: {r: 125, g: 125, b: 0},
         ability: {
@@ -90,29 +108,4 @@ module.exports = {
             }
         }
     },
-
-    // Car displays for menu
-
-    // RacerDisplays: [
-    //     {
-    //         colour: {r: 50, g: 255, b: 150},
-    //         colourOutline: {r: 0, g: 150, b: 50},
-    //         points: '-25 -20 -25 20 -10 10 -10 -10 -10 20 -10 -20 30 -20 30 20',
-    //     },
-    //     {
-    //         colour: {r: 50, g: 255, b: 150},
-    //         colourOutline: {r: 0, g: 150, b: 50},
-    //         points: '-25 -20 -25 20 -10 10 -10 -10 -10 20 -10 -20 30 -20 30 20',
-    //     },
-    //     {
-    //         colour: {r: 50, g: 255, b: 150},
-    //         colourOutline: {r: 0, g: 150, b: 50},
-    //         points: '-25 -20 -25 20 -10 10 -10 -10 -10 20 -10 -20 30 -20 30 20',
-    //     },
-    //     {
-    //         colour: {r: 230, g: 230, b: 10},
-    //         colourOutline: {r: 125, g: 125, b: 0},
-    //         points: '30 -10 30 10 15 20 -30 20 -30 -20 15 -20',
-    //     },
-    //     ]
 }

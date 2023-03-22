@@ -87,6 +87,8 @@ var timeOutTick = 0;
 var state;
 var myId = 0;
 var serverCanvas = {width: 2000, height: 2000};
+var classIndex = 0;
+var displayAngle = 0;
 
 class NewsPiece{
   constructor(title, date, content){
@@ -141,15 +143,17 @@ function setup(){
 
   // Add new player to current game
   socket.on("addPlayer", function(data) {
-    allPlayers.push(new Player(data.playerID, data.vector.x, data.vector.y));
+    allPlayers.push(new Player(data.playerID, data.name, data.vector.x, data.vector.y));
   });
 
   // Remove player from current game
   socket.on("removePlayer", function(data) {
-    let i = allPlayers.indexOf(p => p.id == data.id);
-    if(i > -1)
+    let i = allPlayers.findIndex(p => p.id == data.id);
+    if(i > -1){
+      curPlayer = null;
       allPlayers.splice(i, 1);
       exitGame();
+    }
   });
 
   // Init canvas
@@ -164,7 +168,9 @@ function setup(){
 
   // Recieve player-specific updates
   socket.on("playerData", (data) => {
+    var tempData = [];
     for(var i in data){
+      // Update each player's properties
       for(var j in allPlayers){
         if(allPlayers[j].id === data[i].id){
           allPlayers[j].x = data[i].pos.x
@@ -172,7 +178,6 @@ function setup(){
           allPlayers[j].HP = data[i].HP
           allPlayers[j].maxHP = data[i].maxHP
           allPlayers[j].boost = data[i].boost
-          break;
         }
       }
     }
@@ -180,6 +185,7 @@ function setup(){
 
 }
 
+var curPlayer = null;
 function draw() {
   // Resize canvas to correct dimensions (non-functional on mobile?)
   resizeCanvas(windowWidth, windowHeight);
@@ -187,21 +193,25 @@ function draw() {
   // Render game only if playing
   if (playing == true){  
 
+    // Render background
+    background(0,0,0);
+
     // Translate window to match position of player
     for(var i in allPlayers){
       if(allPlayers[i].id == myId){
         translate(windowWidth/2 - allPlayers[i].x, windowHeight/2 - allPlayers[i].y);
+        curPlayer = allPlayers[i];
       }
     }
 
     // Draw track inner-colour
-    fill(200,200,200);
+    fill(220,220,220);
     square(0,0,5000);
 
     // Draw wall shapes based on verticies sent by server
     state.walls.forEach(w => {
       strokeCap(ROUND);
-      strokeWeight(12);
+      strokeWeight(0);
       stroke(100,100,100);
       fill(0,0,0);
       beginShape();
@@ -209,10 +219,14 @@ function draw() {
       endShape(CLOSE);
     });
 
+    // Draw map line borders
+    state.borderLines.forEach(w =>{
+      mapLine(w.x1, w.y1, w.x2, w.y2, [250, 50, 50])
+    });
 
     // Draw player shapes based on verticies sent by server
     state.players.forEach(p => {
-      strokeWeight(5);
+      strokeWeight(10);
       fill(p[1].r, p[1].g, p[1].b);
       stroke(p[2].r, p[2].g, p[2].b);
       strokeJoin(ROUND);
@@ -238,8 +252,7 @@ function draw() {
       allPlayers[i].drawGUI();
     }
 
-    // Render background and GUI's
-    refreshDisplays();
+    refreshDisplays(curPlayer);
 
     // Send keyboard/mouse inputs to server
     sendInputData();
@@ -247,8 +260,15 @@ function draw() {
 
   // ----- Menu code -----
 
-  else{
+  else
+  {
     if(!windowDisplay){
+
+      // Display cars
+      CarDisplays[classIndex].draw(windowWidth/2 - 70, windowHeight - 175, displayAngle);
+      displayAngle += 0.04;
+
+      // Tips cycle
       if(Date.now() > tipsCounter){
         if(tipsIndex >= tips.length-1){
           tipsIndex = 0;
@@ -288,7 +308,7 @@ function exitGame(){
 
 function enterGame(){
 
-  socket.emit("ready", {});
+  socket.emit("ready", {name: nameInput.value, car: classIndex});
 
   enterGameButton.setAttribute('onClick', '');
   menuContainer.style.visibility = "hidden";
@@ -300,13 +320,14 @@ function enterGame(){
 
 }
 
-function refreshDisplays(){
+function refreshDisplays(player){
   tabLeaderboard.style.visibility = "hidden";
   tabLeaderboard.style.opacity = "0";
   leaderboardContainer.innerHTML = "Leaderboard";
   tabLeaderboard.innerHTML = "Leaderboard";
   var text = "<table width='100%'><tr><th>Leaderboard</th></tr>";
   var tabText = "<table width='100%'><tr><th>Name</th><th>Laps</th><th>Best Time</th><th>Kills</th></tr>";
+  boostContainerCooldown.innerHTML = player ? Math.floor(player.boost) : "";
 
   if(keyIsDown(81)){
     tabLeaderboard.style.visibility = "visible";
@@ -354,12 +375,12 @@ function sendInputData() {
 // ----------- OBJECTS ---------------------------------------------------
 
 // The player object constructor
-var Player = function(id, vector) {
+var Player = function(id, name, vector) {
   this.id = id;
   this.verticies;
   this.x = vector.x;
   this.y = vector.y;
-  this.name = "Racer";
+  this.name = name;
   this.maxHP = 0;
   this.HP = 0;
   this.boost = 0;
@@ -371,25 +392,61 @@ var Player = function(id, vector) {
       push();
       strokeWeight(12);
       stroke(120,120,120)
-      line(this.x - 20, this.y + 70, this.x + 20, this.y + 70);
+      line(this.x - (this.maxHP / 5), this.y + 70, this.x + (this.maxHP / 5), this.y + 70);
       strokeWeight(8);
       stroke(80, 80, 80);
-      line(this.x - 20, this.y + 70, this.x + 20, this.y + 70);
+      line(this.x - (this.maxHP / 5), this.y + 70, this.x + (this.maxHP / 5), this.y + 70);
       if (this.HP < (this.maxHP / 4)){
         stroke(220, 0, 0);
       }
       else{
         stroke(0, 220, 0);
       }
-      line(this.x - (this.HP / (this.maxHP / 20)), this.y + 70, this.x + (this.HP / (this.maxHP / 20)),
+      line(this.x - (this.HP / (this.maxHP / (this.maxHP / 5))), this.y + 70, this.x + (this.HP / (this.maxHP / (this.maxHP / 5))),
           this.y + 70);
       pop();
     }
-  }
 
+    // Player name
+    textSize(30);
+    strokeWeight(6);
+    stroke(0,0,0);
+    fill(255,255,255);
+    textStyle(BOLD);
+    text(this.name, this.x - (this.name.length) * 8, this.y - 70);
+  }
 }
 
 // ---------- UTILITIES ----------
+
+function mapLine(x1, y1, x2, y2, colour1 = [0,0,0], colour2 = [250,250,250], thickness = 30){
+  var count = 0;
+  var sectionsToDraw = Math.floor(Math.sqrt((x1 - y1)**2 + (x2 - y2)**2) / 100);
+  var max = 0;
+  var isColour = true;
+
+  strokeCap(SQUARE);
+  strokeWeight(thickness);
+
+  max = Math.sqrt(((x2-x1)**2)+((y2-y1)**2)) / 75
+
+  while(count<sectionsToDraw){
+    if (isColour == true){
+      stroke(colour1);
+      isColour = false;
+    }
+    else{
+      stroke(colour2);
+      isColour = true;
+    }
+    line(x1+(((x2-x1)/sectionsToDraw)*count),y1+(((y2-y1)/sectionsToDraw)*count),x2,y2);
+    strokeCap(SQUARE);
+    count++;
+  }
+  strokeCap(ROUND);
+  strokeWeight(0);
+  stroke(0,0,0);
+}
 
 function debugDraw(debugText){
   //[[-1000, -200, -600, 3000], [-1000, -600, -600, -200], [2600, 3000, -600, -200], [2600, 3000, 2600, 3000]]
@@ -410,7 +467,7 @@ function setPlayerName(){
 
 function changeClass(){
   classIndex++;
-  if(classIndex >= Object.keys(allCars).length){
+  if(classIndex >= CarDisplays.length){
     classIndex=0;
   }
   classDisplay.innerHTML = "<div id='classImageBlock'></div>" + classEntries[classIndex];
@@ -463,3 +520,101 @@ function toggleMetricsOff(){
     metricsContainer.style.visibility = "hidden";
     windowDisplay = false;
 }
+
+const CarDisplays = [
+  {
+      draw: function(x, y, angle, size=1){ // Racer
+          push();
+          fill(20,20,200);
+          translate(x, y);
+          scale(size);
+          rotate(angle);
+          stroke(100,100,255);
+          strokeWeight(8);
+          strokeJoin(ROUND);
+          beginShape();
+          vertex(25, 0);
+          vertex(-25, 20);
+          vertex(-25, -20);
+          endShape(CLOSE);
+          smooth(4);
+          pop();
+      }   
+  },
+  {
+    draw: function(x, y, angle, size=1){ // Sprinter
+        push();
+        fill(255,0,0);
+        translate(x, y);
+        scale(size);
+        rotate(angle);
+        stroke(125,0,0);
+        strokeWeight(8);
+        strokeJoin(ROUND);
+        beginShape();
+        vertex(30, 0);
+        vertex(-25, 15);
+        vertex(-25, -15);
+        endShape(CLOSE);
+        smooth(4);
+        pop();
+    }   
+},
+  {
+      draw: function(x, y, angle, size=1){ // Tank
+          push();
+          translate(x, y);
+          scale(size);
+          rotate(angle);
+          strokeWeight(8);
+          strokeJoin(ROUND);
+          fill(50,255,150);
+          stroke(0,150,50);
+          circle(0,0,70);
+          smooth();
+          pop();
+      }   
+  },
+  {
+      draw: function(x, y, angle, size=1){ // Prankster
+          push();
+          translate(x, y);
+          scale(size);
+          rotate(angle);
+          strokeWeight(8);
+          strokeJoin(ROUND);
+          fill(200,0,200);
+          stroke(255,100,255);
+          beginShape();
+          vertex(30, 20);
+          vertex(-10, 20);
+          vertex(-10, -20);
+          vertex(30, -20);
+          endShape(CLOSE);
+          smooth();
+          pop();
+      }   
+  },
+  {
+      draw: function(x, y, angle, size=1){ // Bullet
+          push();
+          translate(x, y);
+          scale(size);
+          rotate(angle);
+          strokeWeight(8);
+          strokeJoin(ROUND);
+          fill(230,230,10);
+          stroke(125,125,0);
+          beginShape();
+          vertex(30, -10);
+          vertex(30, 10);
+          vertex(15, 20);
+          vertex(-30, 20);
+          vertex(-30, -20);
+          vertex(15, -20);
+          endShape(CLOSE);
+          smooth();
+          pop();
+      }   
+  },
+];
