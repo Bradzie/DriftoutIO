@@ -1,7 +1,9 @@
 const p5 = require('node-p5');
 const matterjs = require("matter-js");
 const Bodies = matterjs.Bodies;
+const Body = matterjs.Body;
 const Vertices = matterjs.Vertices;
+const Vector = matterjs.Vector;
 const getSpawn = function(){
     let num = {x: 2500, y: 300 + Math.floor(Math.random() * 200)};
     return num;
@@ -72,15 +74,16 @@ module.exports = {
             type: "Vertices",
             x: getSpawn().x,
             y: getSpawn().y,
-            points: '',
+            points: '-20 -20 -20 20 20 20 20 -20',
             bounce: 0.5
         },
         colour: {r: 50, g: 255, b: 150},
         colourOutline: {r: 0, g: 150, b: 50},
         ability: {
             name: "Trap",
+            cooldown: 10000,
             fire: function(player){
-                player.HP += 20;
+                player.HP += 100;
                 return player;
             }
         },
@@ -102,8 +105,12 @@ module.exports = {
         colourOutline: {r: 125, g: 125, b: 0},
         ability: {
             name: "Dash",
-            fire: function(player){
-                player.maxSpeed = 20;
+            cooldown: 5000,
+            fire: function(player){ // --- Cannot be deep cloned either A: remove abilities alltogether from structuredClone() or b: remove all out-of-scope refs (Might be trying to ref the engine?)
+                //Body.applyForce(player.body, player.body.position, {x: 10, y: 10});
+                // let vx = Body.getVelocity(player.body).x;
+                // let vy = Body.getVelocity(player.body).y;
+                // Body.setVelocity(player.body, Vector.create(vx + Math.cos(player.body.angle) * 10, vy + Math.sin(player.body.angle) * 10));
                 return player;
             }
         }

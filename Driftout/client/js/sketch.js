@@ -130,14 +130,15 @@ function setup(){
 
   // Recieve player ID and canvas size
   socket.on("setupData", function(data) {
+    console.log(data)
       myId = data.id;
       serverCanvas = data.serverCanvas;
-      abilityContainer.visibility = "hidden";
-      abilityContainer.opacity = 0;
+      abilityContainer.style.visibility = "hidden";
+      abilityContainer.style.opacity = 0;
       if(data.abilityName != null){
         abilityContainerCooldown.innerHTML = data.abilityName;
-        abilityContainer.visibility = "visible";
-        abilityContainer.opacity = 1;
+        abilityContainer.style.visibility = "visible";
+        abilityContainer.style.opacity = 1;
       }
   });
 
@@ -168,7 +169,6 @@ function setup(){
 
   // Recieve player-specific updates
   socket.on("playerData", (data) => {
-    var tempData = [];
     for(var i in data){
       // Update each player's properties
       for(var j in allPlayers){

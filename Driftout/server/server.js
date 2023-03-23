@@ -55,12 +55,10 @@ Composite.add(engine.world, Object.values(entities).flat());
 // ---------- UTILITIES ----------
 
 const cleanseName = function(name, carName) {
-  console.log(carName)
   if(name.length > 14)
     name = name.substring(0,14);
   if(name === "" || name.includes("<"))
     name = carName;
-  console.log(name)
   return name;
 }
 
@@ -85,9 +83,9 @@ io.on("connection", function(socket){
 
   // New player
   socket.on("ready", (data) => {
-    const carChoice = Cars[Object.keys(Cars)[data.car]];
+    const carChoice = structuredClone(Cars[Object.keys(Cars)[data.car]]);
     let playerName = cleanseName(data.name, carChoice.name);
-    let player = new Player(socket.id, playerName, carChoice, buildBody(carChoice.body));
+    let player = new Player(socket.id, playerName, carChoice, buildBody(carChoice.body), carChoice.ability);
     socket.emit("setupData", {id: player.id, serverCanvas: engineCanvas, abilityName: carChoice.ability === null ? null : carChoice.ability.name});
     socket.emit("addPlayer", {playerID: player.id, name: playerName, vector: {x: player.body.position.x, y: player.body.position.y}});
     player.setup();
@@ -107,7 +105,8 @@ io.on("connection", function(socket){
         allPlayers[i].angle = data.clientPlayerAngle;
         allPlayers[i].windowWidth = data.windowWidth;
         allPlayers[i].windowHeight = data.windowHeight;
-        allPlayers[i].mouseClick = data.mouseClick;
+        allPlayers[i].inputs.mouseClick = data.mouseClick;
+        allPlayers[i].inputs.spacePressed = data.spacePressed;
       }
     }
   });
@@ -137,10 +136,6 @@ var processState = function(){
     let vy = Body.getVelocity(allPlayers[i].body).y;
     let maxSpeed = allPlayers[i].mouseClick && allPlayers[i].boost > 0 ? allPlayers[i].maxSpeed * 1.4 : allPlayers[i].maxSpeed;
     let accl = allPlayers[i].mouseClick && allPlayers[i].boost > 0 ? allPlayers[i].acceleration * 1.6 : allPlayers[i].acceleration;
-    if (allPlayers[i].mouseClick) {
-      allPlayers[i].boost -= allPlayers[i].boost > 0.1 ? 0.1 : 0;
-    }
-
 
     Body.setVelocity(allPlayers[i].body, Vector.create
       (
@@ -155,10 +150,21 @@ var processState = function(){
 
     Body.setAngularVelocity(allPlayers[i].body, allPlayers[i].angle - allPlayers[i].body.angle);
 
-    // --- PLAYER EVENTS ---
-    if(allPlayers[i].HP < allPlayers[i].maxHP){
-      allPlayers[i].HP += allPlayers[i].regen;
+    // --- INPUT-TRIGGERED EVENTS ---
+    if(Object.values(allPlayers[i].inputs).some(input => input === true)){
+
+      // BOOST
+      if (allPlayers[i].inputs.mouseClick)
+        allPlayers[i].boost -= allPlayers[i].boost > 0.2 ? 0.2 : 0;
+
+      // ABILITY
+      if (allPlayers[i].inputs.spacePressed && allPlayers[i].ability != null)
+        allPlayers[i] = allPlayers[i].ability.fire(allPlayers[i]);
     }
+
+    // --- PLAYER PASSIVE EVENTS ---
+    if(allPlayers[i].HP < allPlayers[i].maxHP)
+      allPlayers[i].HP += allPlayers[i].regen;
 
     if(allPlayers[i].HP < 0){
       console.log(`Player crashed | ID: ${allPlayers[i].id}`);
@@ -172,10 +178,10 @@ var processState = function(){
     }
   }
 
-  // Process events for entities
+  // --- ENTITY EVENTS ---
   for (var i in entities.players){
 
-    // Check decay timer and destroy entity when expired
+    // Remove entity from world if decay timer has expired
     if(entities.players[i].decay){
       if(entities.players[i].decay < Date.now()){
         entities.players.splice(j, 1);
@@ -187,7 +193,7 @@ var processState = function(){
 }
 
 // The player object constructor
-var Player = function(id, name,  car, body) {
+var Player = function(id, name,  car, body, ability) {
   this.body = body
   this.id = id;
   this.name = name;
@@ -198,10 +204,9 @@ var Player = function(id, name,  car, body) {
   this.name = car.name;
   this.mouseX;
   this.mouseY;
-  this.mouseClick;
-  this.pos;
   this.maxHP = car.HP;
   this.HP = car.HP;
+  this.ability = ability;
   this.regen = 0.1;
   this.angle = 0;
   this.maxSpeed = car.maxSpeed;
@@ -209,6 +214,10 @@ var Player = function(id, name,  car, body) {
   this.colour = car.colour;
   this.colourOutline = car.colourOutline;
   this.boost = 100;
+  this.inputs = {
+    mouseClick: false,
+    spacePressed : false,
+  };
 
   this.setup = function(){
     this.body.playerID = this.id;
