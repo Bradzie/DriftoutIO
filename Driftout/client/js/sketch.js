@@ -130,7 +130,6 @@ function setup(){
 
   // Recieve player ID and canvas size
   socket.on("setupData", function(data) {
-    console.log(data)
       myId = data.id;
       serverCanvas = data.serverCanvas;
       abilityContainer.style.visibility = "hidden";
@@ -170,6 +169,7 @@ function setup(){
   // Recieve player-specific updates
   socket.on("playerData", (data) => {
     for(var i in data){
+      console.log(data[i].nextAbilityUse)
       // Update each player's properties
       for(var j in allPlayers){
         if(allPlayers[j].id === data[i].id){

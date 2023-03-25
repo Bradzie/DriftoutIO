@@ -4,7 +4,7 @@ const express = require("express");
 const socketIO = require("socket.io");
 const matterjs = require("matter-js");
 const Tracks = require("./tracks")
-const Cars = require("./cars")
+const CarData = require("./cars")
 
 
 var publicPath = path.join(__dirname, "../client")
@@ -30,11 +30,10 @@ const Events = matterjs.Events;
 const engineCanvas = {width: 5000, height: 5000}; // Also hard-coded in tracks.js
 var frameRate = 1000/60;
 var allPlayers = [];
-var entities = {players: [], entities: [], walls: []};
+var entities = {players: [], entities: [], walls: [], triggers: []};
 var currentConnections = [];
 var totalConnections = 0;
 var currentTrack = Tracks.Square;
-const carChoice = Cars.Bullet;
 
 // ---------- MODIFIERS ----------
 
@@ -72,6 +71,8 @@ const buildBody = function(template) {
   }
 }
 
+// ---------- ---------- ----------
+
 server.listen(port, host);
 
 console.log(`Server started on port ${port}`);
@@ -83,10 +84,11 @@ io.on("connection", function(socket){
 
   // New player
   socket.on("ready", (data) => {
-    const carChoice = structuredClone(Cars[Object.keys(Cars)[data.car]]);
+    const carChoice = structuredClone(CarData.Cars[Object.keys(CarData.Cars)[data.car]]);
+    const abilityData = CarData.Abilities[Object.keys(CarData.Abilities)[data.car]];
     let playerName = cleanseName(data.name, carChoice.name);
-    let player = new Player(socket.id, playerName, carChoice, buildBody(carChoice.body), carChoice.ability);
-    socket.emit("setupData", {id: player.id, serverCanvas: engineCanvas, abilityName: carChoice.ability === null ? null : carChoice.ability.name});
+    let player = new Player(socket.id, playerName, carChoice, buildBody(carChoice.body), abilityData);
+    socket.emit("setupData", {id: player.id, serverCanvas: engineCanvas, abilityName: abilityData === null ? null : abilityData.data.name});
     socket.emit("addPlayer", {playerID: player.id, name: playerName, vector: {x: player.body.position.x, y: player.body.position.y}});
     player.setup();
     allPlayers.push(player);
@@ -126,6 +128,8 @@ io.on("connection", function(socket){
 
 });
 
+// --------- GAME STATE UPDATE ---------
+
 var processState = function(){
 
   // Apply movement velocities to players
@@ -158,8 +162,14 @@ var processState = function(){
         allPlayers[i].boost -= allPlayers[i].boost > 0.2 ? 0.2 : 0;
 
       // ABILITY
-      if (allPlayers[i].inputs.spacePressed && allPlayers[i].ability != null)
-        allPlayers[i] = allPlayers[i].ability.fire(allPlayers[i]);
+      if (allPlayers[i].inputs.spacePressed && allPlayers[i].abilityData != null){
+        if(allPlayers[i].abilityData.data.nextUse < Date.now()){
+          allPlayers[i] = allPlayers[i].abilityData.fire(allPlayers[i]);
+          allPlayers[i].abilityData.data.nextUse = Date.now() + allPlayers[i].abilityData.data.cooldown;
+        }
+      }
+
+      console.log([allPlayers[i].abilityData.data.nextUse, Date.now()])
     }
 
     // --- PLAYER PASSIVE EVENTS ---
@@ -192,52 +202,6 @@ var processState = function(){
   }
 }
 
-// The player object constructor
-var Player = function(id, name,  car, body, ability) {
-  this.body = body
-  this.id = id;
-  this.name = name;
-  this.bodyid = body.id;
-  this.car = car;
-  this.windowWidth = 0;
-  this.windowHeight = 0;
-  this.name = car.name;
-  this.mouseX;
-  this.mouseY;
-  this.maxHP = car.HP;
-  this.HP = car.HP;
-  this.ability = ability;
-  this.regen = 0.1;
-  this.angle = 0;
-  this.maxSpeed = car.maxSpeed;
-  this.acceleration = car.acceleration;
-  this.colour = car.colour;
-  this.colourOutline = car.colourOutline;
-  this.boost = 100;
-  this.inputs = {
-    mouseClick: false,
-    spacePressed : false,
-  };
-
-  this.setup = function(){
-    this.body.playerID = this.id;
-    this.body.colour = this.colour;
-    this.body.colourOutline = this.colourOutline;
-  }
-
-  this.getUpdatePack = function(){
-    return{
-      id: this.id,
-      pos: this.body.position,
-      HP: this.HP,
-      maxHP: this.maxHP,
-      boost: this.boost,
-    }
-  }
-
-  return this;
-}
-
 // ---------- COLLISION HANDLING ----------
 
 // Collision event handler
@@ -266,7 +230,56 @@ setInterval(() => {
         ({x, y}))),
     borderLines: currentTrack.borderLines,
   });
-  const playerData = [];
+  let playerData = [];
   allPlayers.forEach(p => playerData.push(p.getUpdatePack()));
   io.emit("playerData", playerData);
 }, frameRate)
+
+// The player object constructor
+var Player = function(id, name,  car, body, abilityData) {
+  this.body = body
+  this.id = id;
+  this.name = name;
+  this.bodyid = body.id;
+  this.car = car;
+  this.windowWidth = 0;
+  this.windowHeight = 0;
+  this.name = car.name;
+  this.mouseX;
+  this.mouseY;
+  this.maxHP = car.HP;
+  this.HP = car.HP;
+  this.abilityData = abilityData;
+  this.regen = 0.1;
+  this.angle = 0;
+  this.maxSpeed = car.maxSpeed;
+  this.acceleration = car.acceleration;
+  this.colour = car.colour;
+  this.colourOutline = car.colourOutline;
+  this.boost = 100;
+  this.inputs = {
+    mouseClick: false,
+    spacePressed : false,
+  };
+
+  this.setup = function(){
+    this.body.playerID = this.id;
+    this.body.colour = this.colour;
+    this.body.colourOutline = this.colourOutline;
+    if(this.abilityData != null)
+      this.abilityData.data.nextUse = 0;
+  }
+
+  this.getUpdatePack = function(){
+    return{
+      id: this.id,
+      pos: this.body.position,
+      HP: this.HP,
+      maxHP: this.maxHP,
+      boost: this.boost,
+      nextAbilityUse: this.abilityData === null ? null : this.abilityData.data.cooldown / (this.abilityData.data.nextUse - Date.now())
+    }
+  }
+
+  return this;
+}
