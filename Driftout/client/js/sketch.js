@@ -63,7 +63,7 @@ var classEntries = [
 ]
 var forceDisconnect = 0;
 var errors = [
-  "Failed to reach server for 3 seconds. Most likely an update, refresh in a minute. :D",
+  "Failed to reach server for 3 seconds. Try checking your internet connection.",
   "This game only functions properly in portrait mode, please rotate your device and refresh :)"
 ]
 var tips = [
@@ -89,6 +89,8 @@ var myId = 0;
 var serverCanvas = {width: 2000, height: 2000};
 var classIndex = 0;
 var displayAngle = 0;
+var roomId = null;
+var curPlayer = null;
 
 class NewsPiece{
   constructor(title, date, content){
@@ -131,6 +133,7 @@ function setup(){
   // Recieve player ID and canvas size
   socket.on("setupData", function(data) {
       myId = data.id;
+      roomId = data.roomId;
       serverCanvas = data.serverCanvas;
       abilityContainer.style.visibility = "hidden";
       abilityContainer.style.opacity = 0;
@@ -143,7 +146,11 @@ function setup(){
 
   // Add new player to current game
   socket.on("addPlayer", function(data) {
-    allPlayers.push(new Player(data.playerID, data.name, data.vector.x, data.vector.y));
+    const newPlayer = new Player(data.playerID, data.name, data.vector.x, data.vector.y);
+    allPlayers.push(newPlayer);
+    if (data.playerID === myId){
+      curPlayer = allPlayers.find(p => p.id === myId);
+    }
   });
 
   // Remove player from current game
@@ -169,7 +176,6 @@ function setup(){
   // Recieve player-specific updates
   socket.on("playerData", (data) => {
     for(var i in data){
-      console.log(data[i].nextAbilityUse)
       // Update each player's properties
       for(var j in allPlayers){
         if(allPlayers[j].id === data[i].id){
@@ -178,6 +184,8 @@ function setup(){
           allPlayers[j].HP = data[i].HP
           allPlayers[j].maxHP = data[i].maxHP
           allPlayers[j].boost = data[i].boost
+          allPlayers[j].nextAbilityUse = data[i].nextAbilityUse
+          allPlayers[j].laps = data[i].laps
         }
       }
     }
@@ -185,8 +193,11 @@ function setup(){
 
 }
 
-var curPlayer = null;
 function draw() {
+  // If state is not yet initialised by socket update, break until it is
+  if(typeof state === 'undefined')
+    return
+
   // Resize canvas to correct dimensions (non-functional on mobile?)
   resizeCanvas(windowWidth, windowHeight);
 
@@ -195,14 +206,6 @@ function draw() {
 
     // Render background
     background(0,0,0);
-
-    // Translate window to match position of player
-    for(var i in allPlayers){
-      if(allPlayers[i].id == myId){
-        translate(windowWidth/2 - allPlayers[i].x, windowHeight/2 - allPlayers[i].y);
-        curPlayer = allPlayers[i];
-      }
-    }
 
     // Draw track inner-colour
     fill(220,220,220);
@@ -219,12 +222,23 @@ function draw() {
       endShape(CLOSE);
     });
 
+    // Draw finish line
+    state.finishLine.forEach(f =>{
+      mapLine(f.x1, f.y1, f.x2, f.y2, [50, 50, 50], [250, 250, 250], 50)
+    });
+
     // Draw map line borders
     state.borderLines.forEach(w =>{
       mapLine(w.x1, w.y1, w.x2, w.y2, [250, 50, 50])
     });
 
-    // Draw player shapes based on verticies sent by server
+    // Translate window to match position of player
+    for (var i in allPlayers) {
+      if(allPlayers[i].id == myId)
+        translate(windowWidth/2 - allPlayers[i].x, windowHeight/2 - allPlayers[i].y);
+    }
+
+    // Draw player shapes using verticies sent by server
     state.players.forEach(p => {
       strokeWeight(10);
       fill(p[1].r, p[1].g, p[1].b);
@@ -298,7 +312,7 @@ function exitGame(){
   gameGuiContainer.style.visibility = "hidden";
   gameGuiContainer.style.opacity = "0";
   playing = false;
-  socket.emit("removePlayerServer", { id:myId });
+  socket.emit("removePlayerServer", { id:myId, roomId:roomId });
   enterGameButton.setAttribute('onClick', 'enterGame()');
   allPlayers=[];
   refreshDisplays();
@@ -327,7 +341,12 @@ function refreshDisplays(player){
   tabLeaderboard.innerHTML = "Leaderboard";
   var text = "<table width='100%'><tr><th>Leaderboard</th></tr>";
   var tabText = "<table width='100%'><tr><th>Name</th><th>Laps</th><th>Best Time</th><th>Kills</th></tr>";
-  boostContainerCooldown.innerHTML = player ? Math.floor(player.boost) : "";
+
+  if(player){
+    boostContainerCooldown.innerHTML = Math.floor(player.boost);
+    if(player.nextAbilityUse)
+      abilityContainerCooldown.style.width = player.nextAbilityUse < 95 ? `${Math.floor(player.nextAbilityUse)}%` : `95%`;
+  }
 
   if(keyIsDown(81)){
     tabLeaderboard.style.visibility = "visible";
@@ -369,7 +388,7 @@ function sendInputData() {
     }
     //var mouseDistanceToCar = Math.abs(Math.sqrt((windowHeight/2 - mouseY)**2+(windowHeight/2 - mouseY)**2));
     var mouseDistanceToCar = Math.abs((windowHeight/2 + windowWidth/2) - (mouseX+mouseY));
-    socket.emit("inputData", {mouseX, mouseY, clientPlayerAngle, windowWidth, windowHeight, mouseClick, mouseDistanceToCar, spacePressed});
+    socket.emit("inputData", {roomId, mouseX, mouseY, clientPlayerAngle, windowWidth, windowHeight, mouseClick, mouseDistanceToCar, spacePressed});
 }
 
 // ----------- OBJECTS ---------------------------------------------------
@@ -384,6 +403,7 @@ var Player = function(id, name, vector) {
   this.maxHP = 0;
   this.HP = 0;
   this.boost = 0;
+  this.laps = 0;
 
   this.drawGUI = function(){
 
@@ -425,7 +445,7 @@ function mapLine(x1, y1, x2, y2, colour1 = [0,0,0], colour2 = [250,250,250], thi
   var max = 0;
   var isColour = true;
 
-  strokeCap(SQUARE);
+  strokeCap(ROUND);
   strokeWeight(thickness);
 
   max = Math.sqrt(((x2-x1)**2)+((y2-y1)**2)) / 75

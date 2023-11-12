@@ -123,7 +123,7 @@ module.exports = {
                 //Body.applyForce(player.body, player.body.position, {x: 10, y: 10});
                 let vx = Body.getVelocity(player.body).x;
                 let vy = Body.getVelocity(player.body).y;
-                Body.setVelocity(player.body, Vector.create(vx + Math.cos(player.body.angle) * 10, vy + Math.sin(player.body.angle) * 10));
+                Body.setVelocity(player.body, Vector.create(vx + Math.cos(player.body.angle) * 10, vy + Math.sin(player.body.angle) * 18));
                 return player;
             }
         },
